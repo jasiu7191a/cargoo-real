@@ -1,0 +1,28 @@
+{
+  "hero": {
+    "badge": "Der neue Weg zum Import",
+    "title": "Direkt beziehen. Null Zwischenhändler.",
+    "subtitle": "Cargoo hilft Ihnen dabei, Markenartikel, Kleinelektronik und Modeartikel mühelos und ohne Stress direkt von der Quelle zu bestellen.",
+    "cta_sourcing": "Sourcing starten",
+    "cta_marketplace": "Marktplatz ansehen"
+  },
+  "howItWorks": {
+    "title": "Vier Schritte bis zu Ihrer Tür",
+    "step1": {
+      "title": "Produkte anfragen",
+      "desc": "Senden Sie uns einen Link oder eine Beschreibung eines Produkts, das Sie aus China beziehen möchten."
+    },
+    "step2": {
+      "title": "Angebot erhalten",
+      "desc": "Unsere Experten bewerten Lieferanten und erstellen ein Angebot über die Gesamtkosten."
+    },
+    "step3": {
+      "title": "Qualitätsprüfung",
+      "desc": "Wir bestellen in unser China-Hub, prüfen die Qualität per Video und sichern Ihre Waren."
+    },
+    "step4": {
+      "title": "Direkte Lieferung",
+      "desc": "Wir kümmern uns um den gesamten Zoll und die Logistik direkt bis vor Ihre Haustür."
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "hero": {
+    "badge": "La nouvelle façon d'importer",
+    "title": "Sourcez en direct. Zéro intermédiaire.",
+    "subtitle": "Cargoo vous aide à commander facilement des articles de marque, de l'électronique et de la mode directement à la source, sans souci.",
+    "cta_sourcing": "Lancer le sourcing",
+    "cta_marketplace": "Voir le catalogue"
+  },
+  "howItWorks": {
+    "title": "Quatre étapes jusqu'à votre porte",
+    "step1": {
+      "title": "Demander des produits",
+      "desc": "Envoyez-nous un lien ou une description d'un produit que vous souhaitez importer de Chine."
+    },
+    "step2": {
+      "title": "Recevoir un devis",
+      "desc": "Nos experts évaluent les fournisseurs et fournissent un devis complet des coûts."
+    },
+    "step3": {
+      "title": "Contrôle qualité",
+      "desc": "Nous commandons vers notre centre en Chine, vérifions la qualité par vidéo et sécurisons vos marchandises."
+    },
+    "step4": {
+      "title": "Livraison directe",
+      "desc": "Nous gérons toute la douane et la logistique directement jusqu'à votre porte."
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "hero": {
+    "badge": "Nowy sposób na import",
+    "title": "Kupuj bezpośrednio. Bez pośredników.",
+    "subtitle": "Cargoo pomaga łatwo zamawiać markowe produkty, elektronikę i modę bezpośrednio ze źródła, bez żadnych problemów.",
+    "cta_sourcing": "Zacznij importować",
+    "cta_marketplace": "Zobacz marketplace"
+  },
+  "howItWorks": {
+    "title": "Cztery kroki do Twojego domu",
+    "step1": {
+      "title": "Zgłoś produkt",
+      "desc": "Wyślij nam link lub opis dowolnego produktu, który chcesz sprowadzić z Chin."
+    },
+    "step2": {
+      "title": "Otrzymaj wycenę",
+      "desc": "Nasi eksperci ocenią dostawców i przedstawią całkowitą wycenę kosztów dostarczenia."
+    },
+    "step3": {
+      "title": "Kontrola jakości",
+      "desc": "Zamawiamy towar do naszego hubu w Chinach, sprawdzamy jakość przez wideo i zabezpieczamy towar."
+    },
+    "step4": {
+      "title": "Dostawa bezpośrednia",
+      "desc": "Obsługujemy wszystkie formalności celne i logistykę dostawy prosto pod Twoje drzwi."
+    }
+  }
+}

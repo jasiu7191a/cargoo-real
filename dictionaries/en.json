@@ -1,0 +1,28 @@
+{
+  "hero": {
+    "badge": "The New Way To Import",
+    "title": "Source Direct. Zero Middleman.",
+    "subtitle": "Cargoo helps you easily order brand items, small electronics, and fashion directly from the source with zero hassle.",
+    "cta_sourcing": "Start Sourcing",
+    "cta_marketplace": "View Marketplace"
+  },
+  "howItWorks": {
+    "title": "Four Steps to Your Door",
+    "step1": {
+      "title": "Request Items",
+      "desc": "Send us a link or description of any product you want to source from China."
+    },
+    "step2": {
+      "title": "Get Estimate",
+      "desc": "Our experts evaluate suppliers and provide a total landed cost quote."
+    },
+    "step3": {
+      "title": "Quality Check",
+      "desc": "We order to our China hub, verify quality via video, and secure your goods."
+    },
+    "step4": {
+      "title": "Direct Delivery",
+      "desc": "We handle all customs and delivery logistics straight to your doorstep."
+    }
+  }
+}

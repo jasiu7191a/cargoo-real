@@ -1,0 +1,108 @@
+"use client";
+
+import React, { useState } from "react";
+import { Button } from "@/components/ui/Button";
+import { Send, Users, Mail, CheckCircle, Search, Clock } from "lucide-react";
+
+export default function AdminOutreachPage() {
+  const [isDrafting, setIsDrafting] = useState(false);
+
+  return (
+    <div className="space-y-10">
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-4xl font-black uppercase tracking-tighter mb-2">Outreach HQ</h1>
+          <p className="text-[#94a3b8]">Targeted, permission-based outreach for resellers and niche partners.</p>
+        </div>
+        <div className="flex gap-4">
+           <Button variant="outline" className="gap-2">
+              <Clock size={18} /> History
+           </Button>
+           <Button className="gap-2">
+              <Send size={18} /> New Campaign
+           </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-1 space-y-6">
+           <div className="glass-panel p-8">
+              <h3 className="text-xl font-bold uppercase mb-6 flex items-center gap-2">
+                <Users size={20} className="text-[#ff5500]" /> High-Value Targets
+              </h3>
+              <div className="space-y-4">
+                 <TargetCard name="TechResell Hub" type="Electronics" score="98" />
+                 <TargetCard name="StyleVibe EU" type="Fashion" score="92" />
+                 <TargetCard name="ModShops PL" type="Bespoke" score="85" />
+              </div>
+           </div>
+        </div>
+
+        <div className="lg:col-span-3 space-y-8">
+           <div className="glass-panel p-8">
+              <div className="flex justify-between items-center mb-8">
+                <h3 className="text-xl font-bold uppercase">Pending Approval Queue</h3>
+                <span className="text-[10px] font-black uppercase bg-[#ff5500]/10 text-[#ff5500] px-3 py-1 rounded-full">3 Drafts Ready</span>
+              </div>
+              
+              <div className="space-y-4">
+                 <OutreachDraftItem 
+                   to="contact@techresell.com" 
+                   subject="Direct-from-China sourcing for TechResell (Cargoo)"
+                   preview="I noticed you were looking for specifically high-end drone parts..."
+                 />
+                 <OutreachDraftItem 
+                   to="partners@stylevibe.fr" 
+                   subject="Améliorez vos marges d'importation avec Cargoo"
+                   preview="Suite à votre demande concernant les collections 2026..."
+                 />
+              </div>
+           </div>
+
+           <div className="glass-panel p-10 bg-gradient-to-br from-[#2962ff]/5 to-transparent flex items-center justify-between">
+              <div className="max-w-[500px]">
+                 <h4 className="text-2xl font-black uppercase mb-4">Smart Outreach AI</h4>
+                 <p className="text-[#94a3b8] text-sm">Our system automatically identifies high-value resellers from your inbound leads and drafts personalized outreach templates for your approval.</p>
+              </div>
+              <Button size="lg" glow>Optimize Leads</Button>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TargetCard({ name, type, score }: { name: string; type: string; score: string }) {
+  return (
+    <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+       <div className="flex justify-between items-start mb-2">
+          <div className="font-bold text-sm">{name}</div>
+          <span className="text-[10px] font-bold text-[#00c853]">{score}% Match</span>
+       </div>
+       <div className="text-[10px] uppercase font-black text-[#94a3b8]">{type}</div>
+    </div>
+  );
+}
+
+function OutreachDraftItem({ to, subject, preview }: { to: string; subject: string; preview: string }) {
+  return (
+    <div className="bg-white/5 border border-white/10 p-6 rounded-2xl group transition-all hover:bg-white/[0.08]">
+       <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center gap-3">
+             <div className="w-10 h-10 bg-[#ff5500]/10 text-[#ff5500] rounded-xl flex items-center justify-center">
+                <Mail size={20} />
+             </div>
+             <div>
+                <div className="text-xs font-bold text-white mb-0.5">{to}</div>
+                <div className="text-sm font-black text-[#ff5500] uppercase tracking-tighter">{subject}</div>
+             </div>
+          </div>
+          <div className="flex gap-2">
+             <button className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full text-xs font-bold uppercase transition-all">Edit Draft</button>
+             <button className="px-4 py-2 bg-[#ff5500] text-black hover:scale-105 rounded-full text-xs font-black uppercase transition-all">Send Now</button>
+          </div>
+       </div>
+       <p className="text-xs text-[#94a3b8] italic">"{preview}"</p>
+    </div>
+  );
+}

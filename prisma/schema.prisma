@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String?
+  role          String    @default("USER") // ADMIN, USER
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  leads         Lead[]
+}
+
+model Lead {
+  id            String    @id @default(cuid())
+  userId        String?
+  user          User?     @relation(fields: [userId], references: [id])
+  status        String    @default("NEW") // NEW, PROCESSING, QUOTED, PAID, SHIPPED, DELIVERED
+  productName   String
+  productUrl    String?
+  quantity      Int       @default(1)
+  targetPrice   Float?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  quotes        Quote[]
+  tags          Tag[]
+}
+
+model Quote {
+  id                String    @id @default(cuid())
+  leadId            String
+  lead              Lead      @relation(fields: [leadId], references: [id])
+  sourcingPrice     Float
+  shippingCost      Float
+  serviceFee        Float
+  totalLandedCost   Float
+  estimatedDelivery String?
+  notes             String?
+  expiresAt         DateTime?
+  createdAt         DateTime  @default(now())
+}
+
+model BlogPost {
+  id             String    @id @default(cuid())
+  title          String
+  slug           String    @unique
+  content        String    @db.Text
+  targetKeyword  String?
+  metaDescription String?
+  status         String    @default("DRAFT") // DRAFT, PUBLISHED
+  publishedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Tag {
+  id    String @id @default(cuid())
+  name  String @unique
+  leads Lead[]
+}

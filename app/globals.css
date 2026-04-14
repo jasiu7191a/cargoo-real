@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+
+:root {
+  /* Cargoo Design System Tokens */
+  --foreground-rgb: 226, 232, 240;
+  --background-start-rgb: 5, 5, 5;
+  --background-end-rgb: 5, 5, 5;
+
+  --clr-bg: #050505;
+  --clr-bg-surface: #111111;
+  --clr-bg-panel: rgba(255, 255, 255, 0.03);
+  
+  --clr-blue: #2962ff;
+  --clr-blue-light: #5281ff;
+  
+  --clr-orange: #ff5500;
+  --clr-orange-light: #ff7733;
+  
+  --clr-white: #ffffff;
+  --clr-text: #e2e8f0;
+  --clr-text-muted: #94a3b8;
+  
+  --clr-border: rgba(255, 255, 255, 0.1);
+  
+  /* Typography */
+  --font-main: 'Plus Jakarta Sans', sans-serif;
+  
+  /* Layout */
+  --max-width: 1200px;
+  --container-px: 1.5rem;
+  
+  /* Border Radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --radius-full: 9999px;
+  
+  /* Glows & Shadows */
+  --glow-orange: 0 0 30px rgba(255, 85, 0, 0.4);
+  --glow-blue: 0 0 30px rgba(41, 98, 255, 0.4);
+  --shadow-glass: inset 0 1px 1px rgba(255, 255, 255, 0.1), 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  
+  /* Transitions */
+  --trans-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --trans-bouncy: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    background-color: var(--clr-bg);
+  }
+
+  body {
+    font-family: var(--font-main);
+    color: var(--clr-text);
+    background-color: var(--clr-bg);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--clr-white);
+    letter-spacing: -0.03em;
+  }
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: var(--clr-bg-panel);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-glass);
+  transition: var(--trans-bouncy);
+}
+
+.glass-panel:hover {
+  transform: translateY(-5px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Animations from Static Site */
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+.mesh-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.6;
+  animation: spin 20s linear infinite;
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--clr-orange), var(--clr-blue));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+/* Global Container */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--container-px);
+}
