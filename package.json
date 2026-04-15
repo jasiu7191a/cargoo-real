@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "npx @opennextjs/cloudflare && rm -rf .next/cache && rm -rf .worker-next/.next/cache",
+    "build:cf": "node build-cf.js",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate"
