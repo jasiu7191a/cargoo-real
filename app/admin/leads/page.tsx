@@ -2,6 +2,8 @@ import React from "react";
 import prisma from "@/lib/prisma";
 import { Search, Filter, MoreHorizontal, Eye, Mail, MessageSquare } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 async function getLeads() {
   return await prisma.lead.findMany({
     orderBy: { createdAt: "desc" },

@@ -2,6 +2,8 @@ import React from "react";
 import prisma from "@/lib/prisma";
 import { Users, TrendingUp, Package, ShieldCheck } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 async function getStats() {
   const totalLeads = await prisma.lead.count();
   const recentLeads = await prisma.lead.findMany({
