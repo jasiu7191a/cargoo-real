@@ -26,7 +26,7 @@ removeDirRecursive('.next');
 
 // 2. Run the OpenNext build
 console.log('\n--- Starting Cloudflare Build ---');
-runCommand('npx @opennextjs/cloudflare');
+runCommand('npx @opennextjs/cloudflare build');
 
 // 3. FORCE CLEANUP of the build artifacts
 // This ensures the 25MB limit is NEVER hit by accidental cache files
