@@ -21,7 +21,7 @@ function removeDirRecursive(dir) {
 
 // 1. Clean previous builds
 console.log('--- Cleaning previous builds ---');
-removeDirRecursive('.worker-next');
+removeDirRecursive('.open-next');
 removeDirRecursive('.next');
 
 // 2. Run the OpenNext build
@@ -34,8 +34,8 @@ console.log('\n--- Finalizing bundles for Cloudflare Pages (25MB Limit Enforceme
 
 const pathsToSweep = [
     '.next/cache',
-    '.worker-next/.next/cache',
-    '.worker-next/cache'
+    '.open-next/.next/cache',
+    '.open-next/cache'
 ];
 
 pathsToSweep.forEach(p => {
@@ -62,8 +62,8 @@ function scanForLargeFiles(dir) {
     }
 }
 
-if (fs.existsSync('.worker-next')) {
-    scanForLargeFiles('.worker-next');
+if (fs.existsSync('.open-next')) {
+    scanForLargeFiles('.open-next');
 }
 
 console.log('\n✅ Build verified and cleaned! No files exceed deployment limits.');
