@@ -1,8 +1,9 @@
 {
   "name": "cargoo-platform",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "packageManager": "npm@10.8.2",
+  "comment": "Forcing build script fix - 2026-04-15",
 
   "scripts": {
     "dev": "next dev",
