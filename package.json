@@ -2,10 +2,12 @@
   "name": "cargoo-platform",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@10.8.2",
+
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "npx @opennextjs/cloudflare --package-manager npm",
+    "build:cf": "npx @opennextjs/cloudflare",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate"
