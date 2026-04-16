@@ -11,5 +11,10 @@
   },
   "observability": {
     "enabled": true
+  },
+  "vars": {
+    "DATABASE_URL": "REPLACE_WITH_YOUR_NEON_LINK",
+    "OPENAI_API_KEY": "REPLACE_WITH_YOUR_OPENAI_KEY",
+    "RESEND_API_KEY": "REPLACE_WITH_YOUR_RESEND_KEY"
   }
 }
