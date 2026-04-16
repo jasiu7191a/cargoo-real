@@ -19,7 +19,8 @@ export function middleware(request: NextRequest) {
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   )
 
-  if (pathnameHasLocale) return
+  // Skip middleware for admin, api, and already localized routes
+  if (pathnameHasLocale || pathname.startsWith('/admin') || pathname.startsWith('/api')) return
 
   const locale = getLocale(request)
   request.nextUrl.pathname = `/${locale}${pathname}`

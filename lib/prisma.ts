@@ -6,13 +6,18 @@ const prismaClientSingleton = () => {
   const connectionString = process.env.DATABASE_URL
   
   if (!connectionString) {
+    console.error("DATABASE_URL is missing from environment variables!")
     return new PrismaClient()
   }
 
-  // This part is specific for Cloudflare + Neon
-  const pool = new Pool({ connectionString })
-  const adapter = new PrismaNeon(pool)
-  return new PrismaClient({ adapter })
+  try {
+    const pool = new Pool({ connectionString })
+    const adapter = new PrismaNeon(pool)
+    return new PrismaClient({ adapter })
+  } catch (error) {
+    console.error("Failed to initialize Prisma with Neon adapter:", error)
+    return new PrismaClient()
+  }
 }
 
 declare global {
