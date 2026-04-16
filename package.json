@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "node build-cf.js",
+    "build:cf": "npx prisma db push --accept-data-loss && node build-cf.js",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate"
