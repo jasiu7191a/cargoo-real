@@ -1,17 +1,18 @@
 import { PrismaClient } from '@prisma/client'
-import { PrismaPg } from '@prisma/adapter-pg'
-import { Pool } from 'pg'
+import { PrismaNeon } from '@prisma/adapter-neon'
+import { Pool } from '@neondatabase/serverless'
 
 const prismaClientSingleton = () => {
   const connectionString = process.env.DATABASE_URL
   
-  if (process.env.NODE_ENV === 'production' || connectionString?.includes('pooler')) {
-    const pool = new Pool({ connectionString })
-    const adapter = new PrismaPg(pool)
-    return new PrismaClient({ adapter })
+  if (!connectionString) {
+    return new PrismaClient()
   }
-  
-  return new PrismaClient()
+
+  // This part is specific for Cloudflare + Neon
+  const pool = new Pool({ connectionString })
+  const adapter = new PrismaNeon(pool)
+  return new PrismaClient({ adapter })
 }
 
 declare global {

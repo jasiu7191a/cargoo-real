@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Cargoo | Import from China Made Simple",
     description: "Cargoo helps you source, ship, and deliver products with zero hassle. Beginner-friendly importing for everyday people.",
-    url: 'https://cargoo.com',
+    url: 'https://cargooimport.eu',
     siteName: 'Cargoo',
     images: [
       {
