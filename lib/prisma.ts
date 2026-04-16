@@ -3,29 +3,34 @@ import { PrismaNeon } from '@prisma/adapter-neon'
 import { Pool } from '@neondatabase/serverless'
 
 const prismaClientSingleton = () => {
-  const connectionString = process.env.DATABASE_URL
+  // SEARCH MULTIPLE LOCATIONS: process.env, globalThis, and any bindings
+  const connectionString = 
+    process.env.DATABASE_URL || 
+    (globalThis as any).DATABASE_URL || 
+    (process as any).env?.DATABASE_URL;
   
   if (!connectionString) {
-    console.error("DATABASE_URL is missing from environment variables!")
-    return new PrismaClient()
+    // If absolutely missing, log it so it shows in Cloudflare Logs
+    console.error("CRITICAL: DATABASE_URL not found in environment or global scope.");
+    return new PrismaClient();
   }
 
   try {
-    const pool = new Pool({ connectionString })
-    const adapter = new PrismaNeon(pool)
-    return new PrismaClient({ adapter })
+    const pool = new Pool({ connectionString });
+    const adapter = new PrismaNeon(pool);
+    return new PrismaClient({ adapter });
   } catch (error) {
-    console.error("Failed to initialize Prisma with Neon adapter:", error)
-    return new PrismaClient()
+    console.error("Prisma Initialization Error:", error);
+    return new PrismaClient();
   }
 }
 
 declare global {
-  var prisma: undefined | ReturnType<typeof prismaClientSingleton>
+  var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
 }
 
-const prisma = globalThis.prisma ?? prismaClientSingleton()
+const prisma = globalThis.prisma ?? prismaClientSingleton();
 
-export default prisma
+export default prisma;
 
-if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma
+if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma;
