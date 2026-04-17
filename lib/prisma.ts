@@ -14,9 +14,13 @@ const prismaClientSingleton = () => {
   // 2. BUILD-TIME SAFETY: If we are in the Cloudflare build environment, 
   // we might not have a DATABASE_URL. Return a dummy client to avoid crashing the build.
   if (!connectionString) {
-    console.warn("⚠️ BUILD PHASE: DATABASE_URL not found. Using safe-mode client.");
-    // Return a dummy Prisma Client that won't try to connect yet
-    return new PrismaClient();
+    console.warn("⚠️ BUILD PHASE SAFE-MODE: DATABASE_URL not found. Shields activated.");
+    // Return a dummy object that blocks Prisma initialization during build
+    return new Proxy({}, {
+      get: () => { 
+        return () => { throw new Error("Prisma used at build time without DATABASE_URL"); }
+      }
+    }) as any;
   }
 
   try {

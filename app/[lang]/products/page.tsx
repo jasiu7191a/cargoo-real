@@ -1,5 +1,7 @@
 import React from "react";
 import prisma from "@/lib/prisma";
+
+export const dynamic = 'force-dynamic';
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { Search, Filter, ArrowRight, Star, TrendingUp } from "lucide-react";
