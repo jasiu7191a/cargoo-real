@@ -1,31 +1,16 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { Plus_Jakarta_Sans } from "next/font/google";
-import { Providers } from "@/components/Providers";
+import React from "react";
 
-const jakarta = Plus_Jakarta_Sans({ 
-  subsets: ["latin"],
-  variable: '--font-main',
-  display: 'swap',
-});
-
-export const metadata: Metadata = {
-  title: "Cargoo | Import from China Made Simple",
-  description: "Cargoo helps you source, ship, and deliver products with zero hassle.",
-};
-
-export default function RootLayout({
+/**
+ * THIS IS A PASS-THROUGH LAYOUT. 
+ * THE ACTUAL ROOT LAYOUTS ARE IN /admin/layout.tsx AND /[lang]/layout.tsx.
+ * 
+ * We keep this file empty of <html> and <body> tags to prevent 
+ * HierarchyRequestError and hydration crashes.
+ */
+export default function UniversalPassthrough({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html lang="en">
-      <body className={jakarta.className}>
-        <Providers>
-          {children}
-        </Providers>
-      </body>
-    </html>
-  );
+  return <>{children}</>;
 }
