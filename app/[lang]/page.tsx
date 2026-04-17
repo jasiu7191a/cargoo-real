@@ -65,6 +65,7 @@ export default function Home() {
       </section>
 
       <PricingCalculator />
+      <SourcingResources />
 
       {/* Trust Signal Section */}
       <section className="py-24 bg-[#050505]">

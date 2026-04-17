@@ -137,3 +137,61 @@ export function BentoGrid() {
     </section>
   );
 }
+
+export function SourcingResources() {
+  return (
+    <section className="py-24 bg-[#050505] border-t border-white/5">
+      <div className="container">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+          <div className="max-w-[600px]">
+            <span className="text-[#ff5500] font-black uppercase tracking-widest text-sm mb-4 block">Knowledge Hub</span>
+            <h2 className="text-5xl font-black uppercase tracking-tighter leading-none mb-6">Expert Sourcing <span className="gradient-text">Guides</span>.</h2>
+            <p className="text-lg text-[#94a3b8]">Master the art of importing from China with our technical guides on VAT, supplier verification, and logistics.</p>
+          </div>
+          <Button variant="outline" className="group">
+            View All Resources <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <ResourcePreview 
+            tag="Logistics"
+            title="How to optimize shipping costs for small electronics"
+            desc="Learn how to choose between Air Express and Sea Freight based on your volume."
+            image="https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop"
+          />
+          <ResourcePreview 
+            tag="Security"
+            title="5 Signs your Alibaba supplier is a middleman"
+            desc="Identifying factories vs trading companies can save you up to 30% in fees."
+            image="https://images.unsplash.com/photo-1553413766-41f9d287af3c?q=80&w=2089&auto=format&fit=crop"
+          />
+          <ResourcePreview 
+            tag="Taxes"
+            title="Understanding VAT & Import Duties in the EU"
+            desc="A complete breakdown of IOSS, customs clearance, and local tax requirements."
+            image="https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=2070&auto=format&fit=crop"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ResourcePreview({ tag, title, desc, image }: { tag: string; title: string, desc: string, image: string }) {
+  return (
+    <div className="group cursor-pointer">
+      <div className="relative h-64 rounded-3xl overflow-hidden mb-6 border border-white/10 group-hover:border-[#ff5500]/50 transition-all">
+        <div className="absolute inset-0 bg-cover bg-center grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700" style={{ backgroundImage: `url(${image})` }}></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#050505] to-transparent opacity-80"></div>
+        <div className="absolute bottom-6 left-6">
+           <span className="bg-[#ff5500] text-[#050505] text-[10px] font-black uppercase px-3 py-1 rounded-full mb-3 inline-block tracking-tighter tracking-widest">
+             {tag}
+           </span>
+        </div>
+      </div>
+      <h3 className="text-xl font-bold mb-3 group-hover:text-[#ff5500] transition-colors uppercase leading-tight">{title}</h3>
+      <p className="text-[#94a3b8] text-sm leading-relaxed line-clamp-2 font-medium">{desc}</p>
+    </div>
+  );
+}
