@@ -1,6 +1,4 @@
-import React from "react";
-import Link from "next/link";
-import { LayoutDashboard, Users, FileText, Send, Settings, LogOut, Package } from "lucide-react";
+import { Providers } from "@/components/Providers";
 
 export default function AdminLayout({
   children,
@@ -8,7 +6,8 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-[#050505] text-white">
+    <Providers>
+      <div className="flex min-h-screen bg-[#050505] text-white">
       {/* Admin Sidebar */}
       <aside className="w-64 border-r border-white/10 bg-[#0b0b0b] flex flex-col pt-8">
         <div className="px-6 mb-10 flex items-center gap-2">
