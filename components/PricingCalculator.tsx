@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "./ui/Button";
+import { Shield, Globe, Lock } from "lucide-react";
 
 export function PricingCalculator() {
   const [productCost, setProductCost] = useState<number | "">("");
@@ -181,11 +182,28 @@ export function PricingCalculator() {
                 >
                   Submit Official Sourcing Request
                 </Button>
+
+                {/* Trust Badges Row */}
+                <div className="flex flex-wrap items-center justify-center gap-6 mt-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                   <div className="flex items-center gap-2">
+                      <Shield size={14} className="text-[#00c853]" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">EU Compliant</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                      <Globe size={14} className="text-[#2962ff]" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Global Sourcing</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                      <Lock size={14} className="text-[#ff5500]" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Secure Escrow</span>
+                   </div>
+                </div>
+
                 <button 
-                  className="w-full text-xs text-[#94a3b8] hover:text-white underline mt-4"
+                  className="w-full text-xs text-[#94a3b8] hover:text-white underline mt-6"
                   onClick={() => setResults(null)}
                 >
-                  ← Go back back to calculator
+                  ← Reset Calculator
                 </button>
               </div>
             </div>

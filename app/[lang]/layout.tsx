@@ -1,4 +1,5 @@
 import React from "react";
+import { LiveActivity } from "@/components/LiveActivity";
 
 export default function RootLocaleLayout({
   children,
@@ -8,6 +9,7 @@ export default function RootLocaleLayout({
   return (
     <>
       {children}
+      <LiveActivity />
     </>
   );
 }

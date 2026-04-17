@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { sendAdminNotification, sendClientConfirmation } from '@/lib/mail';
 
 export async function POST(req: Request) {
   try {
@@ -35,8 +36,20 @@ export async function POST(req: Request) {
         notes,
         userId: user.id,
         status: 'NEW'
-      }
+      },
+      include: { user: true } // Include user for notification data
     });
+
+    // 3. Trigger Automated Notifications (Non-blocking for better UX)
+    // In Edge/Worker environments, we handle this carefully.
+    try {
+      await Promise.all([
+        sendAdminNotification(lead),
+        sendClientConfirmation(email, productName)
+      ]);
+    } catch (mailError) {
+      console.error('Non-critical Mail Error:', mailError);
+    }
 
     return NextResponse.json({ success: true, leadId: lead.id }, { status: 201 });
   } catch (error: any) {

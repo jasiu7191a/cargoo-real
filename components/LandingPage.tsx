@@ -195,3 +195,59 @@ function ResourcePreview({ tag, title, desc, image }: { tag: string; title: stri
     </div>
   );
 }
+
+export function ClientTestimonials() {
+  return (
+    <section className="py-24 bg-[#111111]">
+      <div className="container">
+        <div className="text-center mb-16">
+          <span className="text-[#ff5500] font-black uppercase tracking-widest text-sm mb-4 block">Success Stories</span>
+          <h2 className="text-5xl font-black uppercase tracking-tighter">Trusted by 400+ <span className="gradient-text">Importers</span></h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <TestimonialCard 
+            name="Marek S."
+            role="Electronics Distributor"
+            country="Poland"
+            text="Cargoo turned my sourcing nightmare into a dream. They verified 3 suppliers in Shenzen and found me the best price. Saved about 20% on my last container."
+          />
+          <TestimonialCard 
+            name="Julian K."
+            role="Amazon FBA Seller"
+            country="Germany"
+            text="The real-time updates on WhatsApp are a game changer. I always know where my goods are. No more guessing games with random agents."
+          />
+          <TestimonialCard 
+            name="Sophie L."
+            role="Boutique Owner"
+            country="France"
+            text="Very impressed with the quality control. The video inspection service prevented us from receiving a bad batch of textiles. Highly recommend."
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TestimonialCard({ name, role, country, text }: { name: string; role: string, country: string, text: string }) {
+  return (
+    <div className="glass-panel p-8 relative hover:border-[#ff5500]/30 transition-all group">
+      <div className="flex gap-1 mb-6">
+        {[...Array(5)].map((_, i) => (
+          <Zap key={i} size={16} className="text-[#ff5500] fill-[#ff5500]" />
+        ))}
+      </div>
+      <p className="text-[#94a3b8] font-medium leading-relaxed mb-8 italic">"{text}"</p>
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center font-black text-[#ff5500] border border-white/10">
+          {name[0]}
+        </div>
+        <div>
+          <div className="font-bold text-white group-hover:text-[#ff5500] transition-colors">{name}</div>
+          <div className="text-[10px] text-[#94a3b8] font-black uppercase tracking-widest">{role} • {country}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
