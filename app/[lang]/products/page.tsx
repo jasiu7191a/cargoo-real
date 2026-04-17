@@ -57,7 +57,7 @@ export default async function ProductsPage({ params }: { params: { lang: string 
                 <ProductCard name="Sony PlayStation 5 Slim" brand="Sony" price="€380" target="€499" />
                 <ProductCard name="Prada Re-Edition 2005" brand="Prada" price="€650" target="€1200" />
               </>
-            ) : products.map(p => (
+            ) : products.map((p: any) => (
               <ProductCard 
                 key={p.id} 
                 name={p.productName} 

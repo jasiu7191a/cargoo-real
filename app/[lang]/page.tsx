@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/Navbar";
+export const dynamic = 'force-dynamic';
 import { Hero, BentoGrid } from "@/components/LandingPage";
 import { PricingCalculator } from "@/components/PricingCalculator";
 import { Footer } from "@/components/Footer";
