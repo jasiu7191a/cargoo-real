@@ -2,9 +2,41 @@
 
 import React, { useState } from "react";
 import { Button } from "./ui/Button";
-import { ChevronRight, Calculator, ShieldCheck, Truck, Handshake } from "lucide-react";
+import { ChevronRight, Calculator, ShieldCheck, Truck, Handshake, Loader2 } from "lucide-react";
 
 export function Hero() {
+  const [productName, setProductName] = useState("");
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productName || !email) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productName,
+          email,
+          quantity: 1,
+          notes: "Quick inquiry from Hero section search bar"
+        })
+      });
+
+      if (res.ok) {
+        setSubmitted(true);
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section className="relative pt-44 pb-20 min-h-[90vh] flex flex-col justify-center overflow-hidden">
       {/* Mesh Background */}
@@ -27,21 +59,38 @@ export function Hero() {
           Cargoo helps you easily order brand items, small electronics, and fashion directly from the source with zero hassle.
         </p>
 
-        <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
-          <Button size="lg" glow>
-            Start Sourcing <ChevronRight size={20} />
-          </Button>
-          <Button size="lg" variant="outline">
-            View Marketplace
-          </Button>
-        </div>
-
-        {/* Hero Search Mock */}
-        <div className="max-w-[600px] mx-auto bg-white/5 backdrop-blur-2xl border border-white/10 p-2 rounded-2xl flex items-center shadow-2xl">
-          <div className="flex-1 px-4 text-left text-sm text-[#94a3b8] font-medium">
-            Search products, brands, categories...
+        {submitted ? (
+          <div className="max-w-[500px] mx-auto glass-panel p-8 animate-in fade-in zoom-in-95 duration-500">
+             <div className="text-[#00c853] font-bold uppercase tracking-widest text-sm mb-2">Success!</div>
+             <h3 className="text-xl font-bold mb-4">Inquiry for "{productName}" Sent</h3>
+             <p className="text-sm text-[#94a3b8]">Our agents will email you at {email} with pricing options today.</p>
+             <button className="mt-6 text-xs text-[#ff5500] font-black uppercase hover:underline" onClick={() => setSubmitted(false)}>Submit another link</button>
           </div>
-          <Button className="h-10 px-6 text-xs">Search</Button>
+        ) : (
+          <form onSubmit={handleSubmit} className="max-w-[700px] mx-auto bg-white/5 backdrop-blur-2xl border border-white/10 p-2 rounded-2xl flex flex-col sm:flex-row gap-2 shadow-2xl">
+            <input 
+              required
+              className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder:text-[#94a3b8] focus:outline-none"
+              placeholder="Paste product link or name..."
+              value={productName}
+              onChange={e => setProductName(e.target.value)}
+            />
+            <input 
+              required
+              type="email"
+              className="flex-1 bg-white/5 border-x border-white/10 sm:border-y-0 sm:border-x px-4 py-3 text-sm text-white placeholder:text-[#94a3b8] focus:outline-none"
+              placeholder="Your Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+            />
+            <Button type="submit" className="h-full px-8 uppercase font-black tracking-tighter" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="animate-spin" size={18} /> : "Get Price"}
+            </Button>
+          </form>
+        )}
+        
+        <div className="mt-8 text-xs text-[#94a3b8] uppercase tracking-[0.3em] font-medium">
+          Trusted by 400+ active importers in Europe
         </div>
       </div>
     </section>
