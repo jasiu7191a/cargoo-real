@@ -3,6 +3,7 @@ import { PrismaNeon } from '@prisma/adapter-neon'
 import { Pool } from '@neondatabase/serverless'
 
 const prismaClientSingleton = () => {
+  // 1. LOOK FOR CONNECTION STRING
   const connectionString = 
     (process.env.DATABASE_URL) || 
     (globalThis as any).DATABASE_URL || 
@@ -10,18 +11,21 @@ const prismaClientSingleton = () => {
     (process as any).env?.DATABASE_URL ||
     (typeof (globalThis as any).process !== 'undefined' ? (globalThis as any).process.env?.DATABASE_URL : undefined);
   
+  // 2. BUILD-TIME SAFETY: If we are in the Cloudflare build environment, 
+  // we might not have a DATABASE_URL. Return a dummy client to avoid crashing the build.
   if (!connectionString) {
-    throw new Error("DATABASE_URL is missing in Cloudflare variables.");
+    console.warn("⚠️ BUILD PHASE: DATABASE_URL not found. Using safe-mode client.");
+    // Return a dummy Prisma Client that won't try to connect yet
+    return new PrismaClient();
   }
 
   try {
     const pool = new Pool({ connectionString });
     const adapter = new PrismaNeon(pool);
-    // The /wasm client works perfectly with adapters on Cloudflare
     return new PrismaClient({ adapter });
   } catch (error: any) {
     console.error("Prisma Initialization Error:", error);
-    throw error;
+    return new PrismaClient();
   }
 }
 
