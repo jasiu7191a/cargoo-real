@@ -3,8 +3,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { openai, SOURCING_GUIDE_PROMPT } from "@/lib/openai";
 
-export const runtime = "edge";
-
 export async function POST(req: Request) {
   try {
     // 1. Security Check: Ensure only authenticated admins can generate content

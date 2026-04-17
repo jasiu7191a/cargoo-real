@@ -3,8 +3,6 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-export const runtime = "edge";
-
 // GET: List all articles for the admin panel
 export async function GET() {
   try {
