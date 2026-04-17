@@ -1,5 +1,12 @@
-import React from "react";
 import Link from "next/link";
+import "../globals.css";
+import { Plus_Jakarta_Sans } from "next/font/google";
+
+const jakarta = Plus_Jakarta_Sans({ 
+  subsets: ["latin"],
+  variable: '--font-main',
+  display: 'swap',
+});
 import { LayoutDashboard, Users, FileText, Send, Settings, LogOut, Package } from "lucide-react";
 import { Providers } from "@/components/Providers";
 
@@ -10,7 +17,7 @@ export default function AdminLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-[#050505]">
+      <body className={jakarta.className}>
         <Providers>
           <div className="flex min-h-screen text-white">
             {/* Admin Sidebar */}
