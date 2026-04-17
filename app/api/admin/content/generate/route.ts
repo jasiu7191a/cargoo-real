@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
-import { openai, SOURCING_GUIDE_PROMPT } from "@/lib/openai";
+import { getOpenAI, SOURCING_GUIDE_PROMPT } from "@/lib/openai";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
@@ -18,6 +20,7 @@ export async function POST(req: Request) {
     }
 
     // 2. Call OpenAI with our specialized sourcing prompt
+    const openai = getOpenAI();
     const response = await openai.chat.completions.create({
       model: "gpt-4-turbo-preview", // Best for structured JSON output
       messages: [

@@ -2,11 +2,20 @@ import OpenAI from "openai";
 
 /**
  * Shared OpenAI client for the Cargoo Platform.
- * Uses the OPENAI_API_KEY from environment variables.
+ * Lazily initialized to prevent build-time crashes when API keys are missing.
  */
-export const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openaiInstance: OpenAI | null = null;
+
+export const getOpenAI = () => {
+  if (!openaiInstance) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error("OPENAI_API_KEY is missing. Please check your Cloudflare Environment Variables.");
+    }
+    openaiInstance = new OpenAI({ apiKey });
+  }
+  return openaiInstance;
+};
 
 export interface GeneratedContent {
   title: string;
