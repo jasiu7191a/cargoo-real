@@ -6,15 +6,18 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+import { Loader2 } from "lucide-react";
+
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "outline" | "ghost";
   glow?: boolean;
   size?: "sm" | "md" | "lg";
+  isLoading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", glow = false, size = "md", ...props }, ref) => {
-    const baseStyles = "inline-flex items-center justify-center gap-2 rounded-full font-bold uppercase tracking-wider transition-all active:scale-95 duration-300 cursor-pointer";
+  ({ className, variant = "primary", glow = false, size = "md", isLoading = false, children, disabled, ...props }, ref) => {
+    const baseStyles = "inline-flex items-center justify-center gap-2 rounded-full font-bold uppercase tracking-wider transition-all active:scale-95 duration-300 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed";
     
     const variants = {
       primary: "bg-[#ff5500] text-[#050505] hover:bg-white hover:text-[#050505] hover:shadow-[0_0_30px_rgba(255,255,255,0.4)]",
@@ -34,8 +37,12 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(baseStyles, variants[variant], sizes[size], glowStyle, className)}
+        disabled={isLoading || disabled}
         {...props}
-      />
+      >
+        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {children}
+      </button>
     );
   }
 );
