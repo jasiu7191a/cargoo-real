@@ -1,6 +1,5 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
-const path = require('path');
 
 async function runBuild() {
   try {
@@ -11,19 +10,15 @@ async function runBuild() {
 
     console.log('\n--- Starting Cloudflare Build ---');
     
-    // We use OpenNext to build the project specifically for Cloudflare Pages
+    // We only need to run the build. 
+    // Cloudflare Pages will automatically deploy the '.open-next' folder 
+    // once this script finishes successfully.
     console.log('\n🚀 Running: npx @opennextjs/cloudflare build');
     execSync('npx @opennextjs/cloudflare build --dangerouslyUseUnsupportedNextVersion', { stdio: 'inherit' });
 
-    console.log('\n--- Starting Deployment ---');
-    
-    // CRITICAL FIX: Use 'wrangler pages deploy' instead of standard worker deploy
-    console.log('\n🚀 Running: npx wrangler pages deploy .open-next');
-    execSync('npx wrangler pages deploy .open-next', { stdio: 'inherit' });
-
-    console.log('\n✅ Success: Build and Pages Deployment finished!');
+    console.log('\n✅ Success: Build finished! Cloudflare will now deploy the results.');
   } catch (error) {
-    console.error('\n❌ Build/Deploy failed:');
+    console.error('\n❌ Build failed:');
     console.error(error.message);
     process.exit(1);
   }
