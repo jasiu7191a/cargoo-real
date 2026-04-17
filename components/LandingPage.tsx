@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Button } from "./ui/Button";
-import { ChevronRight, Calculator, ShieldCheck, Truck, Handshake, Loader2 } from "lucide-react";
+import { ChevronRight, Calculator, ShieldCheck, Truck, Handshake, Loader2, Zap } from "lucide-react";
 
 export function Hero() {
   const [productName, setProductName] = useState("");
