@@ -4,7 +4,8 @@ import { Resend } from 'resend';
  * Shared Resend client for the Cargoo Platform.
  * Uses the RESEND_API_KEY from environment variables.
  */
-export const resend = new Resend(process.env.RESEND_API_KEY);
+// Shared Resend client. Fallback key prevents build-time crashes on Cloudflare.
+export const resend = new Resend(process.env.RESEND_API_KEY || 're_build_placeholder');
 
 interface MailOptions {
   to: string;
