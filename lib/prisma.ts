@@ -1,37 +1,56 @@
 import { PrismaClient } from '@prisma/client/wasm'
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { Pool } from '@neondatabase/serverless'
+import { getRequestContext } from '@opennextjs/cloudflare'
 
 const prismaClientSingleton = () => {
-  const connectionString = 
-    (process.env.DATABASE_URL) || 
-    (globalThis as any).DATABASE_URL || 
-    (globalThis as any).env?.DATABASE_URL ||
-    (process as any).env?.DATABASE_URL ||
-    (typeof (globalThis as any).process !== 'undefined' ? (globalThis as any).process.env?.DATABASE_URL : undefined);
-  
-  if (!connectionString) {
-    console.warn("⚠️ BUILD PHASE SAFE-MODE: DATABASE_URL not found. Universal Shield activated.");
-    // Return a Proxy that satisfies TypeScript by returning empty arrays/objects
-    // and pretending to be a real PrismaClient.
-    return new Proxy({}, {
-      get: (_, prop) => {
-        // Return a proxy that handles the model calls (e.g., prisma.user.findMany)
-        return new Proxy(() => {}, {
-          get: () => () => Promise.resolve([]), // Always return an empty array for findMany/etc.
-          apply: () => Promise.resolve([])      // Handle direct calls
-        });
-      }
-    }) as PrismaClient;
+  // 1. Try to get the connection string from all possible sources
+  // Prioritize Cloudflare Request Context for runtime stability
+  let connectionString = process.env.DATABASE_URL;
+
+  try {
+    const ctx = getRequestContext();
+    if (ctx?.env?.DATABASE_URL) {
+      connectionString = ctx.env.DATABASE_URL as string;
+    }
+  } catch (e) {
+    // Context might not be available during certain build/init phases
   }
 
+  // Fallbacks for local dev or misconfigured environments
+  if (!connectionString) {
+    connectionString = (globalThis as any).DATABASE_URL || (globalThis as any).env?.DATABASE_URL;
+  }
+  
+  // 2. Build Phase / Missing URL Safety Shield
+  if (!connectionString) {
+    console.warn("⚠️ PRISMA SHIELD: DATABASE_URL not found. Returning safe proxy.");
+    return new Proxy({}, {
+      get: (_, prop) => {
+        return new Proxy(() => {}, {
+          get: () => () => Promise.resolve([]),
+          apply: () => Promise.resolve([])
+        });
+      }
+    }) as unknown as PrismaClient;
+  }
+
+  // 3. Optimized Edge Initialization
   try {
     const pool = new Pool({ connectionString });
     const adapter = new PrismaNeon(pool);
     return new PrismaClient({ adapter });
   } catch (error: any) {
-    console.error("Prisma Initialization Error:", error);
-    return new PrismaClient({ adapter: {} as any }); // Fallback to avoid constructor crash
+    console.error("Prisma Fatal Initialization Error:", error);
+    // Return the safe proxy instead of throwing a worker-killing exception
+    return new Proxy({}, {
+        get: (_, prop) => {
+          return new Proxy(() => {}, {
+            get: () => () => Promise.resolve([]),
+            apply: () => Promise.resolve([])
+          });
+        }
+      }) as unknown as PrismaClient;
   }
 }
 
@@ -39,7 +58,9 @@ declare global {
   var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
 }
 
-const prisma = globalThis.prisma ?? prismaClientSingleton() as PrismaClient;
+// We do NOT use the singleton pattern directly in Cloudflare Workers 
+// because global state can be unpredictable. We re-initialize safely if needed.
+const prisma = globalThis.prisma ?? prismaClientSingleton();
 
 export default prisma;
 

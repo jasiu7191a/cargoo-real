@@ -4,7 +4,6 @@
   "private": true,
   "packageManager": "npm@10.8.2",
   "comment": "Forcing build script fix - 2026-04-15",
-
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -30,18 +29,14 @@
     "tailwind-merge": "^2.3.0",
     "@formatjs/intl-localematcher": "^0.5.4",
     "negotiator": "^0.6.3",
-    "bcryptjs": "^2.4.3"
-
-
+    "bcryptjs": "^2.4.3",
+    "@opennextjs/cloudflare": "^1.19.1"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "^1.19.1",
     "@types/node": "^20.12.12",
     "@types/pg": "^8.11.6",
     "@types/negotiator": "^0.6.3",
     "@types/bcryptjs": "^2.4.6",
-
-
     "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "eslint": "^8.57.0",
