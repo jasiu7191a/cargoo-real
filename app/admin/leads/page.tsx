@@ -52,7 +52,7 @@ export default async function AdminLeadsPage() {
               <tr>
                 <td colSpan={5} className="p-10 text-center text-[#94a3b8]">No leads found. Start sourcing!</td>
               </tr>
-            ) : leads.map(lead => (
+            ) : leads.map((lead: any) => (
               <tr key={lead.id} className="group hover:bg-white/[0.03] transition-colors">
                 <td className="p-6">
                   <div className="font-bold text-sm text-white mb-1">{lead.productName}</div>
