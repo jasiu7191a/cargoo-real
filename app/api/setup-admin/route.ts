@@ -34,8 +34,12 @@ export async function GET(request: Request) {
       email,
       password
     });
-  } catch (err) {
+  } catch (err: any) {
     console.error("Setup Error:", err);
-    return NextResponse.json({ error: "Server Configuration Error. Is your DATABASE_URL set?" }, { status: 500 });
+    return NextResponse.json({ 
+      error: "Prisma Failed to initialized", 
+      message: err.message,
+      stack: err.stack 
+    }, { status: 500 });
   }
 }
