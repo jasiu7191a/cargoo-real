@@ -1,22 +1,17 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { Pool } from '@neondatabase/serverless'
-import { getRequestContext } from '@opennextjs/cloudflare'
 
 const prismaClientSingleton = () => {
-  let connectionString: string | undefined;
-
-  try {
-    // 1. THE OFFICIAL TUNNEL: Ask Cloudflare for the env object
-    const ctx = getRequestContext();
-    connectionString = (ctx.env as any).DATABASE_URL;
-  } catch (e) {
-    // 2. FALLBACK: If not on Cloudflare (local dev), check process.env
-    connectionString = process.env.DATABASE_URL;
-  }
+  // SEARCH ALL POSSIBLE LOCATIONS WITHOUT SPECIAL IMPORTS
+  const connectionString = 
+    (process.env.DATABASE_URL) || 
+    (globalThis as any).DATABASE_URL || 
+    (globalThis as any).env?.DATABASE_URL ||
+    (process as any).env?.DATABASE_URL;
   
   if (!connectionString) {
-    console.error("CRITICAL: DATABASE_URL not found in Cloudflare Context or Environment.");
+    console.error("CRITICAL: DATABASE_URL not found in any environment context.");
     return new PrismaClient();
   }
 
