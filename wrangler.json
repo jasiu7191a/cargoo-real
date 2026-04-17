@@ -13,6 +13,9 @@
     "enabled": true
   },
   "vars": {
+    "DATABASE_URL": "postgresql://neondb_owner:npg_d6wIXxcAKo8a@ep-lucky-butterfly-al1edddn.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require",
+    "OPENAI_API_KEY": "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",
+    "RESEND_API_KEY": "re_9bfhNf14_Az2Q8tvcjNfCgEwuu67HGDcp",
     "NODE_VERSION": "18"
   }
 }
