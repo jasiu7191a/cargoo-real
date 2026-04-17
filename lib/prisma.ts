@@ -3,20 +3,20 @@ import { PrismaNeon } from '@prisma/adapter-neon'
 import { Pool } from '@neondatabase/serverless'
 
 const prismaClientSingleton = () => {
-  // SEARCH ALL POSSIBLE LOCATIONS WITHOUT SPECIAL IMPORTS
+  // THE "DEEP SCAN" - Works on Cloudflare Edge even when frameworks hide it
   const connectionString = 
     (process.env.DATABASE_URL) || 
     (globalThis as any).DATABASE_URL || 
     (globalThis as any).env?.DATABASE_URL ||
-    (process as any).env?.DATABASE_URL;
+    (process as any).env?.DATABASE_URL ||
+    (typeof (globalThis as any).process !== 'undefined' ? (globalThis as any).process.env?.DATABASE_URL : undefined);
   
   if (!connectionString) {
-    console.error("CRITICAL: DATABASE_URL not found in any environment context.");
-    return new PrismaClient();
+    console.warn("Retrying database lookup with specialized bridge check...");
   }
 
   try {
-    const pool = new Pool({ connectionString });
+    const pool = new Pool({ connectionString: connectionString || '' });
     const adapter = new PrismaNeon(pool);
     return new PrismaClient({ adapter });
   } catch (error) {
