@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 "use client";
 
 import React, { useState } from "react";
@@ -113,3 +114,4 @@ export default function AdminLoginPage() {
     </main>
   );
 }
+

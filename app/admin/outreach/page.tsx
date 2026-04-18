@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 "use client";
 
 import React, { useState } from "react";
@@ -106,3 +107,4 @@ function OutreachDraftItem({ to, subject, preview }: { to: string; subject: stri
     </div>
   );
 }
+

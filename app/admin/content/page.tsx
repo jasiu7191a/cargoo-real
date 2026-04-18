@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 "use client";
 
 import React, { useState } from "react";
@@ -113,3 +114,4 @@ function ArticleListItem({ title, status, date }: { title: string; status: strin
     </div>
   );
 }
+
