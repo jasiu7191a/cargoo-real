@@ -10,24 +10,39 @@ function getLocale(request: NextRequest) {
   request.headers.forEach((value, key) => (negotiatorHeaders[key] = value))
 
   const languages = new Negotiator({ headers: negotiatorHeaders }).languages()
-  return match(languages, locales, defaultLocale)
+  try {
+    return match(languages, locales, defaultLocale)
+  } catch (e) {
+    return defaultLocale
+  }
 }
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  
+  // Custom rule: Always localize admin if not already
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
+    const locale = getLocale(request)
+    const newPathname = `/${locale}${pathname}`
+    const url = request.nextUrl.clone()
+    url.pathname = newPathname
+    return NextResponse.redirect(url)
+  }
+
   const pathnameHasLocale = locales.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   )
   if (pathnameHasLocale) return
 
   const locale = getLocale(request)
-  request.nextUrl.pathname = `/${locale}${pathname}`
-  return NextResponse.redirect(request.nextUrl)
+  const url = request.nextUrl.clone()
+  url.pathname = `/${locale}${pathname}`
+  return NextResponse.redirect(url)
 }
 
 export const config = {
   matcher: [
-    // Skip all internal paths (_next)
-    '/((?!api|_next/static|_next/image|favicon.ico|assets|img|js).*)',
+    // Skip internal paths and assets
+    '/((?!api|_next/static|_next/image|favicon.ico|assets|img|js|admin-assets).*)',
   ],
 }

@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { LayoutDashboard, Users, FileText, Send, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
 import React from "react";
+import "@/app/globals.css";
 
 export const metadata: Metadata = {
   title: "Admin HQ | Cargoo Import",
