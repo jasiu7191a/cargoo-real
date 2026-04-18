@@ -20,7 +20,7 @@ function getLocale(request: NextRequest) {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
-  // DIRECT RULE: Let /admin go straight through
+  // EXPLICIT RULE: Leave the admin folder ALONE
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
     return NextResponse.next()
   }
