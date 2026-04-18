@@ -4,11 +4,11 @@ import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(req: Request) {
   try {
+    // Initialize Resend safely inside the executing scope to avoid build-time crashes
+    const resend = new Resend(process.env.RESEND_API_KEY);
+
     const { leadId, newStatus } = await req.json();
 
     if (!leadId || !newStatus) {
