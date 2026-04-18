@@ -40,9 +40,16 @@ async function runBuild() {
 
         // Migrate and rename the worker precisely
         fs.renameSync(workerPath, `${assetsDir}/_worker.js`);
-        console.log('\n🚀 Master Worker migrated to _worker.js successfully.');
+        
+        // Migrate routes and force Cloudflare to preserve hidden CSS folders
+        if (fs.existsSync('.open-next/_routes.json')) {
+            fs.renameSync('.open-next/_routes.json', `${assetsDir}/_routes.json`);
+        }
+        fs.writeFileSync(`${assetsDir}/.nojekyll`, '');
+
+        console.log('\\n🚀 Master Worker migrated to _worker.js successfully.');
     } else {
-        console.warn('\n⚠️ Warning: worker.js not found in .open-next/');
+        console.warn('\\n⚠️ Warning: worker.js not found in .open-next/');
     }
 
     console.log('\n✨ Success: Build finished! Cloudflare will now recognize your Functions and perfectly serve your Tailwind Styles.');

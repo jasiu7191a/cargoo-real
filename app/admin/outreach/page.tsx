@@ -7,6 +7,7 @@ import { Send, Users, Mail, CheckCircle, Search, Clock } from "lucide-react";
 
 export default function AdminOutreachPage() {
   const [isDrafting, setIsDrafting] = useState(false);
+  const [showCampaignForm, setShowCampaignForm] = useState(false);
 
   return (
     <div className="space-y-10">
@@ -19,8 +20,8 @@ export default function AdminOutreachPage() {
            <Button variant="outline" className="gap-2">
               <Clock size={18} /> History
            </Button>
-           <Button className="gap-2">
-              <Send size={18} /> New Campaign
+           <Button className="gap-2" onClick={() => setShowCampaignForm(!showCampaignForm)}>
+              <Send size={18} /> {showCampaignForm ? "Cancel Creation" : "New Campaign"}
            </Button>
         </div>
       </div>
@@ -40,6 +41,30 @@ export default function AdminOutreachPage() {
         </div>
 
         <div className="lg:col-span-3 space-y-8">
+           {showCampaignForm && (
+              <div className="glass-panel p-8 border-[#ff5500]/30 shadow-[0_10px_40px_rgba(255,85,0,0.1)] transition-all animate-in fade-in slide-in-from-top-4">
+                 <h3 className="text-xl font-black uppercase mb-6 flex items-center gap-2">
+                   <Send size={20} className="text-[#ff5500]" /> Build Automated Campaign
+                 </h3>
+                 <div className="space-y-6">
+                    <div>
+                       <label className="text-xs font-black uppercase text-[#94a3b8] mb-2 block">Campaign Goal & Segment</label>
+                       <select className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:border-[#ff5500] outline-none">
+                          <option>Re-engage Cold Leads (Any Status = NEW)</option>
+                          <option>Target Niche: Fashion Resellers (Keyword Match)</option>
+                          <option>Target Niche: Electronics Importers</option>
+                       </select>
+                    </div>
+                    <Button className="w-full" glow onClick={() => {
+                        alert("Campaign target saved! Connecting to Resend Mailhouse...");
+                        setShowCampaignForm(false);
+                    }}>
+                        Identify Targets & Draft Emails
+                    </Button>
+                 </div>
+              </div>
+           )}
+
            <div className="glass-panel p-8">
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-xl font-bold uppercase">Pending Approval Queue</h3>
@@ -107,4 +132,3 @@ function OutreachDraftItem({ to, subject, preview }: { to: string; subject: stri
     </div>
   );
 }
-
