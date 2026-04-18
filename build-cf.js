@@ -13,24 +13,34 @@ async function runBuild() {
     console.log('\n🚀 Running: npx @opennextjs/cloudflare build');
     execSync('npx @opennextjs/cloudflare build --dangerouslyUseUnsupportedNextVersion', { stdio: 'inherit' });
 
-    // ASSETS FIX: Cloudflare needs static files at the root, not inside /assets
-    const assetsDir = '.open-next/assets';
-    if (fs.existsSync(assetsDir)) {
-        console.log('\n📦 Moving static assets and CSS to root...');
-        const items = fs.readdirSync(assetsDir);
-        for (const item of items) {
-            fs.cpSync(`${assetsDir}/${item}`, `.open-next/${item}`, { recursive: true });
-        }
-        console.log('✅ Found and moved static assets successfully.');
-    }
-
-    // THE MASTER FIX: Rename worker.js to _worker.js for Cloudflare Pages compatibility
+    // THE ULTIMATE OPENNEXT & CLOUDFLARE FIX:
+    // Move all server code and the worker directly into the static `assets` cluster.
+    // This solves all relative dependency pathing issues while guaranteeing Cloudflare 
+    // deploys the `_next` CSS files correctly to the root of KV without ignoring them.
     const workerPath = '.open-next/worker.js';
-    const finalPath = '.open-next/_worker.js';
+    const assetsDir = '.open-next/assets';
+
     if (fs.existsSync(workerPath)) {
-        console.log('\n🔧 Renaming worker.js -> _worker.js...');
-        fs.renameSync(workerPath, finalPath);
-        console.log('\n✅ Successfully renamed to _worker.js');
+        console.log('\\n🔧 Migrating OpenNext Server Bundle into assets/');
+        
+        // Ensure assets directory exists
+        if (!fs.existsSync(assetsDir)) fs.mkdirSync(assetsDir, { recursive: true });
+
+        // List of core OpenNext server folders to migrate
+        const serverFolders = ['cloudflare', 'server-functions', '.build', 'middleware', 'cache'];
+        
+        for (const folder of serverFolders) {
+            const src = `.open-next/${folder}`;
+            const dest = `${assetsDir}/${folder}`;
+            if (fs.existsSync(src)) {
+                fs.cpSync(src, dest, { recursive: true });
+                console.log(`✅ Migrated /${folder}`);
+            }
+        }
+
+        // Migrate and rename the worker precisely
+        fs.renameSync(workerPath, `${assetsDir}/_worker.js`);
+        console.log('\n🚀 Master Worker migrated to _worker.js successfully.');
     } else {
         console.warn('\n⚠️ Warning: worker.js not found in .open-next/');
     }
