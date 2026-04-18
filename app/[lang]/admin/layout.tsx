@@ -1,10 +1,7 @@
 import { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
 import { LayoutDashboard, Users, FileText, Send, Settings, LogOut } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-
-const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Admin HQ | Cargoo Import",
@@ -21,7 +18,7 @@ export default function AdminLayout({
   const lang = params.lang || 'en';
 
   return (
-    <div className={`${jakarta.className} flex h-screen bg-[#050505] text-white`}>
+    <div className="flex h-screen bg-[#050505] text-white">
       <aside className="w-72 border-r border-white/10 bg-[#0a0a0a] flex flex-col pt-10 px-6">
         <div className="flex items-center gap-3 px-4 mb-12">
           <div className="w-10 h-10 bg-[#ff5500] rounded-2xl flex items-center justify-center text-black font-black italic shadow-[0_0_15px_rgba(255,85,0,0.3)]">
