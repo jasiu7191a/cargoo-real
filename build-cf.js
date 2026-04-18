@@ -10,13 +10,21 @@ async function runBuild() {
 
     console.log('\n--- Starting Cloudflare Build ---');
     
-    // We only need to run the build. 
-    // Cloudflare Pages will automatically deploy the '.open-next' folder 
-    // once this script finishes successfully.
     console.log('\n🚀 Running: npx @opennextjs/cloudflare build');
     execSync('npx @opennextjs/cloudflare build --dangerouslyUseUnsupportedNextVersion', { stdio: 'inherit' });
 
-    console.log('\n✅ Success: Build finished! Cloudflare will now deploy the results.');
+    // THE MASTER FIX: Rename worker.js to _worker.js for Cloudflare Pages compatibility
+    const workerPath = '.open-next/worker.js';
+    const finalPath = '.open-next/_worker.js';
+    if (fs.existsSync(workerPath)) {
+        console.log('\n🔧 Renaming worker.js -> _worker.js...');
+        fs.renameSync(workerPath, finalPath);
+        console.log('\n✅ Successfully renamed to _worker.js');
+    } else {
+        console.warn('\n⚠️ Warning: worker.js not found in .open-next/');
+    }
+
+    console.log('\n✨ Success: Build finished! Cloudflare will now recognize your Functions.');
   } catch (error) {
     console.error('\n❌ Build failed:');
     console.error(error.message);
