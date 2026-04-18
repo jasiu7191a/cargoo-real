@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { getOpenAI, SOURCING_GUIDE_PROMPT } from "@/lib/openai";
+import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -43,8 +44,21 @@ export async function POST(req: Request) {
     }
 
     // 3. Parse and return the structured content
-    const content = JSON.parse(result);
-    return NextResponse.json(content);
+    const contentData = JSON.parse(result);
+
+    // 4. Automatically save the generated artifact to the database as a DRAFT
+    const savedPost = await prisma.blogPost.create({
+      data: {
+        title: contentData.title,
+        slug: contentData.slug,
+        metaDescription: contentData.metaDescription,
+        content: contentData.content,
+        targetKeyword: keyword,
+        status: "DRAFT",
+      },
+    });
+
+    return NextResponse.json({ success: true, post: savedPost });
   } catch (error: any) {
     console.error("AI Generation Error:", error);
     return NextResponse.json(

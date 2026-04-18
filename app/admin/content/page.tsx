@@ -1,23 +1,15 @@
-"use client";
 export const dynamic = 'force-dynamic';
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { Sparkles, FileText, Globe, Search, ArrowRight } from "lucide-react";
+import React from "react";
+import prisma from "@/lib/prisma";
+import { Sparkles, FileText, ArrowRight } from "lucide-react";
+import { ContentGenerator } from "../view-components/content-generator";
 
-export default function AdminContentPage() {
-  const [topic, setTopic] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-
-  const handleGenerate = () => {
-    setIsGenerating(true);
-    // In actual implementation, we'd call the api/admin/content/generate route
-    setTimeout(() => {
-      setIsGenerating(false);
-      alert("SEO Draft generated! Reviewing in real-time...");
-    }, 2000);
-  };
+export default async function AdminContentPage() {
+  const recentPosts = await prisma.blogPost.findMany({
+    orderBy: { createdAt: "desc" },
+    take: 10,
+  });
 
   return (
     <div className="space-y-10">
@@ -34,22 +26,7 @@ export default function AdminContentPage() {
               <h3 className="text-xl font-bold uppercase mb-6 flex items-center gap-2">
                 <Sparkles size={20} className="text-[#ff5500]" /> New Article
               </h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-black uppercase text-[#94a3b8] mb-2 block">Target Topic / Keyword</label>
-                  <Input 
-                    placeholder="e.g. Is it worth importing Nike from China?" 
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                  />
-                </div>
-                <div className="pt-4">
-                   <p className="text-xs text-[#94a3b8] mb-4">Our AI will generate a title, meta description, and long-form markdown content optimized for conversion.</p>
-                   <Button className="w-full" onClick={handleGenerate} disabled={isGenerating || !topic}>
-                     {isGenerating ? "Analyzing..." : "Generate Draft"} <ArrowRight size={18} />
-                   </Button>
-                </div>
-              </div>
+              <ContentGenerator />
            </div>
 
            <div className="glass-panel p-8 bg-[#ff5500]/5 border-[#ff5500]/20">
@@ -81,9 +58,18 @@ export default function AdminContentPage() {
            </div>
 
            <div className="space-y-4">
-              <ArticleListItem title="The 2026 Guide to Importing High-End Fashion" status="PUBLISHED" date="2 hours ago" />
-              <ArticleListItem title="Why AliExpress prices are rising and how to bypass them" status="DRAFT" date="Yesterday" />
-              <ArticleListItem title="Verified Sourcing: 5 Signs of a Scam Supplier" status="PUBLISHED" date="Apr 12, 2026" />
+              {recentPosts.length === 0 ? (
+                <div className="p-8 text-center text-[#94a3b8] italic">No AI artifacts built yet. Generate one to the left!</div>
+              ) : (
+                recentPosts.map((post: any) => (
+                  <ArticleListItem 
+                    key={post.id}
+                    title={post.title} 
+                    status={post.status} 
+                    date={new Date(post.createdAt).toLocaleDateString()} 
+                  />
+                ))
+              )}
            </div>
         </div>
       </div>
@@ -99,7 +85,7 @@ function ArticleListItem({ title, status, date }: { title: string; status: strin
            <FileText size={20} />
         </div>
         <div>
-           <div className="font-bold text-sm text-white group-hover:text-[#ff5500] transition-colors">{title}</div>
+           <div className="font-bold text-sm text-white group-hover:text-[#ff5500] transition-colors line-clamp-1">{title}</div>
            <div className="text-xs text-[#94a3b8]">{date}</div>
         </div>
       </div>
@@ -114,4 +100,3 @@ function ArticleListItem({ title, status, date }: { title: string; status: strin
     </div>
   );
 }
-

@@ -1,6 +1,7 @@
 import React from "react";
 import prisma from "@/lib/prisma";
 import { Search, Filter, MoreHorizontal, Eye, Mail, MessageSquare } from "lucide-react";
+import { LeadStatusDropdown } from "../view-components/lead-status-dropdown";
 
 export const dynamic = "force-dynamic";
 
@@ -62,16 +63,7 @@ export default async function AdminLeadsPage() {
                   <div className="text-sm font-medium">{lead.user?.email}</div>
                 </td>
                 <td className="p-6">
-                   <select 
-                     defaultValue={lead.status}
-                     className="bg-white/5 border border-white/10 rounded-lg text-[10px] font-black uppercase px-3 py-1 text-white focus:outline-none focus:border-[#ff5500]"
-                   >
-                     <option value="NEW">New</option>
-                     <option value="PROCESSING">Processing</option>
-                     <option value="QUOTED">Quoted</option>
-                     <option value="PAID">Paid</option>
-                     <option value="SHIPPED">Shipped</option>
-                   </select>
+<LeadStatusDropdown leadId={lead.id} initialStatus={lead.status} />
                 </td>
                 <td className="p-6 text-xs text-[#94a3b8]">
                   {new Date(lead.createdAt).toLocaleString()}
