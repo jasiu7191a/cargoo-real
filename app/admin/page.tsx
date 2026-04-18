@@ -1,7 +1,7 @@
 import { Metadata } from "next";
-import { AdminLeadsTable } from "./components/AdminLeadsTable";
-import { DashboardHeader } from "./components/DashboardHeader";
-import { StatsCards } from "./components/StatsCards";
+import { AdminLeadsTable } from "./view-components/admin-leads-table";
+import { DashboardHeader } from "./view-components/dashboard-header";
+import { StatsCards } from "./view-components/stats-cards";
 
 // THE DYNAMIC SHIELD: Resolves 522 errors by forcing runtime-only rendering
 export const dynamic = 'force-dynamic';
