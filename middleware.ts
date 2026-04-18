@@ -20,13 +20,9 @@ function getLocale(request: NextRequest) {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
-  // Custom rule: Always localize admin if not already
+  // DIRECT RULE: Let /admin go straight through
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
-    const locale = getLocale(request)
-    const newPathname = `/${locale}${pathname}`
-    const url = request.nextUrl.clone()
-    url.pathname = newPathname
-    return NextResponse.redirect(url)
+    return NextResponse.next()
   }
 
   const pathnameHasLocale = locales.some(
