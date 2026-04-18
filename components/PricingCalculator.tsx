@@ -2,11 +2,16 @@
 
 import React, { useState } from "react";
 import { Button } from "./ui/Button";
+import { Shield, Globe, Lock } from "lucide-react";
 
 export function PricingCalculator() {
   const [productCost, setProductCost] = useState<number | "">("");
   const [weight, setWeight] = useState<number | "">("");
   const [shippingMethod, setShippingMethod] = useState("air_express");
+  const [productName, setProductName] = useState("");
+  const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [results, setResults] = useState<{
     product: number;
     shipping: number;
@@ -35,6 +40,49 @@ export function PricingCalculator() {
       total: total
     });
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!productName || !email) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productName,
+          email,
+          quantity: 1,
+          targetPrice: results?.total,
+          notes: `Calculator Estimate: Cost €${productCost}, Weight ${weight}kg, Method ${shippingMethod}`
+        })
+      });
+
+      if (res.ok) {
+        setSubmitted(true);
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (submitted) {
+    return (
+      <section className="py-20 bg-[#111111]" id="pricing">
+        <div className="container max-w-[800px]">
+          <div className="glass-panel p-16 text-center">
+            <div className="w-16 h-16 bg-[#00c853]/20 text-[#00c853] rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">✓</div>
+            <h2 className="text-3xl font-black uppercase mb-4">Request Received!</h2>
+            <p className="text-[#94a3b8] mb-8">Our sourcing agents are already looking for your "{productName}". We will contact you at {email} within 24 hours.</p>
+            <Button onClick={() => setSubmitted(false)}>Make Another Request</Button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 bg-[#111111]" id="pricing">
@@ -68,24 +116,26 @@ export function PricingCalculator() {
                 onChange={(e) => setWeight(e.target.value === "" ? "" : Number(e.target.value))}
               />
             </div>
-            <div className="md:col-span-2 space-y-2">
-              <label className="text-xs font-bold uppercase text-[#94a3b8]">Shipping Method</label>
-              <select 
-                className="w-full bg-[#111] border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-[#2962ff] transition-all"
-                value={shippingMethod}
-                onChange={(e) => setShippingMethod(e.target.value)}
-              >
-                <option value="air_standard">Standard Air (€15/kg)</option>
-                <option value="air_express">Express Air (€18/kg)</option>
-              </select>
-            </div>
+            {!results && (
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-xs font-bold uppercase text-[#94a3b8]">Shipping Method</label>
+                <select 
+                  className="w-full bg-[#111] border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-[#2962ff] transition-all"
+                  value={shippingMethod}
+                  onChange={(e) => setShippingMethod(e.target.value)}
+                >
+                  <option value="air_standard">Standard Air (€15/kg)</option>
+                  <option value="air_express">Express Air (€18/kg)</option>
+                </select>
+              </div>
+            )}
           </div>
 
-          <Button className="w-full" size="lg" onClick={calculate}>Calculate Estimate</Button>
-
-          {results && (
-            <div className="mt-12 pt-12 border-t border-white/10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="space-y-4">
+          {!results ? (
+            <Button className="w-full" size="lg" onClick={calculate}>Calculate Estimate</Button>
+          ) : (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="space-y-4 mb-12 bg-white/5 p-8 rounded-2xl border border-white/10">
                 <div className="flex justify-between text-lg">
                   <span className="text-[#94a3b8]">Product Cost</span>
                   <span className="text-white font-bold">€{results.product.toFixed(2)}</span>
@@ -104,9 +154,58 @@ export function PricingCalculator() {
                   <span className="text-[#ff5500]">€{results.total.toFixed(2)}</span>
                 </div>
               </div>
-              <p className="mt-8 text-xs text-[#94a3b8] italic text-center">
-                *This is a rough estimate. Actual costs vary based on volumetric weight and tariffs.
-              </p>
+
+              <div className="space-y-6 border-t border-white/10 pt-10">
+                <div className="text-center mb-6">
+                  <h3 className="text-xl font-bold uppercase italic shadow-orange-500">Ready to start?</h3>
+                  <p className="text-sm text-[#94a3b8]">Lock in this estimate and let us find the suppliers.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   <input 
+                     className="bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-[#ff5500]" 
+                     placeholder="Product Name (e.g. iPhone 15)" 
+                     value={productName}
+                     onChange={e => setProductName(e.target.value)}
+                   />
+                   <input 
+                     className="bg-white/5 border border-white/10 rounded-xl p-4 text-white focus:outline-none focus:border-[#ff5500]" 
+                     placeholder="Your Email" 
+                     value={email}
+                     onChange={e => setEmail(e.target.value)}
+                   />
+                </div>
+                <Button 
+                  className="w-full bg-[#ff5500] hover:bg-[#ff7700]" 
+                  size="lg" 
+                  onClick={handleSubmit}
+                  isLoading={isSubmitting}
+                >
+                  Submit Official Sourcing Request
+                </Button>
+
+                {/* Trust Badges Row */}
+                <div className="flex flex-wrap items-center justify-center gap-6 mt-8 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-500">
+                   <div className="flex items-center gap-2">
+                      <Shield size={14} className="text-[#00c853]" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">EU Compliant</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                      <Globe size={14} className="text-[#2962ff]" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Global Sourcing</span>
+                   </div>
+                   <div className="flex items-center gap-2">
+                      <Lock size={14} className="text-[#ff5500]" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Secure Escrow</span>
+                   </div>
+                </div>
+
+                <button 
+                  className="w-full text-xs text-[#94a3b8] hover:text-white underline mt-6"
+                  onClick={() => setResults(null)}
+                >
+                  ← Reset Calculator
+                </button>
+              </div>
             </div>
           )}
         </div>

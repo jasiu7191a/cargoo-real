@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/Navbar";
-import { Hero, BentoGrid } from "@/components/LandingPage";
+export const dynamic = 'force-dynamic';
+import { Hero, BentoGrid, SourcingResources, ClientTestimonials } from "@/components/LandingPage";
 import { PricingCalculator } from "@/components/PricingCalculator";
 import { Footer } from "@/components/Footer";
 import { CheckCircle, Truck, ShieldCheck, Zap } from "lucide-react";
@@ -64,6 +65,8 @@ export default function Home() {
       </section>
 
       <PricingCalculator />
+      <SourcingResources />
+      <ClientTestimonials />
 
       {/* Trust Signal Section */}
       <section className="py-24 bg-[#050505]">

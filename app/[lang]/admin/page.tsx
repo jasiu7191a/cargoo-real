@@ -6,13 +6,16 @@ export const dynamic = "force-dynamic";
 
 async function getStats() {
   const totalLeads = await prisma.lead.count();
+  const activeSourcing = await prisma.lead.count({ where: { status: 'PROCESSING' } });
+  const confirmedOrders = await prisma.lead.count({ where: { status: 'PAID' } });
+  
   const recentLeads = await prisma.lead.findMany({
     take: 5,
     orderBy: { createdAt: "desc" },
     include: { user: true }
   });
   
-  return { totalLeads, recentLeads };
+  return { totalLeads, activeSourcing, confirmedOrders, recentLeads };
 }
 
 export default async function AdminDashboard() {

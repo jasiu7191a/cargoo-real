@@ -8,7 +8,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-[#050505] text-white">
+    <div className="flex min-h-screen text-white bg-[#050505]">
       {/* Admin Sidebar */}
       <aside className="w-64 border-r border-white/10 bg-[#0b0b0b] flex flex-col pt-8">
         <div className="px-6 mb-10 flex items-center gap-2">
@@ -26,7 +26,7 @@ export default function AdminLayout({
         </nav>
 
         <div className="p-4 border-t border-white/10 mt-auto">
-          <AdminNavLink href="/settings" icon={<Settings size={18} />} label="Settings" />
+          <AdminNavLink href="/admin/settings" icon={<Settings size={18} />} label="Settings" />
           <button className="flex items-center gap-3 w-full px-4 py-3 text-sm font-bold text-[#94a3b8] hover:text-white transition-all rounded-xl hover:bg-white/5">
             <LogOut size={18} /> Logout
           </button>
