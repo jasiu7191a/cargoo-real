@@ -28,6 +28,12 @@ async function runBuild() {
         }
     }
 
+    // MANDATORY CLOUDFLARE BYPASS: 
+    // If the Cloudflare dashboard is NOT set to the "Next.js" framework preset, 
+    // it will ruthlessly delete the `_next` folder during upload. 
+    // `.nojekyll` forces Cloudflare to ingest all underscore files safely!
+    fs.writeFileSync('.open-next/.nojekyll', '');
+
     // 2. Rename worker.js to _worker.js so Cloudflare Pages recognizes it
     if (fs.existsSync('.open-next/worker.js')) {
         fs.renameSync('.open-next/worker.js', '.open-next/_worker.js');
