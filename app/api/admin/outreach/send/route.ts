@@ -89,11 +89,18 @@ export async function POST(req: Request) {
        return NextResponse.json({ error: sendResult.error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, message: "Email sent successfully" });
+    // 4. PERSIST THE STATUS CHANGE IN THE DATABASE
+    // This solves the state-reverting issue on refresh.
+    await prisma.lead.update({
+      where: { id: leadId },
+      data: { status: newStatus }
+    });
+
+    return NextResponse.json({ success: true, message: "Email sent and status updated" });
   } catch (error: any) {
     console.error("Outreach API Error:", error);
     return NextResponse.json(
-      { error: "Failed to send outreach email", details: error.message },
+      { error: "Failed to process outreach", details: error.message },
       { status: 500 }
     );
   }
