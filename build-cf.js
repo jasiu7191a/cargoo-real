@@ -24,15 +24,22 @@ async function runBuild() {
     console.log('\n🚀 Running: npx @opennextjs/cloudflare build');
     execSync('npx @opennextjs/cloudflare build --dangerouslyUseUnsupportedNextVersion', { stdio: 'inherit' });
 
-    // 4. Post-build validation: ensure _worker.js exists
-    const workerPath = path.join('.open-next', '_worker.js');
-    if (!fs.existsSync(workerPath)) {
+    // 4. OpenNext 1.19 outputs `worker.js` but Cloudflare Pages requires `_worker.js`
+    //    Rename it so Cloudflare can find the entrypoint.
+    const rawWorker  = path.join('.open-next', 'worker.js');
+    const finalWorker = path.join('.open-next', '_worker.js');
+
+    if (fs.existsSync(rawWorker)) {
+      fs.renameSync(rawWorker, finalWorker);
+      console.log('✓ Renamed worker.js  →  _worker.js');
+    } else if (fs.existsSync(finalWorker)) {
+      console.log('✓ _worker.js already present (no rename needed)');
+    } else {
       throw new Error(
-        '_worker.js was NOT generated in .open-next/. ' +
-        'Check that @opennextjs/cloudflare >= 1.0 is installed and wrangler.json has "pages_build_output_dir": ".open-next".'
+        'Neither worker.js nor _worker.js found in .open-next/. ' +
+        'The OpenNext build may have failed silently.'
       );
     }
-    console.log('✓ _worker.js found at', workerPath);
 
     // 5. Ensure .nojekyll exists so Cloudflare doesn't strip _next assets
     fs.writeFileSync('.open-next/.nojekyll', '');
