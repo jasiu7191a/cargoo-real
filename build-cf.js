@@ -13,40 +13,24 @@ async function runBuild() {
     console.log('\n🚀 Running: npx @opennextjs/cloudflare build');
     execSync('npx @opennextjs/cloudflare build --dangerouslyUseUnsupportedNextVersion', { stdio: 'inherit' });
 
-    // THE ULTIMATE OPENNEXT & CLOUDFLARE FIX:
-    // Move all server code and the worker directly into the static `assets` cluster.
-    // This solves all relative dependency pathing issues while guaranteeing Cloudflare 
-    // deploys the `_next` CSS files correctly to the root of KV without ignoring them.
-    const workerPath = '.open-next/worker.js';
-    const assetsDir = '.open-next/assets';
-
-    if (fs.existsSync(workerPath)) {
-        console.log('\n🔧 Migrating OpenNext Server Bundle into assets/');
-        
-        // Ensure assets directory exists
-        if (!fs.existsSync(assetsDir)) fs.mkdirSync(assetsDir, { recursive: true });
-
-        // List of core OpenNext server folders to migrate
-        const serverFolders = ['cloudflare', 'server-functions', '.build', 'middleware', 'cache'];
-        
-        for (const folder of serverFolders) {
-            const src = `.open-next/${folder}`;
-            const dest = `${assetsDir}/${folder}`;
-            if (fs.existsSync(src)) {
-                fs.cpSync(src, dest, { recursive: true });
-                console.log(`✅ Migrated /${folder}`);
-            }
+    // THE FINAL OPENNEXT & CLOUDFLARE PAGES FIX:
+    // Cloudflare Pages expects the worker and static files at the absolute root of the build output.
+    // OpenNext outputs static files into `.open-next/assets/`, causing 404s.
+    // We must flatten `assets/` into `.open-next/` and rename the worker.
+    
+    // 1. Flatten static assets out of assets/ directly into .open-next/
+    const srcDir = '.open-next/assets';
+    if (fs.existsSync(srcDir)) {
+        console.log('\n📦 Flattening Cloudflare Static Assets to root...');
+        const items = fs.readdirSync(srcDir);
+        for (const item of items) {
+             fs.cpSync(`${srcDir}/${item}`, `.open-next/${item}`, { recursive: true });
         }
+    }
 
-        // Migrate and rename the worker precisely
-        fs.renameSync(workerPath, `${assetsDir}/_worker.js`);
-        
-        // Migrate routes and force Cloudflare to preserve hidden CSS folders
-        if (fs.existsSync('.open-next/_routes.json')) {
-            fs.renameSync('.open-next/_routes.json', `${assetsDir}/_routes.json`);
-        }
-        fs.writeFileSync(`${assetsDir}/.nojekyll`, '');
-
+    // 2. Rename worker.js to _worker.js so Cloudflare Pages recognizes it
+    if (fs.existsSync('.open-next/worker.js')) {
+        fs.renameSync('.open-next/worker.js', '.open-next/_worker.js');
         console.log('\n🚀 Master Worker migrated to _worker.js successfully.');
     } else {
         console.warn('\n⚠️ Warning: worker.js not found in .open-next/');
