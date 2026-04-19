@@ -52,7 +52,7 @@ export default function AdminOutreachPage() {
                  </div>
                  <div className="border-l-2 border-white/10 pl-6 space-y-1">
                     <p className="text-[10px] font-black uppercase text-white/40">Yesterday, 09:15</p>
-                    <p className="text-sm font-bold opacity-60">Status change: lead_8829 -> QUALIFIED</p>
+                    <p className="text-sm font-bold opacity-60">Status change: lead_8829 {"->"} QUALIFIED</p>
                  </div>
                  <div className="border-l-2 border-white/10 pl-6 space-y-1">
                     <p className="text-[10px] font-black uppercase text-white/40">18 Apr, 23:59</p>
