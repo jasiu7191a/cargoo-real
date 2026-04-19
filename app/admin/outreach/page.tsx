@@ -5,8 +5,17 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Send, Users, Mail, CheckCircle, Search, Clock, Sparkles, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
 export default function AdminOutreachPage() {
+  return (
+    <Suspense fallback={<div className="p-20 text-center animate-pulse font-black uppercase tracking-widest text-[#94a3b8]">Initializing Outreach Engine...</div>}>
+      <OutreachContent />
+    </Suspense>
+  );
+}
+
+function OutreachContent() {
   const [isDrafting, setIsDrafting] = useState(false);
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
