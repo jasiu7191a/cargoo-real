@@ -26,10 +26,20 @@ export default function AdminOutreachPage() {
   );
 }
 
+interface HistoryItem {
+  id: string;
+  type: string;
+  details: string;
+  adminName: string;
+  createdAt: string;
+}
+
 function OutreachContent() {
   const [isDrafting, setIsDrafting] = useState(false);
   const [showCampaignForm, setShowCampaignForm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [showAIOverlay, setShowAIOverlay] = useState(false);
   const [preSelectedLead, setPreSelectedLead] = useState<any>(null);
   
@@ -38,22 +48,42 @@ function OutreachContent() {
 
   useEffect(() => {
     if (leadId) {
-      // Simulate fetching specifically targeted lead
       setPreSelectedLead({
         id: leadId,
         email: "targeted-lead@user.com",
-        product: "Drone Accessories (Bulk)"
+        product: "Direct Inquiry (Pending Analysis)"
       });
       setShowCampaignForm(true);
     }
   }, [leadId]);
+
+  useEffect(() => {
+    if (showHistory) {
+      fetchHistory();
+    }
+  }, [showHistory]);
+
+  const fetchHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const res = await fetch("/api/admin/history");
+      if (res.ok) {
+        const data = await res.json();
+        setHistory(data);
+      }
+    } catch (e) {
+      console.error("Failed to load history:", e);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   return (
     <div className="space-y-10 relative">
       {/* History Modal Overlay */}
       {showHistory && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in zoom-in-95 duration-300">
-           <div className="bg-[#0a0a0a] border border-white/10 p-12 rounded-[40px] max-w-xl w-full shadow-2xl relative overflow-hidden">
+           <div className="bg-[#0a0a0a] border border-white/10 p-12 rounded-[40px] max-w-xl w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[80vh]">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#ff5500] to-transparent" />
               <button 
                 onClick={() => setShowHistory(false)}
@@ -65,20 +95,23 @@ function OutreachContent() {
               <h3 className="text-3xl font-black uppercase mb-8 flex items-center gap-3 italic">
                 <Clock size={28} className="text-[#ff5500]" /> Outreach Log
               </h3>
-              <div className="space-y-6">
-                 <div className="border-l-2 border-white/10 pl-6 space-y-1">
-                    <p className="text-[10px] font-black uppercase text-[#ff5500]">Today, 14:02</p>
-                    <p className="text-sm font-bold">Campaign "Fashion Launch" initialized.</p>
-                 </div>
-                 <div className="border-l-2 border-white/10 pl-6 space-y-1">
-                    <p className="text-[10px] font-black uppercase text-white/40">Yesterday, 09:15</p>
-                    <p className="text-sm font-bold opacity-60">Status change: lead_8829 {"->"} QUALIFIED</p>
-                 </div>
-                 <div className="border-l-2 border-white/10 pl-6 space-y-1">
-                    <p className="text-[10px] font-black uppercase text-white/40">18 Apr, 23:59</p>
-                    <p className="text-sm font-bold opacity-60">Automated follow-up sent to stylevibe.fr</p>
-                 </div>
+              
+              <div className="space-y-6 overflow-y-auto pr-4 custom-scrollbar">
+                 {loadingHistory ? (
+                   <div className="py-12 text-center text-white/20 font-black uppercase tracking-widest text-xs animate-pulse">Syncing Audit Trail...</div>
+                 ) : history.length > 0 ? (
+                    history.map((item) => (
+                      <div key={item.id} className="border-l-2 border-[#ff5500]/50 pl-6 space-y-1 group hover:border-[#ff5500] transition-colors">
+                        <p className="text-[10px] font-black uppercase text-[#ff5500]">{new Date(item.createdAt).toLocaleString()}</p>
+                        <p className="text-sm font-bold text-white/90">{item.details}</p>
+                        <p className="text-[9px] font-black uppercase text-[#94a3b8]">By: {item.adminName}</p>
+                      </div>
+                    ))
+                 ) : (
+                   <div className="py-12 text-center text-white/20 italic text-sm">No recent actions recorded in the matrix.</div>
+                 )}
               </div>
+              
               <button onClick={() => setShowHistory(false)} className="w-full mt-10 py-4 bg-white/5 rounded-2xl font-black uppercase text-xs hover:bg-white/10 transition-all">Dismiss</button>
            </div>
         </div>

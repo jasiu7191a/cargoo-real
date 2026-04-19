@@ -90,10 +90,18 @@ export async function POST(req: Request) {
     }
 
     // 4. PERSIST THE STATUS CHANGE IN THE DATABASE
-    // This solves the state-reverting issue on refresh.
     await prisma.lead.update({
       where: { id: leadId },
       data: { status: newStatus }
+    });
+
+    // 5. LOG THE ACTION FOR HISTORY
+    await prisma.adminAction.create({
+      data: {
+        type: "EMAIL_SENT",
+        details: `Sent ${newStatus} email to ${lead.user.email} (Item: ${lead.productName})`,
+        adminName: "Senior Admin" // In a real app, this would come from session.user.name
+      }
     });
 
     return NextResponse.json({ success: true, message: "Email sent and status updated" });

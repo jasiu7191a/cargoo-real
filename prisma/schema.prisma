@@ -70,3 +70,12 @@ model Tag {
   name  String @unique
   leads Lead[]
 }
+
+model AdminAction {
+  id        String   @id @default(cuid())
+  type      String   // E.g., "EMAIL_SENT", "STATUS_CHANGE", "CAMPAIGN_CREATED"
+  details   String?  // Description or target lead
+  adminId   String?
+  adminName String   @default("System")
+  createdAt DateTime @default(now())
+}

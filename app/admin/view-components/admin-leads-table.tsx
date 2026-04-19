@@ -12,6 +12,8 @@ interface Lead {
   email: string;
   product: string;
   status: string;
+  quantity: number;
+  notes: string | null;
   createdAt: string;
 }
 
@@ -53,7 +55,8 @@ export function AdminLeadsTable() {
          // Also update local state for immediate feedback
          setLeads(prev => prev.map(l => l.id === id ? { ...l, status: newStatus } : l));
       } else {
-         alert("Failed to update status.");
+         const err = await res.json();
+         alert("Failed to update status: " + (err.error || "Unknown error"));
       }
     } catch (e) {
       alert("Network error during status update.");
@@ -67,7 +70,12 @@ export function AdminLeadsTable() {
   );
 
   if (loading) {
-    return <div className="p-8 text-center text-white/50 animate-pulse font-black uppercase tracking-widest text-xs">Accessing Database...</div>;
+    return (
+      <div className="h-64 flex flex-col items-center justify-center space-y-4">
+        <div className="w-12 h-12 border-4 border-[#ff5500]/20 border-t-[#ff5500] rounded-full animate-spin" />
+        <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] animate-pulse">Establishing Secure Uplink...</div>
+      </div>
+    );
   }
 
   return (
@@ -75,7 +83,9 @@ export function AdminLeadsTable() {
       {/* Quick-View Modal Overlay */}
       {selectedLead && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-           <div className="bg-[#0a0a0a] border border-white/10 p-10 rounded-[40px] max-w-2xl w-full shadow-[0_20px_60px_rgba(0,0,0,1)] relative">
+           <div className="bg-[#0a0a0a] border border-white/10 p-10 rounded-[40px] max-w-2xl w-full shadow-[0_20px_60px_rgba(0,0,0,1)] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-[#ff5500]/5 blur-[100px] -z-10" />
+              
               <button 
                 onClick={() => setSelectedLead(null)}
                 className="absolute top-8 right-8 text-[#94a3b8] hover:text-white transition-colors"
@@ -93,20 +103,32 @@ export function AdminLeadsTable() {
                  </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-8 mb-10">
+              <div className="grid grid-cols-2 gap-8 mb-8">
                  <div className="space-y-1">
                     <label className="text-[10px] font-black uppercase text-[#ff5500] tracking-widest">Customer</label>
                     <p className="text-lg font-bold">{selectedLead.name}</p>
                     <p className="text-sm text-[#94a3b8]">{selectedLead.email}</p>
                  </div>
-                 <div className="space-y-1">
-                    <label className="text-[10px] font-black uppercase text-[#ff5500] tracking-widest">Submission Date</label>
-                    <p className="text-lg font-bold">{new Date(selectedLead.createdAt).toLocaleString()}</p>
+                 <div className="space-y-1 text-right">
+                    <label className="text-[10px] font-black uppercase text-[#ff5500] tracking-widest">Log Date</label>
+                    <p className="text-lg font-bold">{new Date(selectedLead.createdAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-[#94a3b8]">{new Date(selectedLead.createdAt).toLocaleTimeString()}</p>
                  </div>
-                 <div className="col-span-2 space-y-1">
-                    <label className="text-[10px] font-black uppercase text-[#ff5500] tracking-widest">Product Inquiry</label>
+                 <div className="col-span-1 space-y-1">
+                    <label className="text-[10px] font-black uppercase text-[#ff5500] tracking-widest">Target Item</label>
                     <p className="text-xl font-black uppercase italic text-white/90">{selectedLead.product}</p>
                  </div>
+                 <div className="col-span-1 space-y-1 text-right">
+                    <label className="text-[10px] font-black uppercase text-[#ff5500] tracking-widest">Quantity</label>
+                    <p className="text-2xl font-black text-white">{selectedLead.quantity || 1} units</p>
+                 </div>
+                 
+                 {selectedLead.notes && (
+                   <div className="col-span-2 space-y-1 bg-white/[0.03] p-4 rounded-2xl border border-white/5">
+                      <label className="text-[10px] font-black uppercase text-[#ff5500] tracking-widest">Agent Notes / Inbound Message</label>
+                      <p className="text-sm text-white/70 leading-relaxed italic">"{selectedLead.notes}"</p>
+                   </div>
+                 )}
               </div>
 
               <div className="flex gap-4">

@@ -24,7 +24,10 @@ export async function GET() {
         email: lead.user?.email || lead.notes?.match(/Email: ([\w.-]+@[\w.-]+\.\w+)/)?.[1] || "No Email",
         product: lead.productName,
         status: lead.status,
-        createdAt: lead.createdAt.toISOString() // Explicitly serialize to string for Edge
+        quantity: lead.quantity,
+        targetPrice: lead.targetPrice,
+        notes: lead.notes,
+        createdAt: lead.createdAt.toISOString()
     }));
 
     return NextResponse.json(formattedLeads);
