@@ -1,34 +1,46 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
+const path = require('path');
 
 async function runBuild() {
   try {
-    console.log('\n--- Cleaning previous builds ---');
+    // 1. Clean previous build
+    console.log('\n--- Cleaning previous build ---');
     if (fs.existsSync('.open-next')) {
-        fs.rmSync('.open-next', { recursive: true, force: true });
+      fs.rmSync('.open-next', { recursive: true, force: true });
+      console.log('✓ Cleaned .open-next');
     }
 
-    // Ensure database is in sync with schema before build
-    console.log('\n🗄️ Syncing Database Schema: npx prisma db push --accept-data-loss');
+    // 2. Sync DB schema (new AdminAction table etc.)
+    console.log('\n🗄️  Syncing Database Schema...');
     try {
       execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
+      console.log('✓ Schema synced');
     } catch (dbErr) {
-      console.warn('⚠️ Warning: Prisma DB Push failed. Check your DATABASE_URL connectivity.');
+      console.warn('⚠️  Prisma DB push failed — check DATABASE_URL. Continuing...');
     }
 
-    // Core build command execution
+    // 3. Run the OpenNext Cloudflare build
     console.log('\n🚀 Running: npx @opennextjs/cloudflare build');
     execSync('npx @opennextjs/cloudflare build --dangerouslyUseUnsupportedNextVersion', { stdio: 'inherit' });
 
-    // In OpenNext 1.19+, the .open-next folder is designed for Cloudflare.
-    // It contains the _worker.js and assets/ directory.
-    // Cloudflare Pages expects the output dir to contain either a _worker.js 
-    // or a folder of static files. 
-    
-    console.log('\n✨ Success: Standard OpenNext build complete.');
+    // 4. Post-build validation: ensure _worker.js exists
+    const workerPath = path.join('.open-next', '_worker.js');
+    if (!fs.existsSync(workerPath)) {
+      throw new Error(
+        '_worker.js was NOT generated in .open-next/. ' +
+        'Check that @opennextjs/cloudflare >= 1.0 is installed and wrangler.json has "pages_build_output_dir": ".open-next".'
+      );
+    }
+    console.log('✓ _worker.js found at', workerPath);
+
+    // 5. Ensure .nojekyll exists so Cloudflare doesn't strip _next assets
+    fs.writeFileSync('.open-next/.nojekyll', '');
+    console.log('✓ .nojekyll written');
+
+    console.log('\n✅ Build complete — Cloudflare will deploy .open-next correctly.\n');
   } catch (error) {
-    console.error('\n❌ Build failed:');
-    console.error(error.message);
+    console.error('\n❌ Build FAILED:', error.message);
     process.exit(1);
   }
 }
