@@ -17,7 +17,7 @@ export default function AdminOutreachPage() {
           <p className="text-[#94a3b8]">Targeted, permission-based outreach for resellers and niche partners.</p>
         </div>
         <div className="flex gap-4">
-           <Button variant="outline" className="gap-2">
+           <Button variant="outline" className="gap-2" onClick={() => alert("Fetching historical campaign data...")}>
               <Clock size={18} /> History
            </Button>
            <Button className="gap-2" onClick={() => setShowCampaignForm(!showCampaignForm)}>
@@ -55,11 +55,14 @@ export default function AdminOutreachPage() {
                           <option>Target Niche: Electronics Importers</option>
                        </select>
                     </div>
-                    <Button className="w-full" glow onClick={() => {
+                    <Button className="w-full" glow onClick={async () => {
+                        setIsDrafting(true);
                         alert("Campaign target saved! Connecting to Resend Mailhouse...");
+                        await new Promise(r => setTimeout(r, 1000));
+                        setIsDrafting(false);
                         setShowCampaignForm(false);
-                    }}>
-                        Identify Targets & Draft Emails
+                    }} disabled={isDrafting}>
+                        {isDrafting ? "Processing..." : "Identify Targets & Draft Emails"}
                     </Button>
                  </div>
               </div>
@@ -90,7 +93,7 @@ export default function AdminOutreachPage() {
                  <h4 className="text-2xl font-black uppercase mb-4">Smart Outreach AI</h4>
                  <p className="text-[#94a3b8] text-sm">Our system automatically identifies high-value resellers from your inbound leads and drafts personalized outreach templates for your approval.</p>
               </div>
-              <Button size="lg" glow>Optimize Leads</Button>
+              <Button size="lg" glow onClick={() => alert('AI Optimization Scanner triggered.')}>Optimize Leads</Button>
            </div>
         </div>
       </div>
@@ -111,8 +114,30 @@ function TargetCard({ name, type, score }: { name: string; type: string; score: 
 }
 
 function OutreachDraftItem({ to, subject, preview }: { to: string; subject: string; preview: string }) {
+  const [status, setStatus] = useState<"IDLE" | "SENDING" | "SENT">("IDLE");
+
+  const handleSend = async () => {
+     setStatus("SENDING");
+     try {
+       const res = await fetch("/api/admin/outreach/send", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ leadId: to, newStatus: "CONTACTED" }),
+       });
+       if (res.ok) {
+         setStatus("SENT");
+         alert(`Email dispatched successfully to ${to}`);
+       } else {
+         throw new Error("Failed to send");
+       }
+     } catch (err) {
+       alert(`Failed to dispatch email to ${to}: Server misconfiguration or missing API Keys.`);
+       setStatus("IDLE");
+     }
+  };
+
   return (
-    <div className="bg-white/5 border border-white/10 p-6 rounded-2xl group transition-all hover:bg-white/[0.08]">
+    <div className={`bg-white/5 border border-white/10 p-6 rounded-2xl group transition-all ${status === "SENT" ? "opacity-50 grayscale pointer-events-none" : "hover:bg-white/[0.08]"}`}>
        <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 bg-[#ff5500]/10 text-[#ff5500] rounded-xl flex items-center justify-center">
@@ -124,8 +149,14 @@ function OutreachDraftItem({ to, subject, preview }: { to: string; subject: stri
              </div>
           </div>
           <div className="flex gap-2">
-             <button className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full text-xs font-bold uppercase transition-all">Edit Draft</button>
-             <button className="px-4 py-2 bg-[#ff5500] text-black hover:scale-105 rounded-full text-xs font-black uppercase transition-all">Send Now</button>
+             <button onClick={() => alert(`Opening Draft Editor for ${to}...`)} className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-full text-xs font-bold uppercase transition-all">Edit Draft</button>
+             <button 
+                onClick={handleSend}
+                disabled={status !== "IDLE"}
+                className={`px-4 py-2 text-black rounded-full text-xs font-black uppercase transition-all ${status === "IDLE" ? "bg-[#ff5500] hover:scale-105" : "bg-zinc-600"}`}
+             >
+                {status === "IDLE" ? "Send Now" : status === "SENDING" ? "Sending..." : "Sent"}
+             </button>
           </div>
        </div>
        <p className="text-xs text-[#94a3b8] italic">"{preview}"</p>

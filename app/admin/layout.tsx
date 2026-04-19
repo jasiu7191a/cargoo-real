@@ -3,6 +3,7 @@ import { LayoutDashboard, Users, FileText, Send, Settings, LogOut } from "lucide
 import Link from "next/link";
 import React from "react";
 import { Providers } from "@/components/Providers";
+import { LogoutButton } from "./view-components/logout-button";
 import "@/app/globals.css";
 
 export const metadata: Metadata = {
@@ -38,9 +39,7 @@ export default function AdminLayout({
 
           <div className="pb-10 space-y-2 border-t border-white/10 pt-6">
             <AdminNavLink href="/admin/settings" icon={<Settings size={18} />} label="Settings" />
-            <button className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/5 transition-all rounded-xl">
-              <LogOut size={18} /> Logout
-            </button>
+            <LogoutButton />
           </div>
         </aside>
 

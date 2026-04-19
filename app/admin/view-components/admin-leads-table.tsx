@@ -61,9 +61,28 @@ export function AdminLeadsTable() {
                   {lead.product}
                 </td>
                 <td className="px-8 py-5">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-black bg-green-500/10 text-green-400 border border-green-500/20 uppercase tracking-widest">
-                    {lead.status || "Active Inquiry"}
-                  </span>
+                  <select 
+                     className="bg-black/50 border border-white/10 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-widest text-green-400 focus:border-[#ff5500] outline-none hover:bg-white/5 transition-all cursor-pointer"
+                     defaultValue={lead.status || "NEW"}
+                     onChange={async (e) => {
+                        const newStatus = e.target.value;
+                        const res = await fetch("/api/admin/outreach/send", {
+                           method: "POST",
+                           headers: { "Content-Type": "application/json" },
+                           body: JSON.stringify({ leadId: lead.email, newStatus })
+                        });
+                        if (res.ok) {
+                           alert(`Status updated to ${newStatus}`);
+                        } else {
+                           alert("Failed to update status. Check API keys.");
+                        }
+                     }}
+                  >
+                     <option value="NEW">New Inquiry</option>
+                     <option value="CONTACTED">Contacted</option>
+                     <option value="QUALIFIED">Qualified</option>
+                     <option value="CLOSED">Closed</option>
+                  </select>
                 </td>
                 <td className="px-8 py-5 text-xs text-white/40 tabular-nums">
                   {new Date(lead.createdAt).toLocaleDateString("en-GB", {

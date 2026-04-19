@@ -4,6 +4,7 @@ import React from "react";
 import prisma from "@/lib/prisma";
 import { Sparkles, FileText, ArrowRight } from "lucide-react";
 import { ContentGenerator } from "../view-components/content-generator";
+import { SeoArtifactList } from "../view-components/seo-artifact-list";
 
 export default async function AdminContentPage() {
   const recentPosts = await prisma.blogPost.findMany({
@@ -48,54 +49,7 @@ export default async function AdminContentPage() {
            </div>
         </div>
 
-        <div className="lg:col-span-2 glass-panel p-8">
-           <div className="flex justify-between items-center mb-8">
-              <h3 className="text-xl font-bold uppercase">Recent Artifacts</h3>
-              <div className="flex gap-2">
-                 <button className="text-xs font-bold bg-white/5 px-4 py-2 rounded-lg border border-white/10">All Posts</button>
-                 <button className="text-xs font-bold bg-white/5 px-4 py-2 rounded-lg border border-white/10">Drafts</button>
-              </div>
-           </div>
-
-           <div className="space-y-4">
-              {recentPosts.length === 0 ? (
-                <div className="p-8 text-center text-[#94a3b8] italic">No AI artifacts built yet. Generate one to the left!</div>
-              ) : (
-                recentPosts.map((post: any) => (
-                  <ArticleListItem 
-                    key={post.id}
-                    title={post.title} 
-                    status={post.status} 
-                    date={new Date(post.createdAt).toLocaleDateString()} 
-                  />
-                ))
-              )}
-           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ArticleListItem({ title, status, date }: { title: string; status: string; date: string }) {
-  return (
-    <div className="group bg-white/5 border border-white/10 p-5 rounded-2xl flex justify-between items-center hover:border-white/30 transition-all cursor-pointer">
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-[#94a3b8]">
-           <FileText size={20} />
-        </div>
-        <div>
-           <div className="font-bold text-sm text-white group-hover:text-[#ff5500] transition-colors line-clamp-1">{title}</div>
-           <div className="text-xs text-[#94a3b8]">{date}</div>
-        </div>
-      </div>
-      <div className="flex items-center gap-6">
-         <span className={`text-[10px] font-black uppercase px-3 py-1 rounded-full ${
-            status === 'PUBLISHED' ? 'bg-[#00c853]/10 text-[#00c853]' : 'bg-white/10 text-white'
-         }`}>{status}</span>
-         <button className="text-[#94a3b8] hover:text-white transition-colors">
-            <ArrowRight size={18} />
-         </button>
+        <SeoArtifactList initialPosts={recentPosts} />
       </div>
     </div>
   );
