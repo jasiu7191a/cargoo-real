@@ -1,3 +1,5 @@
+// Cargoo Admin Platform — Build v4 — Asset fix (2026-04-19)
+// Cloudflare Pages: worker.js -> _worker.js + asset flatten
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
