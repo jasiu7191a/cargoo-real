@@ -1,19 +1,50 @@
-export const dynamic = 'force-dynamic';
-
-import React from "react";
+import React, { Suspense } from "react";
 import prisma from "@/lib/prisma";
 import { Sparkles, FileText, ArrowRight } from "lucide-react";
 import { ContentGenerator } from "../view-components/content-generator";
 import { SeoArtifactList } from "../view-components/seo-artifact-list";
 
-export default async function AdminContentPage() {
-  const recentPosts = await prisma.blogPost.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 10,
-  });
+export const dynamic = 'force-dynamic';
+
+export default function AdminContentPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-[60vh] flex flex-col items-center justify-center space-y-6">
+        <Sparkles size={48} className="text-[#ff5500] animate-pulse" />
+        <div className="text-center">
+          <h2 className="text-2xl font-black uppercase tracking-tighter italic">Loading SEO Engine</h2>
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mt-2">Connecting to Content Matrix...</p>
+        </div>
+      </div>
+    }>
+      <AdminContentInner />
+    </Suspense>
+  );
+}
+
+async function AdminContentInner() {
+  let serializedPosts: any[] = [];
+  
+  try {
+     const recentPosts = await prisma.blogPost.findMany({
+       orderBy: { createdAt: "desc" },
+       take: 10,
+     });
+     
+     // IMPORTANT: Explicit serialization to strings for Client Components
+     serializedPosts = recentPosts.map(post => ({
+       ...post,
+       createdAt: post.createdAt.toISOString(),
+       updatedAt: post.updatedAt.toISOString(),
+       publishedAt: post.publishedAt?.toISOString() || null
+     }));
+  } catch (error) {
+     console.error("Failed to fetch blog posts:", error);
+     // We return empty array so UI doesn't 500
+  }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 animate-in fade-in duration-700">
       <div className="flex justify-between items-end">
         <div>
           <h1 className="text-4xl font-black uppercase tracking-tighter mb-2">SEO Engine</h1>
@@ -49,7 +80,7 @@ export default async function AdminContentPage() {
            </div>
         </div>
 
-        <SeoArtifactList initialPosts={recentPosts} />
+        <SeoArtifactList initialPosts={serializedPosts} />
       </div>
     </div>
   );
