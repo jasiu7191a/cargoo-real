@@ -10,9 +10,12 @@ async function runBuild() {
 
     console.log('\n--- Starting Cloudflare Build ---');
     
+    // Core build command execution
     console.log('\n🚀 Running: npx @opennextjs/cloudflare build');
     execSync('npx @opennextjs/cloudflare build --dangerouslyUseUnsupportedNextVersion', { stdio: 'inherit' });
 
+    // Cloudflare Pages will automatically deploy the '.open-next' folder 
+    // once this script finishes successfully.
     // THE FINAL OPENNEXT & CLOUDFLARE PAGES FIX:
     // Cloudflare Pages expects the worker and static files at the absolute root of the build output.
     // OpenNext outputs static files into `.open-next/assets/`, causing 404s.
@@ -24,8 +27,14 @@ async function runBuild() {
         console.log('\n📦 Flattening Cloudflare Static Assets to root...');
         const items = fs.readdirSync(srcDir);
         for (const item of items) {
-             fs.cpSync(`${srcDir}/${item}`, `.open-next/${item}`, { recursive: true });
+             const srcPath = `${srcDir}/${item}`;
+             const destPath = `.open-next/${item}`;
+             fs.cpSync(srcPath, destPath, { recursive: true });
+             console.log(`   - Migrated: ${item}`);
         }
+        // Cleanup source assets folder to ensure Cloudflare doesn't get confused
+        fs.rmSync(srcDir, { recursive: true, force: true });
+        console.log('🗑️ Cleaned up intermediate assets folder.');
     }
 
     // MANDATORY CLOUDFLARE BYPASS: 
@@ -35,14 +44,16 @@ async function runBuild() {
     fs.writeFileSync('.open-next/.nojekyll', '');
 
     // 2. Rename worker.js to _worker.js so Cloudflare Pages recognizes it
-    if (fs.existsSync('.open-next/worker.js')) {
-        fs.renameSync('.open-next/worker.js', '.open-next/_worker.js');
+    const workerPath = '.open-next/worker.js';
+    const finalWorkerPath = '.open-next/_worker.js';
+    if (fs.existsSync(workerPath)) {
+        fs.renameSync(workerPath, finalWorkerPath);
         console.log('\n🚀 Master Worker migrated to _worker.js successfully.');
-    } else {
+    } else if (!fs.existsSync(finalWorkerPath)) {
         console.warn('\n⚠️ Warning: worker.js not found in .open-next/');
     }
 
-    console.log('\n✨ Success: OpenNext build finished! Wrangler will now automatically bundle and deploy your full-stack app.');
+    console.log('\n✨ Success: OpenNext build finished! Cloudflare will now deploy your full-stack app.');
   } catch (error) {
     console.error('\n❌ Build failed:');
     console.error(error.message);

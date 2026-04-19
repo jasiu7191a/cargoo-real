@@ -9,7 +9,18 @@ import { Suspense } from "react";
 
 export default function AdminOutreachPage() {
   return (
-    <Suspense fallback={<div className="p-20 text-center animate-pulse font-black uppercase tracking-widest text-[#94a3b8]">Initializing Outreach Engine...</div>}>
+    <Suspense fallback={
+      <div className="h-[60vh] flex flex-col items-center justify-center space-y-6 animate-in fade-in duration-1000">
+        <div className="relative">
+          <Send size={48} className="text-[#ff5500] animate-bounce" />
+          <div className="absolute inset-0 bg-[#ff5500] blur-2xl opacity-20 animate-pulse" />
+        </div>
+        <div className="text-center">
+          <h2 className="text-2xl font-black uppercase tracking-tighter italic">Initializing Outreach HQ</h2>
+          <p className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] mt-2">Syncing high-value targets with AI nodes...</p>
+        </div>
+      </div>
+    }>
       <OutreachContent />
     </Suspense>
   );

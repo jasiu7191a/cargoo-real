@@ -15,11 +15,14 @@ interface Lead {
   createdAt: string;
 }
 
+import { useRouter } from "next/navigation";
+
 export function AdminLeadsTable() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchLeads() {
@@ -37,6 +40,25 @@ export function AdminLeadsTable() {
     }
     fetchLeads();
   }, []);
+
+  const handleStatusChange = async (id: string, newStatus: string) => {
+    try {
+      const res = await fetch("/api/admin/outreach/send", {
+         method: "POST",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ leadId: id, newStatus })
+      });
+      if (res.ok) {
+         router.refresh();
+         // Also update local state for immediate feedback
+         setLeads(prev => prev.map(l => l.id === id ? { ...l, status: newStatus } : l));
+      } else {
+         alert("Failed to update status.");
+      }
+    } catch (e) {
+      alert("Network error during status update.");
+    }
+  };
 
   const filteredLeads = leads.filter(lead => 
     lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -132,21 +154,9 @@ export function AdminLeadsTable() {
                   </td>
                   <td className="px-8 py-5">
                     <select 
-                       className="bg-black/50 border border-white/10 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-widest text-green-400 focus:border-[#ff5500] outline-none hover:bg-white/5 transition-all cursor-pointer"
-                       defaultValue={lead.status || "NEW"}
-                       onChange={async (e) => {
-                          const newStatus = e.target.value;
-                          const res = await fetch("/api/admin/outreach/send", {
-                             method: "POST",
-                             headers: { "Content-Type": "application/json" },
-                             body: JSON.stringify({ leadId: lead.id, newStatus })
-                          });
-                          if (res.ok) {
-                             alert(`Status updated to ${newStatus}. Automation triggered.`);
-                          } else {
-                             alert("Failed to update status.");
-                          }
-                       }}
+                       className="bg-black/50 border border-white/10 rounded-full px-3 py-1 text-[9px] font-black uppercase tracking-widest text-[#ff5500] focus:border-[#ff5500] outline-none hover:bg-white/5 transition-all cursor-pointer"
+                       value={lead.status || "NEW"}
+                       onChange={(e) => handleStatusChange(lead.id, e.target.value)}
                     >
                        <option value="NEW">New Inquiry</option>
                        <option value="PROCESSING">Processing</option>
