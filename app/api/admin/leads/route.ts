@@ -20,16 +20,19 @@ export async function GET() {
 
     const formattedLeads = leads.map(lead => ({
         id: lead.id,
-        name: lead.user?.name || "Unknown",
-        email: lead.user?.email || "Unknown",
+        name: lead.user?.name || "Anonymous / Web Inquiry",
+        email: lead.user?.email || lead.notes?.match(/Email: ([\w.-]+@[\w.-]+\.\w+)/)?.[1] || "No Email",
         product: lead.productName,
         status: lead.status,
-        createdAt: lead.createdAt
+        createdAt: lead.createdAt.toISOString() // Explicitly serialize to string for Edge
     }));
 
     return NextResponse.json(formattedLeads);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Leads API Error:", error);
-    return NextResponse.json({ error: "Failed to fetch leads" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch leads", details: error.message },
+      { status: 500 }
+    );
   }
 }
