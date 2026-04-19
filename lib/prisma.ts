@@ -50,6 +50,10 @@ const prisma = new Proxy({}, {
   }
 }) as unknown as PrismaClient;
 
+declare global {
+  var prisma: PrismaClient | undefined;
+}
+
 // Singleton pattern for consistency in dev
 if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma;
 
