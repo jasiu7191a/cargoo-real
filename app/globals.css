@@ -46,35 +46,34 @@
   --trans-bouncy: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@layer base {
-  * {
-    @apply border-border;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  html {
-    scroll-behavior: smooth;
-    background-color: var(--clr-bg);
-  }
-
-  body {
-    font-family: var(--font-main);
-    color: var(--clr-text);
-    background-color: var(--clr-bg);
-    line-height: 1.6;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  h1, h2, h3, h4, h5, h6 {
-    font-weight: 800;
-    line-height: 1.1;
-    color: var(--clr-white);
-    letter-spacing: -0.03em;
-  }
+*, *::before, *::after {
+  border-color: var(--clr-border);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
+
+html {
+  scroll-behavior: smooth;
+  background-color: var(--clr-bg);
+}
+
+body {
+  font-family: var(--font-main);
+  color: var(--clr-text);
+  background-color: var(--clr-bg);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--clr-white);
+  letter-spacing: -0.03em;
+}
+
 
 /* Glassmorphism Classes */
 .glass-panel {
