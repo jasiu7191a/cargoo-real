@@ -2,12 +2,14 @@ import { PrismaClient } from '@prisma/client/wasm'
 import { PrismaNeon } from '@prisma/adapter-neon'
 import { Pool } from '@neondatabase/serverless'
 
-const prismaClientSingleton = () => {
-  // 1. Prioritize standard process.env (populated by OpenNext at runtime)
-  let connectionString = process.env.DATABASE_URL;
+let prismaInstance: PrismaClient | null = null;
 
-  // 2. Build Phase / Missing URL Safety Shield
-  // This prevents the build from crashing if the URL isn't present yet.
+export const getPrisma = (): PrismaClient => {
+  if (prismaInstance) return prismaInstance;
+
+  const connectionString = process.env.DATABASE_URL;
+
+  // Build Phase Safety Shield
   if (!connectionString) {
     console.warn("⚠️ PRISMA SHIELD: DATABASE_URL not found. Returning safe build-time proxy.");
     return new Proxy({}, {
@@ -20,32 +22,35 @@ const prismaClientSingleton = () => {
     }) as unknown as PrismaClient;
   }
 
-  // 3. Reliable Edge Initialization
   try {
     const pool = new Pool({ connectionString });
     const adapter = new PrismaNeon(pool);
-    return new PrismaClient({ adapter });
+    prismaInstance = new PrismaClient({ adapter });
+    return prismaInstance;
   } catch (error: any) {
     console.error("Prisma Initialization Error:", error);
-    // Return a safe proxy instead of throwing a worker-killing exception (Error 1101)
     return new Proxy({}, {
-        get: (_, prop) => {
-          return new Proxy(() => {}, {
-            get: () => () => Promise.resolve([]),
-            apply: () => Promise.resolve([])
-          });
-        }
-      }) as unknown as PrismaClient;
+      get: () => new Proxy(() => {}, {
+        get: () => () => Promise.resolve([]),
+        apply: () => Promise.resolve([])
+      })
+    }) as unknown as PrismaClient;
   }
-}
+};
 
-declare global {
-  var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
-}
+// Export a proxy that mimics PrismaClient but delays initialization until a property is accessed
+const prisma = new Proxy({}, {
+  get: (_, prop) => {
+    const client = getPrisma();
+    const value = (client as any)[prop];
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  }
+}) as unknown as PrismaClient;
 
-// Singleton pattern for consistency
-const prisma = globalThis.prisma ?? prismaClientSingleton();
+// Singleton pattern for consistency in dev
+if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma;
 
 export default prisma;
-
-if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma;
