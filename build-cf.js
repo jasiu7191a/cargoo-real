@@ -24,20 +24,36 @@ async function runBuild() {
     console.log('\n🚀 Running: npx @opennextjs/cloudflare build');
     execSync('npx @opennextjs/cloudflare build --dangerouslyUseUnsupportedNextVersion', { stdio: 'inherit' });
 
-    // 4. Verify build succeeded — wrangler.json points to worker.js directly (no rename needed)
-    const workerPath = path.join('.open-next', 'worker.js');
-    const assetsPath = path.join('.open-next', 'assets');
-
-    if (!fs.existsSync(workerPath)) {
+    // 4. Cloudflare Pages post-processing
+    // Pages needs _worker.js (underscore), but OpenNext outputs worker.js
+    const workerSrc  = path.join('.open-next', 'worker.js');
+    const workerDest = path.join('.open-next', '_worker.js');
+    if (!fs.existsSync(workerSrc)) {
       throw new Error('worker.js NOT found in .open-next/ — OpenNext build may have failed.');
     }
-    if (!fs.existsSync(assetsPath)) {
-      throw new Error('assets/ NOT found in .open-next/ — static assets are missing.');
-    }
-    console.log('✓ worker.js found');
-    console.log('✓ assets/ directory found');
+    fs.renameSync(workerSrc, workerDest);
+    console.log('✓ Renamed worker.js → _worker.js  (Cloudflare Pages entrypoint)');
 
-    console.log('\n✅ Build complete! Push to GitHub → Cloudflare will deploy automatically.\n');
+    // Pages serves static files from the root of pages_build_output_dir.
+    // OpenNext puts them in .open-next/assets/ — we must flatten them to .open-next/
+    // so that _next/static/... is reachable without the assets/ prefix.
+    const assetsDir = path.join('.open-next', 'assets');
+    if (fs.existsSync(assetsDir)) {
+      console.log('📦 Flattening assets to .open-next/ root...');
+      for (const item of fs.readdirSync(assetsDir)) {
+        const src  = path.join(assetsDir, item);
+        const dest = path.join('.open-next', item);
+        fs.cpSync(src, dest, { recursive: true });
+        console.log(`   ✓ ${item}`);
+      }
+      fs.rmSync(assetsDir, { recursive: true, force: true });
+    }
+
+    // Prevent Cloudflare from stripping _next/ and other underscore folders
+    fs.writeFileSync('.open-next/.nojekyll', '');
+    console.log('✓ .nojekyll written');
+
+    console.log('\n✅ Build complete! Push to GitHub → Cloudflare Pages will deploy.\n');
   } catch (error) {
     console.error('\n❌ Build FAILED:', error.message);
     process.exit(1);
