@@ -4,7 +4,12 @@ import prisma from "@/lib/prisma";
 import type { NextAuthOptions } from "next-auth";
 
 export const authOptions: NextAuthOptions = {
-  session: { strategy: "jwt" },
+  // Use a hardcoded secret for isolation diagnostics
+  secret: "diagnostic-debug-secret-2024",
+  session: { 
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   providers: [
     CredentialsProvider({
       name: "Cargoo Admin",
@@ -13,7 +18,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log("[AUTH_ISOLATION] Zero-Logic attempt for:", credentials?.email);
+        console.log("[AUTH_ISOLATION_V2] Attempt for:", credentials?.email);
         
         // ISOLATION: Accept ANY password for debugging
         return { 
@@ -38,5 +43,4 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/admin/login",
   },
-  secret: process.env.NEXTAUTH_SECRET,
 };

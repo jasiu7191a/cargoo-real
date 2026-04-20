@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { SignJWT } from 'jose';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,56 +9,54 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     checks: {
-      DATABASE_URL: !!process.env.DATABASE_URL ? "DETECTED" : "MISSING",
-      NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET ? "DETECTED" : "MISSING",
-      NODE_VERSION: process.version,
+      DATABASE_URL_SET: !!process.env.DATABASE_URL,
+      NEXTAUTH_SECRET_SET: !!process.env.NEXTAUTH_SECRET,
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     }
   };
 
-  // Bcrypt Test
+  // JOSE JWT Sign Test (Native Edge Compatible)
   try {
-    const testPassword = "test-password-123";
-    const hash = await bcrypt.hash(testPassword, 10);
-    const isValid = await bcrypt.compare(testPassword, hash);
-    diagnostics.bcrypt_status = isValid ? "OK" : "FAILED_COMPARISON";
+    const iat = Math.floor(Date.now() / 1000);
+    const exp = iat + 60 * 60; // 1 hour
+    
+    // Test with the hardcoded diagnostic secret
+    const secret = new TextEncoder().encode("diagnostic-debug-secret-2024");
+    
+    const token = await new SignJWT({ 'urn:example:claim': true })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt(iat)
+      .setExpirationTime(exp)
+      .sign(secret);
+      
+    diagnostics.jose_sign_test = "SUCCESS";
+    diagnostics.test_token_preview = token.substring(0, 15) + "...";
   } catch (error: any) {
-    diagnostics.bcrypt_status = "ERROR";
-    diagnostics.bcrypt_error = error.message;
+    diagnostics.jose_sign_test = "FAILED";
+    diagnostics.jose_error = error.message;
   }
 
-  // Deep Data Audit
-  try {
-    const users = await prisma.user.findMany({
-       select: { 
-         id: true,
-         email: true, 
-         role: true, 
-         name: true,
-         _count: {
-           select: { leads: true }
-         }
-       }
-    });
-    diagnostics.db_status = "CONNECTED";
-    diagnostics.user_inventory = users.map(u => ({
-       ...u,
-       email_length: u.email.length,
-       has_hidden_chars: /[^a-zA-Z0-9@._-]/.test(u.email)
-    }));
-    
-    // Exact lookup test
-    const target = "admin@cargooimport.eu";
-    const found = await prisma.user.findUnique({ where: { email: target } });
-    diagnostics.exact_lookup = {
-       target,
-       found: !!found,
-       role: found?.role,
-       has_password: !!found?.password
+  // Real Secret Metadata (Privacy-Safe)
+  if (process.env.NEXTAUTH_SECRET) {
+    const secret = process.env.NEXTAUTH_SECRET;
+    diagnostics.real_secret_metadata = {
+      length: secret.length,
+      has_spaces: secret.includes(' '),
+      has_newlines: secret.includes('\n') || secret.includes('\r'),
+      is_base64: /^[A-Za-z0-9+/=]+$/.test(secret),
+      // SHA-256 Hash of the secret for verification without exposure
+      hash_hint: await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret))
+        .then(res => Array.from(new Uint8Array(res)).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 8))
     };
+  }
 
+  // Simple DB check to ensure we didn't break connectivity
+  try {
+    const userCount = await prisma.user.count();
+    diagnostics.db_status = "CONNECTED";
+    diagnostics.db_user_count = userCount;
   } catch (error: any) {
     diagnostics.db_status = "ERROR";
-    diagnostics.db_error = error.message;
   }
 
   return NextResponse.json(diagnostics);
