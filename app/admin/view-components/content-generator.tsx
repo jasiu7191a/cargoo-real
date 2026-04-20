@@ -22,8 +22,8 @@ export function ContentGenerator() {
       });
       
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to generate");
+        const errorData = await res.json();
+        throw new Error(errorData.details || errorData.error || "Failed to generate");
       }
       
       setTopic("");

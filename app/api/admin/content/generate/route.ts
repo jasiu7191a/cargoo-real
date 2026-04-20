@@ -23,11 +23,11 @@ export async function POST(req: Request) {
     // 2. Call OpenAI with our specialized sourcing prompt
     const openai = getOpenAI();
     const response = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview", // Best for structured JSON output
+      model: "gpt-4o", // Upgraded to latest flagship for better results and robustness
       messages: [
         {
           role: "system",
-          content: "You are a helpful assistant that returns only valid JSON.",
+          content: "You are a helpful assistant that returns only valid JSON matching the requested schema strictly.",
         },
         {
           role: "user",
@@ -40,11 +40,17 @@ export async function POST(req: Request) {
     const result = response.choices[0].message.content;
 
     if (!result) {
-      throw new Error("No response from OpenAI");
+      throw new Error("OpenAI returned an empty response.");
     }
 
     // 3. Parse and return the structured content
-    const contentData = JSON.parse(result);
+    let contentData;
+    try {
+      contentData = JSON.parse(result);
+    } catch (parseError: any) {
+      console.error("JSON Parsing Error from OpenAI:", result);
+      throw new Error("Failed to parse AI response into valid JSON.");
+    }
 
     // 4. Automatically save the generated artifact to the database as a DRAFT
     const savedPost = await prisma.blogPost.create({
