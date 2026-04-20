@@ -17,7 +17,6 @@
     "@prisma/client": "^5.10.2",
     "@neondatabase/serverless": "^0.9.0",
     "@prisma/adapter-neon": "^5.10.2",
-    "react-markdown": "^9.0.1",
     "next": "14.2.3",
     "next-auth": "^4.24.7",
     "openai": "^4.44.0",
