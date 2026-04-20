@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,17 @@ export async function GET() {
       AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST || "NOT SET",
     }
   };
+
+  // Bcrypt Test
+  try {
+    const testPassword = "test-password-123";
+    const hash = await bcrypt.hash(testPassword, 10);
+    const isValid = await bcrypt.compare(testPassword, hash);
+    diagnostics.bcrypt_status = isValid ? "OK" : "FAILED_COMPARISON";
+  } catch (error: any) {
+    diagnostics.bcrypt_status = "ERROR";
+    diagnostics.bcrypt_error = error.message || "Unknown Bcrypt error";
+  }
 
   try {
     // Attempt a light query to verify DB connection
