@@ -36,11 +36,24 @@ async function runBuild() {
     fs.renameSync(workerSrc, workerDest);
     console.log('✓ Renamed worker.js → _worker.js  (Cloudflare Pages entrypoint)');
 
-    // 5. DO NOT flatten assets/. 
-    //    Cloudflare Pages automatically wires .open-next/assets/ as the ASSETS binding
-    //    for the _worker.js. Moving files to the root breaks this binding.
-    //    The worker (built by OpenNext) already calls env.ASSETS.fetch() for static files.
-    console.log('✓ Assets left in .open-next/assets/ (Cloudflare Pages ASSETS binding auto-wired)');
+    // 5. Flatten assets/ into output root.
+    //    Cloudflare Pages ASSETS auto-binding only covers files at the ROOT of
+    //    pages_build_output_dir. Files inside assets/ subdirectory are NOT served.
+    //    We move them up so env.ASSETS.fetch("/_next/static/...") resolves correctly.
+    const assetsDir = path.join('.open-next', 'assets');
+    if (fs.existsSync(assetsDir)) {
+      console.log('📦 Flattening assets to .open-next/ root...');
+      for (const item of fs.readdirSync(assetsDir)) {
+        const src  = path.join(assetsDir, item);
+        const dest = path.join('.open-next', item);
+        if (!fs.existsSync(dest)) {
+          fs.cpSync(src, dest, { recursive: true });
+        }
+        console.log(`   ✓ ${item}`);
+      }
+      fs.rmSync(assetsDir, { recursive: true, force: true });
+      console.log('   ✓ assets/ subfolder removed (all contents now at root)');
+    }
 
     // 6. Prevent GitHub Pages / Cloudflare from stripping underscore-prefixed folders
     fs.writeFileSync('.open-next/.nojekyll', '');
