@@ -1,5 +1,6 @@
-// Cargoo Admin Platform — Build v4 — Asset fix (2026-04-19)
-// Cloudflare Pages: worker.js -> _worker.js + asset flatten
+// Cargoo Admin Platform — Build v5 — Correct OpenNext + Cloudflare Pages pattern
+// OpenNext generates: .open-next/worker.js + .open-next/assets/
+// Cloudflare Pages requires: _worker.js at root + serves assets/ automatically via ASSETS binding
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -10,10 +11,9 @@ async function runBuild() {
     console.log('\n--- Cleaning previous build ---');
     if (fs.existsSync('.open-next')) {
       fs.rmSync('.open-next', { recursive: true, force: true });
-      console.log('✓ Cleaned .open-next');
     }
 
-    // 2. Sync DB schema (new AdminAction table etc.)
+    // 2. Sync DB schema
     console.log('\n🗄️  Syncing Database Schema...');
     try {
       execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
@@ -26,8 +26,8 @@ async function runBuild() {
     console.log('\n🚀 Running: npx @opennextjs/cloudflare build');
     execSync('npx @opennextjs/cloudflare build --dangerouslyUseUnsupportedNextVersion', { stdio: 'inherit' });
 
-    // 4. Cloudflare Pages post-processing
-    // Pages needs _worker.js (underscore), but OpenNext outputs worker.js
+    // 4. Cloudflare Pages requires _worker.js (with underscore prefix)
+    //    OpenNext outputs worker.js — rename it.
     const workerSrc  = path.join('.open-next', 'worker.js');
     const workerDest = path.join('.open-next', '_worker.js');
     if (!fs.existsSync(workerSrc)) {
@@ -36,26 +36,17 @@ async function runBuild() {
     fs.renameSync(workerSrc, workerDest);
     console.log('✓ Renamed worker.js → _worker.js  (Cloudflare Pages entrypoint)');
 
-    // Pages serves static files from the root of pages_build_output_dir.
-    // OpenNext puts them in .open-next/assets/ — we must flatten them to .open-next/
-    // so that _next/static/... is reachable without the assets/ prefix.
-    const assetsDir = path.join('.open-next', 'assets');
-    if (fs.existsSync(assetsDir)) {
-      console.log('📦 Flattening assets to .open-next/ root...');
-      for (const item of fs.readdirSync(assetsDir)) {
-        const src  = path.join(assetsDir, item);
-        const dest = path.join('.open-next', item);
-        fs.cpSync(src, dest, { recursive: true });
-        console.log(`   ✓ ${item}`);
-      }
-      fs.rmSync(assetsDir, { recursive: true, force: true });
-    }
+    // 5. DO NOT flatten assets/. 
+    //    Cloudflare Pages automatically wires .open-next/assets/ as the ASSETS binding
+    //    for the _worker.js. Moving files to the root breaks this binding.
+    //    The worker (built by OpenNext) already calls env.ASSETS.fetch() for static files.
+    console.log('✓ Assets left in .open-next/assets/ (Cloudflare Pages ASSETS binding auto-wired)');
 
-    // Prevent Cloudflare from stripping _next/ and other underscore folders
+    // 6. Prevent GitHub Pages / Cloudflare from stripping underscore-prefixed folders
     fs.writeFileSync('.open-next/.nojekyll', '');
     console.log('✓ .nojekyll written');
 
-    console.log('\n✅ Build complete! Push to GitHub → Cloudflare Pages will deploy.\n');
+    console.log('\n✅ Build complete!\n');
   } catch (error) {
     console.error('\n❌ Build FAILED:', error.message);
     process.exit(1);
