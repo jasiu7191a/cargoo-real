@@ -35,6 +35,11 @@ export const authOptions: NextAuthOptions = {
           }
 
           // Secure verification
+          if (!user.password) {
+            console.warn(`Auth Failed: User ${credentials.email} has no password set`);
+            return null;
+          }
+
           const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
           
           if (!isPasswordValid) {
