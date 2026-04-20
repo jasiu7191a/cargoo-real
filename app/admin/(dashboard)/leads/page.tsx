@@ -1,4 +1,4 @@
-import { AdminLeadsTable } from "../view-components/admin-leads-table";
+import { AdminLeadsTable } from "../../view-components/admin-leads-table";
 
 export const dynamic = "force-dynamic";
 

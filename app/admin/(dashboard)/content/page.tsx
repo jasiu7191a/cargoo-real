@@ -1,8 +1,8 @@
 import React, { Suspense } from "react";
 import prisma from "@/lib/prisma";
 import { Sparkles, FileText, ArrowRight } from "lucide-react";
-import { ContentGenerator } from "../view-components/content-generator";
-import { SeoArtifactList } from "../view-components/seo-artifact-list";
+import { ContentGenerator } from "../../view-components/content-generator";
+import { SeoArtifactList } from "../../view-components/seo-artifact-list";
 
 export const dynamic = 'force-dynamic';
 
