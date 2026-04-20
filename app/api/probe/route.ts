@@ -11,6 +11,7 @@ export async function GET() {
     checks: {
       DATABASE_URL: !!process.env.DATABASE_URL ? "DETECTED" : "MISSING",
       NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET ? "DETECTED" : "MISSING",
+      NODE_VERSION: process.version,
     }
   };
 
@@ -25,23 +26,36 @@ export async function GET() {
     diagnostics.bcrypt_error = error.message;
   }
 
-  // DB & Data Check
+  // Deep Data Audit
   try {
     const users = await prisma.user.findMany({
-       select: { email: true, role: true, name: true }
+       select: { 
+         id: true,
+         email: true, 
+         role: true, 
+         name: true,
+         _count: {
+           select: { leads: true }
+         }
+       }
     });
     diagnostics.db_status = "CONNECTED";
-    diagnostics.users = users;
+    diagnostics.user_inventory = users.map(u => ({
+       ...u,
+       email_length: u.email.length,
+       has_hidden_chars: /[^a-zA-Z0-9@._-]/.test(u.email)
+    }));
     
-    // Test findUnique
-    const adminEmail = "admin@cargooimport.eu";
-    const adminUser = await prisma.user.findUnique({
-      where: { email: adminEmail }
-    });
-    diagnostics.admin_lookup = !!adminUser ? "FOUND" : "NOT_FOUND";
-    if (adminUser) {
-      diagnostics.admin_has_password = !!adminUser.password;
-    }
+    // Exact lookup test
+    const target = "admin@cargooimport.eu";
+    const found = await prisma.user.findUnique({ where: { email: target } });
+    diagnostics.exact_lookup = {
+       target,
+       found: !!found,
+       role: found?.role,
+       has_password: !!found?.password
+    };
+
   } catch (error: any) {
     diagnostics.db_status = "ERROR";
     diagnostics.db_error = error.message;
