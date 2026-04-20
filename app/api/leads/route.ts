@@ -2,6 +2,20 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { sendAdminNotification, sendClientConfirmation } from '@/lib/mail';
 
+export const dynamic = 'force-dynamic';
+
+// Allow the public website (cargooimport.eu) to POST leads cross-origin
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': 'https://cargooimport.eu',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+// Handle CORS preflight
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -51,9 +65,9 @@ export async function POST(req: Request) {
       console.error('Non-critical Mail Error:', mailError);
     }
 
-    return NextResponse.json({ success: true, leadId: lead.id }, { status: 201 });
+    return NextResponse.json({ success: true, leadId: lead.id }, { status: 201, headers: CORS_HEADERS });
   } catch (error: any) {
     console.error('Lead Generation Error:', error);
-    return NextResponse.json({ error: 'Failed to create lead', details: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create lead', details: error.message }, { status: 500, headers: CORS_HEADERS });
   }
 }
