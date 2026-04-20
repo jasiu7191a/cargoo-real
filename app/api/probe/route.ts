@@ -11,8 +11,6 @@ export async function GET() {
     checks: {
       DATABASE_URL: !!process.env.DATABASE_URL ? "DETECTED" : "MISSING",
       NEXTAUTH_SECRET: !!process.env.NEXTAUTH_SECRET ? "DETECTED" : "MISSING",
-      NEXTAUTH_URL: process.env.NEXTAUTH_URL || "MISSING",
-      AUTH_TRUST_HOST: process.env.AUTH_TRUST_HOST || "NOT SET",
     }
   };
 
@@ -24,17 +22,29 @@ export async function GET() {
     diagnostics.bcrypt_status = isValid ? "OK" : "FAILED_COMPARISON";
   } catch (error: any) {
     diagnostics.bcrypt_status = "ERROR";
-    diagnostics.bcrypt_error = error.message || "Unknown Bcrypt error";
+    diagnostics.bcrypt_error = error.message;
   }
 
+  // DB & Data Check
   try {
-    // Attempt a light query to verify DB connection
-    const userCount = await prisma.user.count();
+    const users = await prisma.user.findMany({
+       select: { email: true, role: true, name: true }
+    });
     diagnostics.db_status = "CONNECTED";
-    diagnostics.user_count = userCount;
+    diagnostics.users = users;
+    
+    // Test findUnique
+    const adminEmail = "admin@cargooimport.eu";
+    const adminUser = await prisma.user.findUnique({
+      where: { email: adminEmail }
+    });
+    diagnostics.admin_lookup = !!adminUser ? "FOUND" : "NOT_FOUND";
+    if (adminUser) {
+      diagnostics.admin_has_password = !!adminUser.password;
+    }
   } catch (error: any) {
     diagnostics.db_status = "ERROR";
-    diagnostics.db_error = error.message || "Unknown Database connection error";
+    diagnostics.db_error = error.message;
   }
 
   return NextResponse.json(diagnostics);
