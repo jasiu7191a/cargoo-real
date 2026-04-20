@@ -15,9 +15,6 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60,
   },
   
-  // Explicitly trusting everything for this diagnostic phase
-  trustHost: true as any, 
-  
   cookies: {
     sessionToken: {
       name: `__Secure-next-auth.session-token`,
