@@ -12,8 +12,6 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
   },
-  // CRITICAL: NextAuth v4 requires this in some environments to trust proxies
-  trustHost: true,
   cookies: {
     sessionToken: {
       name: isProd ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
