@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import prisma from "@/lib/prisma";
 import { SignJWT } from 'jose';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const diagnostics: any = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
@@ -15,46 +15,44 @@ export async function GET() {
     }
   };
 
-  // JOSE JWT Sign Test (Native Edge Compatible)
+  // Header Audit (The most likely culprit for 500)
+  diagnostics.header_audit = {
+    host: request.headers.get('host'),
+    x_forwarded_host: request.headers.get('x-forwarded-host'),
+    x_forwarded_proto: request.headers.get('x-forwarded-proto'),
+    url: request.url,
+    matches_nextauth_url: request.url.startsWith(process.env.NEXTAUTH_URL || 'NONE')
+  };
+
+  // JOSE JWT Sign Test
   try {
     const iat = Math.floor(Date.now() / 1000);
-    const exp = iat + 60 * 60; // 1 hour
-    
-    // Test with the hardcoded diagnostic secret
     const secret = new TextEncoder().encode("diagnostic-debug-secret-2024");
-    
     const token = await new SignJWT({ 'urn:example:claim': true })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt(iat)
-      .setExpirationTime(exp)
+      .setExpirationTime(iat + 60)
       .sign(secret);
-      
     diagnostics.jose_sign_test = "SUCCESS";
-    diagnostics.test_token_preview = token.substring(0, 15) + "...";
   } catch (error: any) {
     diagnostics.jose_sign_test = "FAILED";
     diagnostics.jose_error = error.message;
   }
 
-  // Real Secret Metadata (Privacy-Safe)
+  // Real Secret Metadata
   if (process.env.NEXTAUTH_SECRET) {
-    const secret = process.env.NEXTAUTH_SECRET;
     diagnostics.real_secret_metadata = {
-      length: secret.length,
-      has_spaces: secret.includes(' '),
-      has_newlines: secret.includes('\n') || secret.includes('\r'),
-      is_base64: /^[A-Za-z0-9+/=]+$/.test(secret),
-      // SHA-256 Hash of the secret for verification without exposure
-      hash_hint: await crypto.subtle.digest("SHA-256", new TextEncoder().encode(secret))
+      length: process.env.NEXTAUTH_SECRET.length,
+      is_base64: /^[A-Za-z0-9+/=]+$/.test(process.env.NEXTAUTH_SECRET),
+      hash_hint: await crypto.subtle.digest("SHA-256", new TextEncoder().encode(process.env.NEXTAUTH_SECRET))
         .then(res => Array.from(new Uint8Array(res)).map(b => b.toString(16).padStart(2, '0')).join('').substring(0, 8))
     };
   }
 
-  // Simple DB check to ensure we didn't break connectivity
+  // DB simple check
   try {
     const userCount = await prisma.user.count();
     diagnostics.db_status = "CONNECTED";
-    diagnostics.db_user_count = userCount;
   } catch (error: any) {
     diagnostics.db_status = "ERROR";
   }
