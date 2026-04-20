@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user as any)?.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id, action } = await req.json();
 
     if (!id || action !== "PUBLISH") {
@@ -11,7 +20,7 @@ export async function POST(req: Request) {
 
     const updatedPost = await prisma.blogPost.update({
       where: { id },
-      data: { status: "PUBLISHED" },
+      data: { status: "PUBLISHED", publishedAt: new Date() },
     });
 
     return NextResponse.json({ success: true, post: updatedPost });

@@ -19,7 +19,7 @@ interface MailOptions {
 export async function sendEmail({ to, subject, html }: MailOptions) {
   try {
     const data = await resend.emails.send({
-      from: 'Cargoo Import <onboarding@resend.dev>',
+      from: 'Cargoo Import <noreply@cargooimport.eu>',
       to,
       subject,
       html,

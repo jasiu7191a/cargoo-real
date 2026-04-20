@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    // Initialize Resend safely inside the executing scope to avoid build-time crashes
-    const resend = new Resend(process.env.RESEND_API_KEY);
+    // Security: only authenticated admins can trigger outreach
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user as any)?.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
+    const resend = new Resend(process.env.RESEND_API_KEY);
     const { leadId, newStatus } = await req.json();
 
     if (!leadId || !newStatus) {
@@ -66,6 +72,21 @@ export async function POST(req: Request) {
              <p>You can track the shipment status in your dashboard.</p>
              <br/>
              <p>Thank you for importing with Cargoo.</p>
+          </div>
+        `;
+        break;
+      case "CONTACTED":
+        subject = `You have a sourcing update from Cargoo for ${lead.productName}`;
+        htmlContent = `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 8px; padding: 20px;">
+             <h2 style="color: #ff5500; text-transform: uppercase;">Cargoo Sourcing Team</h2>
+             <p>Hello,</p>
+             <p>Thank you for your inquiry regarding <strong>${lead.productName}</strong>.</p>
+             <p>Our sourcing specialists have reviewed your request and are reaching out to our verified supplier network in China. We will send you a detailed landed-cost quote within <strong>24–48 hours</strong>.</p>
+             <br/>
+             <p>In the meantime, feel free to reply to this email with any additional specifications.</p>
+             <br/>
+             <p>Best regards,<br/>The Cargoo Import Team</p>
           </div>
         `;
         break;
