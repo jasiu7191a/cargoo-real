@@ -24,7 +24,8 @@ export async function GET(request: NextRequest) {
   // JOSE JWT Sign Test
   try {
     const iat = Math.floor(Date.now() / 1000);
-    const secret = new TextEncoder().encode("diagnostic-secret-atomic-1234567890-abcdefghijklmnopqrstuvwxyz-!!!");
+    const secretStr = process.env.NEXTAUTH_SECRET || "diagnostic-secret-atomic-1234567890-abcdefghijklmnopqrstuvwxyz-!!!";
+    const secret = new TextEncoder().encode(secretStr);
     await new SignJWT({ 'urn:example:claim': true })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt(iat)

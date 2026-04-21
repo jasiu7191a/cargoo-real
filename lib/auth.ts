@@ -5,10 +5,9 @@ import CredentialsProvider from "next-auth/providers/credentials";
 // We are using a Zero-Logic hardcoded user and a high-entropy hardcoded secret.
 
 export const authOptions: NextAuthOptions = {
-  // 64-character high-entropy secret
-  secret: "diagnostic-secret-atomic-1234567890-abcdefghijklmnopqrstuvwxyz-!!!",
+  secret: process.env.NEXTAUTH_SECRET,
   
-  debug: true, // This will output internal traces to Cloudflare Workers Logs
+  debug: process.env.NODE_ENV !== "production",
   
   session: { 
     strategy: "jwt",
@@ -22,7 +21,7 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: true, // Forced to true for HTTPS environment
+        secure: true,
       },
     },
     callbackUrl: {
@@ -52,7 +51,7 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log("[AUTH_NUCLEAR] Attempt for:", credentials?.email);
+        console.log("[AUTH] Attempt for:", credentials?.email);
         return { 
           id: "ghost-admin-999", 
           email: "admin@cargooimport.eu", 

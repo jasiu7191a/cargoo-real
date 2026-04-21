@@ -14,13 +14,7 @@ async function runBuild() {
     }
 
     // 2. Sync DB schema
-    console.log('\n🗄️  Syncing Database Schema...');
-    try {
-      execSync('npx prisma db push --accept-data-loss', { stdio: 'inherit' });
-      console.log('✓ Schema synced');
-    } catch (dbErr) {
-      console.warn('⚠️  Prisma DB push failed — check DATABASE_URL. Continuing...');
-    }
+    console.log('\n⏭️  Skipping DB push on Cloudflare build (use migration locally or manually)');
 
     // 3. Run the OpenNext Cloudflare build
     console.log('\n🚀 Running: npx @opennextjs/cloudflare build');
