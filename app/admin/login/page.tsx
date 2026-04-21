@@ -22,26 +22,15 @@ function LoginForm() {
     setError("");
 
     try {
-      // Step 1: Get CSRF token directly
-      const csrfRes = await fetch("/api/auth/csrf");
-      const { csrfToken } = await csrfRes.json();
-
-      // Step 2: POST credentials manually
-      const res = await fetch("/api/auth/callback/credentials", {
+      const res = await fetch("/api/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          email,
-          password,
-          csrfToken,
-          callbackUrl,
-          json: "true",
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
 
-      if (!res.ok || data.error) {
+      if (!res.ok) {
         setError("Invalid credentials. Access denied.");
       } else {
         router.push(callbackUrl);
