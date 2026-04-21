@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getAdminSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { LayoutDashboard, Users, FileText, Send, Settings } from "lucide-react";
 import Link from "next/link";
@@ -11,9 +10,9 @@ export default async function ProtectedAdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getAdminSession();
 
-  if (!session || (session.user as any)?.role !== "ADMIN") {
+  if (!session || session.user.role !== "ADMIN") {
     redirect("/admin/login");
   }
 
