@@ -7,40 +7,11 @@ import CredentialsProvider from "next-auth/providers/credentials";
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   
-  debug: process.env.NODE_ENV !== "production",
+  debug: true,
   
   session: { 
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
-  },
-  
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: true,
-      },
-    },
-    callbackUrl: {
-      name: `__Secure-next-auth.callback-url`,
-      options: {
-        sameSite: "lax",
-        path: "/",
-        secure: true,
-      },
-    },
-    csrfToken: {
-      name: `__Host-next-auth.csrf-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: true,
-      },
-    },
   },
   
   providers: [
@@ -51,11 +22,11 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log("[AUTH] Attempt for:", credentials?.email);
+        console.log("[AUTH] Authorize hit for:", credentials?.email);
         return { 
           id: "ghost-admin-999", 
           email: "admin@cargooimport.eu", 
-          name: "Nuclear Ghost", 
+          name: "Cargoo Admin", 
           role: "ADMIN" 
         };
       }
