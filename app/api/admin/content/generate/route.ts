@@ -17,41 +17,49 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
     }
 
-    // Use native fetch instead of OpenAI SDK (Cloudflare-compatible)
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        max_tokens: 2000,
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: "You are a helpful assistant that returns only valid JSON matching the requested schema strictly.",
-          },
-          {
-            role: "user",
-            content: SOURCING_GUIDE_PROMPT(keyword),
-          },
-        ],
-      }),
-    });
-
-    if (!openaiRes.ok) {
-      const err = await openaiRes.text();
-      throw new Error(`OpenAI API error: ${err}`);
+    const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
+    if (!GOOGLE_API_KEY) {
+      throw new Error("GOOGLE_API_KEY is missing in Cloudflare Environment Variables.");
     }
 
-    const data = await openaiRes.json();
-    const result = data.choices?.[0]?.message?.content;
+    // Call Google Gemini 1.5 Flash (Free Tier) via native fetch
+    const geminiRes = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: SOURCING_GUIDE_PROMPT(keyword) + "\nIMPORTANT: Return ONLY the raw JSON object. No markdown formatting around it."
+                }
+              ]
+            }
+          ],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        }),
+      }
+    );
 
-    if (!result) throw new Error("Empty response from OpenAI");
+    if (!geminiRes.ok) {
+      const err = await geminiRes.text();
+      throw new Error(`Gemini API error: ${err}`);
+    }
 
-    const contentData = JSON.parse(result);
+    const data = await geminiRes.json();
+    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!resultText) throw new Error("Empty response from Gemini");
+
+    // Gemini sometimes includes backticks even with responseMimeType, we clean it just in case
+    const cleanJson = resultText.replace(/```json/g, "").replace(/```/g, "").trim();
+    const contentData = JSON.parse(cleanJson);
 
     const savedPost = await prisma.blogPost.create({
       data: {
