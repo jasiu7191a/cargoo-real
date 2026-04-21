@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     // 2. Call OpenAI with our specialized sourcing prompt
     const openai = getOpenAI();
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // Upgraded to latest flagship for better results and robustness
+      model: "gpt-4o-mini", 
       messages: [
         {
           role: "system",
@@ -35,6 +35,7 @@ export async function POST(req: Request) {
         },
       ],
       response_format: { type: "json_object" },
+      max_tokens: 2000,
     });
 
     const result = response.choices[0].message.content;
