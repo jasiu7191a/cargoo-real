@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, Suspense } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldCheck, Lock, Mail, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -23,19 +22,33 @@ function LoginForm() {
     setError("");
 
     try {
-      const res = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
+      // Step 1: Get CSRF token directly
+      const csrfRes = await fetch("/api/auth/csrf");
+      const { csrfToken } = await csrfRes.json();
+
+      // Step 2: POST credentials manually
+      const res = await fetch("/api/auth/callback/credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          email,
+          password,
+          csrfToken,
+          callbackUrl,
+          json: "true",
+        }),
       });
 
-      if (res?.error) {
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
         setError("Invalid credentials. Access denied.");
       } else {
         router.push(callbackUrl);
         router.refresh();
       }
     } catch (err) {
+      console.error("Login error:", err);
       setError("A system error occurred. Please try again.");
     } finally {
       setIsLoading(false);
