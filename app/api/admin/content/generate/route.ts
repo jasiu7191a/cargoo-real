@@ -17,32 +17,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
     }
 
-    const GOOGLE_API_KEY = process.env.GOOGLE_API_KEY;
-    if (!GOOGLE_API_KEY) {
-      throw new Error("GOOGLE_API_KEY is missing in Cloudflare Environment Variables.");
-    }
-
-    // Call Google Gemini 1.5 Flash (Free Tier) via native fetch
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GOOGLE_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           contents: [
             {
               parts: [
                 {
-                  text: SOURCING_GUIDE_PROMPT(keyword) + "\nIMPORTANT: Return ONLY the raw JSON object. No markdown formatting around it."
+                  text: `You are a helpful assistant that returns only valid JSON with no markdown, no backticks, no explanation — just raw JSON.\n\n${SOURCING_GUIDE_PROMPT(keyword)}`
                 }
               ]
             }
           ],
           generationConfig: {
-            responseMimeType: "application/json"
-          }
+            responseMimeType: "application/json",
+            maxOutputTokens: 2000,
+          },
         }),
       }
     );
@@ -53,13 +46,16 @@ export async function POST(req: Request) {
     }
 
     const data = await geminiRes.json();
-    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const result = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    if (!resultText) throw new Error("Empty response from Gemini");
+    if (!result) throw new Error("Empty response from Gemini");
 
-    // Gemini sometimes includes backticks even with responseMimeType, we clean it just in case
-    const cleanJson = resultText.replace(/```json/g, "").replace(/```/g, "").trim();
-    const contentData = JSON.parse(cleanJson);
+    let contentData;
+    try {
+      contentData = JSON.parse(result);
+    } catch {
+      throw new Error("Failed to parse Gemini response as JSON: " + result.slice(0, 200));
+    }
 
     const savedPost = await prisma.blogPost.create({
       data: {
