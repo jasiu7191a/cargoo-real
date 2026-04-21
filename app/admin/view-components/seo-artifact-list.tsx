@@ -4,12 +4,33 @@ import React, { useState } from "react";
 import { FileText, ArrowRight, CheckCircle, Globe } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export function SeoArtifactList({ initialPosts }: { initialPosts: any[] }) {
+export function SeoArtifactList({ initialPosts = [] }: { initialPosts?: any[] }) {
+  const [posts, setPosts] = useState<any[]>(initialPosts);
+  const [loading, setLoading] = useState(initialPosts.length === 0);
   const [filter, setFilter] = useState<"ALL" | "DRAFT" | "PUBLISHED">("ALL");
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const router = useRouter();
 
-  const filteredPosts = initialPosts.filter(post => {
+  React.useEffect(() => {
+    if (initialPosts.length > 0) return;
+    
+    async function fetchPosts() {
+      try {
+        const res = await fetch("/api/admin/content");
+        if (res.ok) {
+          const data = await res.json();
+          setPosts(data);
+        }
+      } catch (e) {
+        console.error("Failed to fetch posts:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPosts();
+  }, [initialPosts]);
+
+  const filteredPosts = posts.filter(post => {
       if (filter === "ALL") return true;
       return post.status === filter;
   });
@@ -67,7 +88,12 @@ export function SeoArtifactList({ initialPosts }: { initialPosts: any[] }) {
        </div>
 
        <div className="space-y-4">
-          {filteredPosts.length === 0 ? (
+          {loading ? (
+            <div className="h-64 flex flex-col items-center justify-center space-y-4">
+              <div className="w-10 h-10 border-4 border-[#ff5500]/20 border-t-[#ff5500] rounded-full animate-spin" />
+              <div className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8] animate-pulse">Syncing Content Matrix...</div>
+            </div>
+          ) : filteredPosts.length === 0 ? (
             <div className="p-8 text-center text-[#94a3b8] italic">No artifacts match this filter.</div>
           ) : (
             filteredPosts.map((post: any) => (
