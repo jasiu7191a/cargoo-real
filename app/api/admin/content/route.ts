@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
 
+export const dynamic = 'force-dynamic';
+
 // GET: List all articles for the admin panel
 export async function GET() {
   try {
