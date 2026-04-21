@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { getAdminSession } from "@/lib/session";
 
 // GET: List all articles for the admin panel
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const session = await getAdminSession();
+    
+    if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -24,8 +25,8 @@ export async function GET() {
 // POST: Save a new generated article
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const session = await getAdminSession();
+    if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -51,8 +52,8 @@ export async function POST(req: Request) {
 // PATCH: Update/Publish an article
 export async function PATCH(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const session = await getAdminSession();
+    if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

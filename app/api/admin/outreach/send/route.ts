@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { getAdminSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    // Security: only authenticated admins can trigger outreach
-    const session = await getServerSession(authOptions);
-    if (!session || (session.user as any)?.role !== "ADMIN") {
+    const session = await getAdminSession();
+    
+    if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
