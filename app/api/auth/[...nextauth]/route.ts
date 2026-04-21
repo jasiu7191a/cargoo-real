@@ -1,8 +1,11 @@
-import NextAuth from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-const handler = NextAuth(authOptions);
+export async function GET() {
+  return NextResponse.json({ message: "NextAuth is disabled. Using custom auth matrix." });
+}
 
-export { handler as GET, handler as POST };
+export async function POST() {
+  return NextResponse.json({ message: "NextAuth is disabled. Using custom auth matrix." });
+}

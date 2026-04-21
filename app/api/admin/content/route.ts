@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
 
@@ -16,7 +15,14 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json(posts);
+    const serializedPosts = posts.map(post => ({
+      ...post,
+      createdAt: post.createdAt.toISOString(),
+      updatedAt: post.updatedAt.toISOString(),
+      publishedAt: post.publishedAt?.toISOString() || null
+    }));
+
+    return NextResponse.json(serializedPosts);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

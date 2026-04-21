@@ -10,7 +10,8 @@ export async function POST(req: NextRequest) {
     const { email, password } = await req.json();
 
     // Zero-logic hardcoded admin for stabilization
-    if (email !== "admin@cargooimport.eu" || password !== "cargoo2024") {
+    const ADMIN_PASS = process.env.ADMIN_PASSWORD || "cargoo2024";
+    if (email !== "admin@cargooimport.eu" || password !== ADMIN_PASS) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
