@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
+import { getDictionary } from "@/lib/dictionaries";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,7 @@ export async function generateMetadata({ params }: { params: { slug: string; lan
 }
 
 export default async function BlogPostPage({ params }: { params: { slug: string; lang: string } }) {
+  const dict = getDictionary(params.lang);
   const post = await prisma.blogPost.findUnique({ where: { slug: params.slug } });
 
   if (!post || post.status !== "PUBLISHED") {
@@ -58,10 +60,10 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
       <header style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem 0" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto", padding: "0 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <Link href={`/${params.lang}`} style={{ color: "#ff5500", fontWeight: 800, textDecoration: "none", fontSize: "1.1rem", letterSpacing: "-0.03em" }}>
-            ← Cargoo
+            {dict.common.brandBack}
           </Link>
           <Link href={`/${params.lang}/blog`} style={{ color: "#94a3b8", fontWeight: 600, textDecoration: "none", fontSize: "0.85rem" }}>
-            All Articles
+            {dict.common.allArticles}
           </Link>
         </div>
       </header>
@@ -77,7 +79,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
           )}
           {post.publishedAt && (
             <span style={{ color: "#64748b", fontSize: "0.8rem" }}>
-              {new Date(post.publishedAt).toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" })}
+              {new Date(post.publishedAt).toLocaleDateString(params.lang, { year: "numeric", month: "long", day: "numeric" })}
             </span>
           )}
         </div>
@@ -106,16 +108,16 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
       <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", padding: "4rem 1.5rem", textAlign: "center" }}>
         <div style={{ maxWidth: "600px", margin: "0 auto" }}>
           <h2 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-0.04em", marginBottom: "1rem" }}>
-            Ready to Import from China?
+            {dict.blogPost.ctaTitle}
           </h2>
           <p style={{ color: "#94a3b8", marginBottom: "2rem", lineHeight: 1.7 }}>
-            Cargoo handles sourcing, quality control, logistics, and customs clearance — so you don't have to.
+            {dict.blogPost.ctaDescription}
           </p>
           <Link
             href={`/${params.lang}`}
             style={{ display: "inline-block", background: "#ff5500", color: "#000", padding: "1rem 2.5rem", borderRadius: "9999px", fontWeight: 900, textDecoration: "none", fontSize: "0.9rem", textTransform: "uppercase", letterSpacing: "0.05em" }}
           >
-            Get a Free Sourcing Quote →
+            {dict.blogPost.ctaButton}
           </Link>
         </div>
       </div>

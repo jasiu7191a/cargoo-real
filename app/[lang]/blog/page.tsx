@@ -1,17 +1,20 @@
 import Link from "next/link";
 import prisma from "@/lib/prisma";
+import { getDictionary } from "@/lib/dictionaries";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { lang: string } }) {
+  const dict = getDictionary(params.lang);
   return {
-    title: "Import Guides & Sourcing Blog | Cargoo",
-    description: "Expert guides on importing from China: sourcing tips, logistics, customs duties, and finding reliable suppliers for EU businesses.",
+    title: dict.blog.metaTitle,
+    description: dict.blog.metaDescription,
     alternates: { canonical: `https://cargooimport.eu/${params.lang}/blog` },
   };
 }
 
 export default async function BlogIndexPage({ params }: { params: { lang: string } }) {
+  const dict = getDictionary(params.lang);
   let posts: any[] = [];
   try {
     posts = await prisma.blogPost.findMany({
@@ -28,7 +31,7 @@ export default async function BlogIndexPage({ params }: { params: { lang: string
       <header style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem 0" }}>
         <div style={{ maxWidth: "960px", margin: "0 auto", padding: "0 1.5rem" }}>
           <Link href={`/${params.lang}`} style={{ color: "#ff5500", fontWeight: 800, textDecoration: "none", fontSize: "1.1rem", letterSpacing: "-0.03em" }}>
-            ← Cargoo
+            {dict.common.brandBack}
           </Link>
         </div>
       </header>
@@ -36,17 +39,17 @@ export default async function BlogIndexPage({ params }: { params: { lang: string
       <div style={{ maxWidth: "960px", margin: "0 auto", padding: "5rem 1.5rem" }}>
         <div style={{ marginBottom: "4rem" }}>
           <h1 style={{ fontSize: "clamp(2.5rem, 6vw, 4rem)", fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.05, marginBottom: "1rem" }}>
-            Import Guides &<br />
-            <span style={{ color: "#ff5500" }}>Sourcing Intelligence</span>
+            {dict.blog.heroLine1}<br />
+            <span style={{ color: "#ff5500" }}>{dict.blog.heroLine2}</span>
           </h1>
           <p style={{ color: "#94a3b8", fontSize: "1.1rem", maxWidth: "600px", lineHeight: 1.7 }}>
-            Expert knowledge for EU businesses importing from China — covering suppliers, logistics, customs, and more.
+            {dict.blog.subtitle}
           </p>
         </div>
 
         {posts.length === 0 ? (
           <div style={{ padding: "4rem", textAlign: "center", border: "1px dashed rgba(255,255,255,0.1)", borderRadius: "1.5rem" }}>
-            <p style={{ color: "#64748b" }}>No articles published yet. Check back soon.</p>
+            <p style={{ color: "#64748b" }}>{dict.blog.empty}</p>
           </div>
         ) : (
           <div style={{ display: "grid", gap: "1.5rem" }}>
@@ -85,10 +88,10 @@ export default async function BlogIndexPage({ params }: { params: { lang: string
                     </div>
                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                       <div style={{ color: "#64748b", fontSize: "0.75rem" }}>
-                        {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : ""}
+                        {post.publishedAt ? new Date(post.publishedAt).toLocaleDateString(params.lang, { year: "numeric", month: "short", day: "numeric" }) : ""}
                       </div>
                       <div style={{ marginTop: "1rem", color: "#ff5500", fontWeight: 700, fontSize: "0.8rem" }}>
-                        Read guide →
+                        {dict.blog.readGuide}
                       </div>
                     </div>
                   </div>

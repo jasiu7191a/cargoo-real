@@ -1,0 +1,20 @@
+{
+  "common": {
+    "brandBack": "← Cargoo",
+    "allArticles": "All Articles"
+  },
+  "blog": {
+    "metaTitle": "Import Guides & Sourcing Blog | Cargoo",
+    "metaDescription": "Expert guides on importing from China: sourcing tips, logistics, customs duties, and finding reliable suppliers for EU businesses.",
+    "heroLine1": "Import Guides &",
+    "heroLine2": "Sourcing Intelligence",
+    "subtitle": "Expert knowledge for EU businesses importing from China — covering suppliers, logistics, customs, and more.",
+    "empty": "No articles published yet. Check back soon.",
+    "readGuide": "Read guide →"
+  },
+  "blogPost": {
+    "ctaTitle": "Ready to Import from China?",
+    "ctaDescription": "Cargoo handles sourcing, quality control, logistics, and customs clearance — so you don't have to.",
+    "ctaButton": "Get a Free Sourcing Quote →"
+  }
+}

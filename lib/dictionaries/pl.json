@@ -1,0 +1,20 @@
+{
+  "common": {
+    "brandBack": "← Cargoo",
+    "allArticles": "Wszystkie artykuły"
+  },
+  "blog": {
+    "metaTitle": "Przewodniki Importowe i Blog Sourcingowy | Cargoo",
+    "metaDescription": "Eksperckie przewodniki po imporcie z Chin: porady zaopatrzeniowe, logistyka, cła i rzetelni dostawcy dla firm z UE.",
+    "heroLine1": "Przewodniki Importowe i",
+    "heroLine2": "Wiedza o Sourcingu",
+    "subtitle": "Ekspercka wiedza dla firm z UE importujących z Chin — dostawcy, logistyka, cła i nie tylko.",
+    "empty": "Jeszcze nie opublikowano żadnych artykułów. Zajrzyj wkrótce.",
+    "readGuide": "Czytaj przewodnik →"
+  },
+  "blogPost": {
+    "ctaTitle": "Gotowy na import z Chin?",
+    "ctaDescription": "Cargoo zajmuje się zaopatrzeniem, kontrolą jakości, logistyką i odprawą celną — abyś Ty nie musiał.",
+    "ctaButton": "Uzyskaj darmową wycenę →"
+  }
+}

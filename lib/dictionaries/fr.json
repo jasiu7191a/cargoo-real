@@ -1,0 +1,20 @@
+{
+  "common": {
+    "brandBack": "← Cargoo",
+    "allArticles": "Tous les articles"
+  },
+  "blog": {
+    "metaTitle": "Guides d'Import & Blog Sourcing | Cargoo",
+    "metaDescription": "Guides d'experts pour importer de Chine : conseils sourcing, logistique, droits de douane et fournisseurs fiables pour entreprises européennes.",
+    "heroLine1": "Guides d'Import &",
+    "heroLine2": "Intelligence Sourcing",
+    "subtitle": "Savoir d'expert pour les entreprises européennes qui importent de Chine — fournisseurs, logistique, douanes, et plus encore.",
+    "empty": "Aucun article publié pour le moment. Revenez bientôt.",
+    "readGuide": "Lire le guide →"
+  },
+  "blogPost": {
+    "ctaTitle": "Prêt à importer de Chine ?",
+    "ctaDescription": "Cargoo s'occupe du sourcing, du contrôle qualité, de la logistique et du dédouanement — vous n'avez rien à faire.",
+    "ctaButton": "Obtenez un devis gratuit →"
+  }
+}
