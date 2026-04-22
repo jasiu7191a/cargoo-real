@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 // Generate SEO metadata from the blog post
 export async function generateMetadata({ params }: { params: { slug: string; lang: string } }) {
-  const post = await prisma.blogPost.findUnique({ where: { slug: params.slug } });
+  const post = await prisma.blogPost.findFirst({ where: { slug: params.slug, lang: params.lang } });
   if (!post) return {};
   return {
     title: post.title + " | Cargoo Import",
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: { slug: string; lan
 
 export default async function BlogPostPage({ params }: { params: { slug: string; lang: string } }) {
   const dict = getDictionary(params.lang);
-  const post = await prisma.blogPost.findUnique({ where: { slug: params.slug } });
+  const post = await prisma.blogPost.findFirst({ where: { slug: params.slug, lang: params.lang } });
 
   if (!post || post.status !== "PUBLISHED") {
     notFound();

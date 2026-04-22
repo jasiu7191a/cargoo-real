@@ -24,11 +24,12 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true, post: updatedPost });
-  } catch (error) {
+  } catch (error: any) {
+    // Prisma throws P2025 when the record doesn't exist
+    if (error?.code === "P2025") {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
     console.error("Publishing error:", error);
-    return NextResponse.json(
-      { error: "Failed to publish artifact" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to publish" }, { status: 500 });
   }
 }

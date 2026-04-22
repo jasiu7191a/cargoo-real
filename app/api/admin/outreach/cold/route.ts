@@ -46,11 +46,11 @@ export async function POST(req: Request) {
     }
 
     // Check for duplicate — don't contact the same address twice
-    const alreadySent = await prisma.coldOutreach.findFirst({ where: { email } });
+    const alreadySent = await prisma.coldOutreach.findUnique({ where: { email } });
     if (alreadySent) {
       return NextResponse.json(
         { error: "Already contacted this address", skipped: true, sentAt: alreadySent.sentAt },
-        { status: 200 }
+        { status: 409 }
       );
     }
 

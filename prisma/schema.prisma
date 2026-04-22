@@ -83,7 +83,7 @@ model AdminAction {
 
 model ColdOutreach {
   id        String   @id @default(cuid())
-  email     String
+  email     String   @unique
   name      String?
   company   String?
   subject   String
@@ -91,6 +91,8 @@ model ColdOutreach {
   lang      String   @default("en")
   status    String   @default("SENT") // SENT, FAILED
   sentAt    DateTime @default(now())
+
+  @@index([sentAt, status])
 }
 
 model Unsubscribe {
