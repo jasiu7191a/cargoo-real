@@ -32,7 +32,8 @@
     "bcryptjs": "^2.4.3",
     "@opennextjs/cloudflare": "^1.19.1",
     "react-markdown": "^9.0.1",
-    "remark-gfm": "^4.0.0"
+    "remark-gfm": "^4.0.0",
+    "jose": "^5.2.4"
   },
   "devDependencies": {
     "@types/node": "^20.12.12",

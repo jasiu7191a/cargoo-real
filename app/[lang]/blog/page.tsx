@@ -57,6 +57,7 @@ export default async function BlogIndexPage({ params }: { params: { lang: string
                 style={{ textDecoration: "none", display: "block" }}
               >
                 <article
+                  className="glass-panel"
                   style={{
                     background: "rgba(255,255,255,0.03)",
                     border: "1px solid rgba(255,255,255,0.08)",
@@ -64,14 +65,6 @@ export default async function BlogIndexPage({ params }: { params: { lang: string
                     padding: "2rem",
                     transition: "border-color 0.2s, background 0.2s",
                     cursor: "pointer",
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,85,0,0.3)";
-                    (e.currentTarget as HTMLElement).style.background = "rgba(255,85,0,0.03)";
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)";
-                    (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap" }}>
