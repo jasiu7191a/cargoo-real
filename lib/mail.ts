@@ -1,9 +1,20 @@
 import { Resend } from 'resend';
 
-if (!process.env.RESEND_API_KEY) {
-  throw new Error("RESEND_API_KEY env var is required but not set.");
-}
-export const resend = new Resend(process.env.RESEND_API_KEY);
+// Instantiated lazily so a missing key only fails when email is actually sent,
+// not at module load time (which would crash all routes that import this file).
+let _resend: Resend | null = null;
+export const resend = {
+  emails: {
+    send: (opts: Parameters<Resend["emails"]["send"]>[0]) => {
+      if (!_resend) {
+        const key = process.env.RESEND_API_KEY;
+        if (!key) throw new Error("RESEND_API_KEY env var is required but not set.");
+        _resend = new Resend(key);
+      }
+      return _resend.emails.send(opts);
+    },
+  },
+};
 
 /** Escapes HTML special characters to prevent XSS in email bodies. */
 function esc(str: unknown): string {

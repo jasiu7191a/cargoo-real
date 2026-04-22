@@ -5,11 +5,13 @@ import { jwtVerify } from "jose"
 
 const locales = ['en', 'pl', 'de', 'fr']
 const defaultLocale = 'en'
-// No fallback: a missing secret must be a hard failure, not a public default.
-if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error("NEXTAUTH_SECRET env var is required but not set.");
-}
-const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+// Evaluated lazily inside the middleware function so a missing secret only
+// blocks admin routes, not public pages.
+const getSecret = () => {
+  const s = process.env.NEXTAUTH_SECRET;
+  if (!s) throw new Error("NEXTAUTH_SECRET env var is required but not set.");
+  return new TextEncoder().encode(s);
+};
 
 function getLocale(request: NextRequest) {
   const negotiatorHeaders: Record<string, string> = {}
@@ -39,7 +41,7 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      await jwtVerify(token, SECRET);
+      await jwtVerify(token, getSecret());
       return NextResponse.next();
     } catch (err) {
       return NextResponse.redirect(new URL("/admin/login", request.url));

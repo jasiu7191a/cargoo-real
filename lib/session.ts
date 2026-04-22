@@ -1,18 +1,18 @@
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 
-// No fallback: a missing secret must be a hard failure, not a public default.
-if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error("NEXTAUTH_SECRET env var is required but not set.");
-}
-const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
+const getSecret = () => {
+  const s = process.env.NEXTAUTH_SECRET;
+  if (!s) throw new Error("NEXTAUTH_SECRET env var is required but not set.");
+  return new TextEncoder().encode(s);
+};
 
 export async function getAdminSession() {
   const token = cookies().get("admin_token")?.value;
   if (!token) return null;
   
   try {
-    const { payload } = await jwtVerify(token, SECRET);
+    const { payload } = await jwtVerify(token, getSecret());
     return {
       user: {
         email: payload.email,
