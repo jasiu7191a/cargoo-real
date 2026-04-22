@@ -18,18 +18,18 @@ export async function POST(req: Request) {
     }
 
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          system_instruction: {
+            parts: [{ text: "You are a helpful assistant that returns only valid JSON with no markdown, no backticks, no explanation — just raw JSON." }]
+          },
           contents: [
             {
-              parts: [
-                {
-                  text: `You are a helpful assistant that returns only valid JSON with no markdown, no backticks, no explanation — just raw JSON.\n\n${SOURCING_GUIDE_PROMPT(keyword)}`
-                }
-              ]
+              role: "user",
+              parts: [{ text: SOURCING_GUIDE_PROMPT(keyword) }]
             }
           ],
           generationConfig: {
