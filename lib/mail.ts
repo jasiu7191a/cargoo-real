@@ -109,6 +109,73 @@ export async function sendClientConfirmation(email: string, productName: string)
   });
 }
 
+// ---------------------------------------------------------------------------
+// Cold outreach helpers
+// ---------------------------------------------------------------------------
+
+/** Generates a signed unsubscribe token for a given email using HMAC-SHA256. */
+export async function createUnsubscribeToken(email: string): Promise<string> {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("NEXTAUTH_SECRET not set");
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(email));
+  const sigHex = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+  return Buffer.from(`${email}:${sigHex}`).toString("base64url");
+}
+
+/** Verifies an unsubscribe token and returns the email if valid, null if tampered. */
+export async function verifyUnsubscribeToken(token: string): Promise<string | null> {
+  try {
+    const decoded = Buffer.from(token, "base64url").toString("utf-8");
+    const colonIdx = decoded.lastIndexOf(":");
+    const email = decoded.slice(0, colonIdx);
+    const expected = await createUnsubscribeToken(email);
+    return expected === token ? email : null;
+  } catch {
+    return null;
+  }
+}
+
+interface ColdEmailOptions {
+  to: string;
+  name?: string;
+  subject: string;
+  bodyHtml: string;  // pre-built HTML body — must NOT contain unsubscribe footer (added here)
+  lang?: string;
+}
+
+/** Sends a cold prospecting email with a mandatory unsubscribe footer. */
+export async function sendColdEmail({ to, name, subject, bodyHtml, lang = "en" }: ColdEmailOptions) {
+  const token = await createUnsubscribeToken(to);
+  const unsubUrl = `https://admin.cargooimport.eu/api/unsubscribe?token=${token}`;
+
+  const footerByLang: Record<string, string> = {
+    en: `You received this email because we believe Cargoo's sourcing service is relevant to your business. <a href="${unsubUrl}">Unsubscribe</a>.`,
+    pl: `Otrzymałeś tę wiadomość, ponieważ uważamy, że usługi Cargoo mogą być przydatne dla Twojej firmy. <a href="${unsubUrl}">Wypisz się</a>.`,
+    de: `Sie erhalten diese E-Mail, weil wir glauben, dass Cargoos Beschaffungsservice für Ihr Unternehmen relevant ist. <a href="${unsubUrl}">Abmelden</a>.`,
+    fr: `Vous recevez cet e-mail car nous pensons que le service de sourcing Cargoo est pertinent pour votre entreprise. <a href="${unsubUrl}">Se désabonner</a>.`,
+  };
+
+  const html = `
+    <div style="font-family: sans-serif; max-width: 560px; color: #1a1a1a; line-height: 1.6;">
+      ${bodyHtml}
+      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
+      <p style="font-size: 11px; color: #999; margin: 0;">
+        Cargoo Import • cargooimport.eu<br/>
+        ${footerByLang[lang] ?? footerByLang.en}
+      </p>
+    </div>
+  `;
+
+  return sendEmail({ to, subject, html });
+}
+
 /**
  * Returns a niche-specific 'Overseas Plug' outreach script
  */

@@ -80,3 +80,21 @@ model AdminAction {
   adminName String   @default("System")
   createdAt DateTime @default(now())
 }
+
+model ColdOutreach {
+  id        String   @id @default(cuid())
+  email     String
+  name      String?
+  company   String?
+  subject   String
+  body      String   @db.Text
+  lang      String   @default("en")
+  status    String   @default("SENT") // SENT, FAILED
+  sentAt    DateTime @default(now())
+}
+
+model Unsubscribe {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
