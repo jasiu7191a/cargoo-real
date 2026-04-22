@@ -1,11 +1,19 @@
 import { Resend } from 'resend';
 
-/**
- * Shared Resend client for the Cargoo Platform.
- * Uses the RESEND_API_KEY from environment variables.
- */
-// Shared Resend client. Fallback key prevents build-time crashes on Cloudflare.
-export const resend = new Resend(process.env.RESEND_API_KEY || 're_build_placeholder');
+if (!process.env.RESEND_API_KEY) {
+  throw new Error("RESEND_API_KEY env var is required but not set.");
+}
+export const resend = new Resend(process.env.RESEND_API_KEY);
+
+/** Escapes HTML special characters to prevent XSS in email bodies. */
+function esc(str: unknown): string {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 interface MailOptions {
   to: string;
@@ -35,19 +43,20 @@ export async function sendEmail({ to, subject, html }: MailOptions) {
  * Notification to the Admin (cargooimport@gmail.com)
  */
 export async function sendAdminNotification(lead: any) {
+  // esc() prevents XSS if a malicious user submits HTML in product/notes fields.
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; padding: 20px;">
       <h2 style="color: #ff5500; text-transform: uppercase;">New High-Intent Lead!</h2>
       <p>A new sourcing request has been submitted on <strong>cargooimport.eu</strong>.</p>
-      
+
       <div style="background: #f4f4f4; padding: 20px; border-radius: 10px; margin: 20px 0;">
-        <p><strong>Item:</strong> ${lead.productName}</p>
-        <p><strong>Client:</strong> ${lead.user?.email || 'Unknown'}</p>
-        <p><strong>Qty:</strong> ${lead.quantity}</p>
-        <p><strong>Target:</strong> €${lead.targetPrice || 'Not set'}</p>
-        <p><strong>Notes:</strong> ${lead.notes || 'None'}</p>
+        <p><strong>Item:</strong> ${esc(lead.productName)}</p>
+        <p><strong>Client:</strong> ${esc(lead.user?.email ?? 'Unknown')}</p>
+        <p><strong>Qty:</strong> ${esc(lead.quantity)}</p>
+        <p><strong>Target:</strong> €${esc(lead.targetPrice ?? 'Not set')}</p>
+        <p><strong>Notes:</strong> ${esc(lead.notes ?? 'None')}</p>
       </div>
-      
+
       <a href="https://cargooimport.eu/admin/leads" style="background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
         Open Dashboard
       </a>
@@ -56,7 +65,7 @@ export async function sendAdminNotification(lead: any) {
 
   return sendEmail({
     to: 'cargooimport@gmail.com',
-    subject: `🚀 Leads HQ: New Request for ${lead.productName}`,
+    subject: `Leads HQ: New Request for ${lead.productName}`,
     html
   });
 }
@@ -65,17 +74,18 @@ export async function sendAdminNotification(lead: any) {
  * Confirmation to the Client
  */
 export async function sendClientConfirmation(email: string, productName: string) {
+  const safeProduct = esc(productName);
   const html = `
     <div style="font-family: sans-serif; max-width: 600px; padding: 20px; border: 1px solid #eee; border-radius: 15px;">
       <h1 style="color: #000;">Expert Sourcing Initiated.</h1>
       <p>Hello,</p>
-      <p>Thank you for requesting a sourcing quote for <strong>${productName}</strong>.</p>
-      <p>Our agents in Shenzen and Guangzhou are already contacting verified suppliers to negotiate the best possible price and quality for you.</p>
-      
+      <p>Thank you for requesting a sourcing quote for <strong>${safeProduct}</strong>.</p>
+      <p>Our agents in Shenzhen and Guangzhou are already contacting verified suppliers to negotiate the best possible price and quality for you.</p>
+
       <div style="border-left: 4px solid #ff5500; padding: 15px; background: #fff8f5; margin: 20px 0;">
         <strong>Next Step:</strong> You will receive a WhatsApp message or email from your dedicated agent within 24 hours with your <strong>Total Landed Cost</strong> estimate.
       </div>
-      
+
       <p>Best regards,<br/>The Cargoo Team</p>
       <p style="font-size: 12px; color: #999;">cargooimport.eu • Premium China Sourcing</p>
     </div>

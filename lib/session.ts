@@ -1,7 +1,11 @@
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 
-const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "diagnostic-secret-atomic-1234567890-abcdefghijklmnopqrstuvwxyz-!!!");
+// No fallback: a missing secret must be a hard failure, not a public default.
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET env var is required but not set.");
+}
+const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
 
 export async function getAdminSession() {
   const token = cookies().get("admin_token")?.value;

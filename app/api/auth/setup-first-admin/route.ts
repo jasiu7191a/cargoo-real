@@ -5,33 +5,32 @@ import bcrypt from "bcryptjs";
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
-  // 1. Check if any user already exists
   const userCount = await prisma.user.count();
-  
+
   if (userCount > 0) {
     return NextResponse.json({ error: "System already initialized." }, { status: 403 });
   }
 
-  // 2. Clear credentials for the first admin (User should change this immediately)
-  const email = "admin@cargooimport.eu";
-  const password = "CargooPassword2024!";
+  // Credentials MUST come from env vars — never hardcoded defaults.
+  const email = process.env.ADMIN_EMAIL;
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (!email || !password) {
+    return NextResponse.json(
+      { error: "ADMIN_EMAIL and ADMIN_PASSWORD env vars must be set before running setup." },
+      { status: 503 }
+    );
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  // 3. Create the first admin
   await prisma.user.create({
-    data: {
-      email,
-      password: hashedPassword,
-      name: "Cargoo Master",
-      role: "ADMIN"
-    }
+    data: { email, password: hashedPassword, name: "Cargoo Admin", role: "ADMIN" },
   });
 
-  return NextResponse.json({ 
-    success: true, 
-    message: "Admin created successfully.",
-    email,
-    password,
-    warning: "PLEASE DELETE THIS FILE OR CHANGE YOUR PASSWORD IMMEDIATELY."
+  // Never return the plaintext password in the response.
+  return NextResponse.json({
+    success: true,
+    message: `Admin created for ${email}. This endpoint should be disabled or removed now.`,
   });
 }

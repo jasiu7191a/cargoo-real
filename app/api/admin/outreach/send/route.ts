@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
+import { resend } from "@/lib/mail";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
+
+/** Escapes HTML special characters to prevent XSS in outreach email bodies. */
+function esc(str: unknown): string {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +23,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const resend = new Resend(process.env.RESEND_API_KEY);
     const { leadId, newStatus } = await req.json();
 
     if (!leadId || !newStatus) {
@@ -33,7 +42,10 @@ export async function POST(req: Request) {
     let subject = "";
     let htmlContent = "";
 
-    // Generate contextual email based on status
+    // esc() prevents XSS — product names/quantities come from user-submitted data.
+    const safeName = esc(lead.productName);
+    const safeQty = esc(lead.quantity);
+
     switch (newStatus) {
       case "PROCESSING":
         subject = `Cargoo Update: We are processing your request for ${lead.productName}`;
@@ -41,7 +53,7 @@ export async function POST(req: Request) {
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 8px; padding: 20px;">
              <h2 style="color: #ff5500; text-transform: uppercase;">Request Processing</h2>
              <p>Hello,</p>
-             <p>Our sourcing agents in Shenzhen are currently tracking down the best suppliers for <strong>${lead.quantity}x ${lead.productName}</strong>.</p>
+             <p>Our sourcing agents in Shenzhen are currently tracking down the best suppliers for <strong>${safeQty}x ${safeName}</strong>.</p>
              <p>We will compile a landed cost quote (including logistics and duties) and get back to you shortly.</p>
              <br/>
              <p>Best regards,<br/>The Cargoo Import Team</p>
@@ -54,7 +66,7 @@ export async function POST(req: Request) {
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 8px; padding: 20px;">
              <h2 style="color: #ff5500; text-transform: uppercase;">Your Quote is Ready</h2>
              <p>Great news! We have successfully sourced your product and calculated the final landed cost to your warehouse.</p>
-             <p>Please log in to your Cargoo Dashboard to review the quote for <strong>${lead.productName}</strong>.</p>
+             <p>Please log in to your Cargoo Dashboard to review the quote for <strong>${safeName}</strong>.</p>
              <br/>
              <a href="https://cargooimport.eu/dashboard" style="display: inline-block; background: #ff5500; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">View Quote</a>
              <br/><br/>
@@ -67,7 +79,7 @@ export async function POST(req: Request) {
         htmlContent = `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 8px; padding: 20px;">
              <h2 style="color: #ff5500; text-transform: uppercase;">Cargo Shipped</h2>
-             <p>Your order for <strong>${lead.productName}</strong> has been successfully cleared and boarded.</p>
+             <p>Your order for <strong>${safeName}</strong> has been successfully cleared and boarded.</p>
              <p>You can track the shipment status in your dashboard.</p>
              <br/>
              <p>Thank you for importing with Cargoo.</p>
@@ -80,7 +92,7 @@ export async function POST(req: Request) {
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 8px; padding: 20px;">
              <h2 style="color: #ff5500; text-transform: uppercase;">Cargoo Sourcing Team</h2>
              <p>Hello,</p>
-             <p>Thank you for your inquiry regarding <strong>${lead.productName}</strong>.</p>
+             <p>Thank you for your inquiry regarding <strong>${safeName}</strong>.</p>
              <p>Our sourcing specialists have reviewed your request and are reaching out to our verified supplier network in China. We will send you a detailed landed-cost quote within <strong>24–48 hours</strong>.</p>
              <br/>
              <p>In the meantime, feel free to reply to this email with any additional specifications.</p>
@@ -90,38 +102,33 @@ export async function POST(req: Request) {
         `;
         break;
       default:
-        // No email needed for other statuses (e.g., NEW, PAID) right now
         return NextResponse.json({ success: true, message: "No email triggered for this status." });
     }
 
-    // Send the email via Resend
-    // Note: The 'from' address must be a verified domain on Resend. 
-    // Usually something like 'notifications@cargooimport.eu'
+    // Update DB first — email is non-reversible, so we must persist intent before sending.
+    await prisma.lead.update({
+      where: { id: leadId },
+      data: { status: newStatus },
+    });
+
     const sendResult = await resend.emails.send({
       from: "Cargoo Import <noreply@cargooimport.eu>",
       to: lead.user.email,
-      subject: subject,
+      subject,
       html: htmlContent,
     });
 
     if (sendResult.error) {
-       console.error("Resend Error:", sendResult.error);
-       return NextResponse.json({ error: sendResult.error.message }, { status: 500 });
+      console.error("Resend Error:", sendResult.error);
+      return NextResponse.json({ error: "Email delivery failed" }, { status: 500 });
     }
 
-    // 4. PERSIST THE STATUS CHANGE IN THE DATABASE
-    await prisma.lead.update({
-      where: { id: leadId },
-      data: { status: newStatus }
-    });
-
-    // 5. LOG THE ACTION FOR HISTORY
     await prisma.adminAction.create({
       data: {
         type: "EMAIL_SENT",
         details: `Sent ${newStatus} email to ${lead.user.email} (Item: ${lead.productName})`,
-        adminName: "Senior Admin" // In a real app, this would come from session.user.name
-      }
+        adminName: "Senior Admin",
+      },
     });
 
     return NextResponse.json({ success: true, message: "Email sent and status updated" });

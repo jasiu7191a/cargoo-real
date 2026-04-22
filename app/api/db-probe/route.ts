@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getAdminSession } from "@/lib/session";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // Exposing DB connectivity without auth leaks infrastructure info.
+  const session = await getAdminSession();
+  if (!session || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const diagnostics: any = {
     timestamp: new Date().toISOString(),
   };

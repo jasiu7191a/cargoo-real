@@ -23,15 +23,10 @@ export async function GET() {
        console.error("Database connection failed during stats fetch:", dbError);
     }
     
-    // Efficiency = Leads per User ratio (simplified for dashboard)
-    const efficiency = userCount > 0 ? ((leadCount / (userCount * 5)) * 100).toFixed(1) : "0.0";
-    
-    return NextResponse.json({ 
-        count: leadCount,
-        activeSessions: userCount + 5, // Active admins + cache
-        conversionRate: `${efficiency}%`,
-        avgResponse: "1.2m",
-        status: leadCount > 0 ? "LIVE" : "SYNCING"
+    return NextResponse.json({
+      count: leadCount,
+      userCount,
+      status: leadCount > 0 ? "LIVE" : "SYNCING",
     });
   } catch (error: any) {
     console.error("Critical Stats API Error:", error);

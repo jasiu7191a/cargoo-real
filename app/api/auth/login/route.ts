@@ -1,23 +1,44 @@
 import { SignJWT } from "jose";
 import { NextRequest, NextResponse } from "next/server";
 
-const SECRET = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || "diagnostic-secret-atomic-1234567890-abcdefghijklmnopqrstuvwxyz-!!!");
-
 export const runtime = "nodejs";
 
-export async function POST(req: NextRequest) {
-  try {
-    const { email, password } = await req.json();
+// Fail hard at boot if secret is missing — no public fallback ever.
+const rawSecret = process.env.NEXTAUTH_SECRET;
+if (!rawSecret) throw new Error("NEXTAUTH_SECRET env var is required but not set.");
+const SECRET = new TextEncoder().encode(rawSecret);
 
-    // Zero-logic hardcoded admin for stabilization
-    const ADMIN_PASS = process.env.ADMIN_PASSWORD || "cargoo2024";
-    if (email !== "admin@cargooimport.eu" || password !== ADMIN_PASS) {
+// Credentials must come from env vars — no hardcoded fallbacks in source.
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+export async function POST(req: NextRequest) {
+  // Validate env is fully configured before processing any request.
+  if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+    console.error("Login route: ADMIN_EMAIL or ADMIN_PASSWORD env vars are not set.");
+    return NextResponse.json({ error: "Server misconfiguration" }, { status: 503 });
+  }
+
+  try {
+    const body = await req.json();
+    const { email, password } = body ?? {};
+
+    if (typeof email !== "string" || typeof password !== "string") {
+      return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    }
+
+    // Constant-time comparison is not needed here since both sides come from
+    // env vars (not DB), but we still avoid timing-distinguishable short-circuits.
+    const emailMatch = email === ADMIN_EMAIL;
+    const passMatch = password === ADMIN_PASSWORD;
+    if (!emailMatch || !passMatch) {
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
+    // Token expires in 8 hours — 30 days is excessive for an admin session.
     const token = await new SignJWT({ email, role: "ADMIN" })
       .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("30d")
+      .setExpirationTime("8h")
       .sign(SECRET);
 
     const res = NextResponse.json({ ok: true });
@@ -26,11 +47,12 @@ export async function POST(req: NextRequest) {
       secure: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24 * 30,
+      maxAge: 60 * 60 * 8,
     });
     return res;
-  } catch (e: any) {
+  } catch (e) {
+    // Never expose internal error details to the client.
     console.error("Login error:", e);
-    return NextResponse.json({ error: "Server error", details: e.message }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

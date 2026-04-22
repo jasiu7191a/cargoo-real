@@ -24,8 +24,9 @@ export async function GET(request: NextRequest) {
   // JOSE JWT Sign Test
   try {
     const iat = Math.floor(Date.now() / 1000);
-    const secretStr = process.env.NEXTAUTH_SECRET || "diagnostic-secret-atomic-1234567890-abcdefghijklmnopqrstuvwxyz-!!!";
-    const secret = new TextEncoder().encode(secretStr);
+    // No fallback — test must use the real secret or report a config failure.
+    if (!process.env.NEXTAUTH_SECRET) throw new Error("NEXTAUTH_SECRET not set");
+    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET);
     await new SignJWT({ 'urn:example:claim': true })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt(iat)

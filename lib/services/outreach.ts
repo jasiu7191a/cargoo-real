@@ -1,6 +1,4 @@
-import { Resend } from 'resend';
-
-const resend = new Resend(process.env.RESEND_API_KEY || 're_build_placeholder');
+import { resend } from '@/lib/mail';
 
 interface OutreachEmail {
   to: string;
@@ -18,9 +16,9 @@ export async function sendOutreachEmail(data: OutreachEmail) {
       subject: data.subject,
       html: `
         <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
-          <h2>Hello ${data.leadName},</h2>
-          <p>I noticed you were looking for <strong>${data.productName}</strong>. At Cargoo, we specialize in direct-from-factory sourcing to get you much better rates than public marketplaces.</p>
-          <p>${data.personalizedSnippet}</p>
+          <h2>Hello ${data.leadName.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")},</h2>
+          <p>I noticed you were looking for <strong>${data.productName.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</strong>. At Cargoo, we specialize in direct-from-factory sourcing to get you much better rates than public marketplaces.</p>
+          <p>${data.personalizedSnippet.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</p>
           <p>We handle all the logistics, quality inspection, and customs so you don't have to worry about a thing.</p>
           <p>Would you like me to generate a personalized quote for your order?</p>
           <br />

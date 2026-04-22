@@ -7,9 +7,10 @@ import CredentialsProvider from "next-auth/providers/credentials";
 export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   
-  debug: true,
-  
-  session: { 
+  // debug must be off in production — it logs tokens and session data.
+  debug: process.env.NODE_ENV === "development",
+
+  session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60,
   },

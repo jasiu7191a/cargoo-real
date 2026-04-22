@@ -1,7 +1,25 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
-import { SOURCING_GUIDE_PROMPT } from "@/lib/openai";
+
+const SOURCING_GUIDE_PROMPT = (keyword: string) => `
+You are a senior sourcing agent and logistics expert for Cargoo Import, a platform helping EU businesses import from China.
+Generate a comprehensive, high-converting sourcing guide for the targeting keyword/topic: "${keyword}".
+
+Requirements:
+- Title: Catchy, professional, SEO-optimized (e.g. "The 2026 Guide to Importing [Topic]")
+- Slug: URL-safe hyphenated string based on the title.
+- Meta Description: Compelling summary under 160 chars.
+- Content: Long-form Markdown. Must include:
+  ### 📦 Why Import [Topic]?
+  ### 🛡️ Verified Sourcing & Quality Control
+  ### 🚢 Logistics & Shipping to EU
+  ### 📜 Customs & Duties (Focus on Poland/Germany/France)
+  ### ⚡ How Cargoo Can Help (CTA)
+
+Tone: Professional, authoritative, yet approachable.
+Return the result as a raw JSON object with keys: title, slug, metaDescription, content.
+`;
 
 export const dynamic = "force-dynamic";
 
@@ -17,11 +35,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
     }
 
+    // API key goes in a header, not the URL — URL params appear in server logs and CDN access logs.
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": process.env.GEMINI_API_KEY ?? "",
+        },
         body: JSON.stringify({
           system_instruction: {
             parts: [{ text: "You are a helpful assistant that returns only valid JSON with no markdown, no backticks, no explanation — just raw JSON." }]
