@@ -4,11 +4,10 @@ import { getAdminSession } from "@/lib/session";
 
 export const dynamic = 'force-dynamic';
 
-// GET: List all articles for the admin panel
+// GET: List all articles
 export async function GET() {
   try {
     const session = await getAdminSession();
-    
     if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -47,7 +46,7 @@ export async function POST(req: Request) {
         metaDescription,
         content,
         targetKeyword,
-        status: "DRAFT", // Start as draft so admin can review
+        status: "DRAFT",
       },
     });
 
@@ -77,6 +76,25 @@ export async function PATCH(req: Request) {
     });
 
     return NextResponse.json(post);
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// DELETE: Remove an article
+export async function DELETE(req: Request) {
+  try {
+    const session = await getAdminSession();
+    if (!session || session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await req.json();
+    if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
+
+    await prisma.blogPost.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
