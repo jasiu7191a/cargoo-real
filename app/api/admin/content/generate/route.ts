@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -33,7 +33,6 @@ export async function POST(req: Request) {
             }
           ],
           generationConfig: {
-            responseMimeType: "application/json",
             maxOutputTokens: 2000,
           },
         }),
@@ -50,11 +49,16 @@ export async function POST(req: Request) {
 
     if (!result) throw new Error("Empty response from Gemini");
 
+    let cleaned = result.trim();
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/^```json?\n?/, "").replace(/```$/, "").trim();
+    }
+
     let contentData;
     try {
-      contentData = JSON.parse(result);
+      contentData = JSON.parse(cleaned);
     } catch {
-      throw new Error("Failed to parse Gemini response as JSON: " + result.slice(0, 200));
+      throw new Error("Failed to parse Gemini response as JSON: " + cleaned.slice(0, 200));
     }
 
     const savedPost = await prisma.blogPost.create({
