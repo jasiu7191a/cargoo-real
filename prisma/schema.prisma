@@ -59,6 +59,7 @@ model BlogPost {
   content        String    @db.Text
   targetKeyword  String?
   metaDescription String?
+  lang           String    @default("en") // en, pl, de, fr
   status         String    @default("DRAFT") // DRAFT, PUBLISHED
   publishedAt    DateTime?
   createdAt      DateTime  @default(now())

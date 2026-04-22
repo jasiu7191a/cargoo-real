@@ -18,7 +18,7 @@ export default async function BlogIndexPage({ params }: { params: { lang: string
   let posts: any[] = [];
   try {
     posts = await prisma.blogPost.findMany({
-      where: { status: "PUBLISHED" },
+      where: { status: "PUBLISHED", lang: params.lang },
       orderBy: { publishedAt: "desc" },
       select: { id: true, title: true, slug: true, metaDescription: true, targetKeyword: true, publishedAt: true },
     });

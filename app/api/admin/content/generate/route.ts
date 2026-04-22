@@ -2,15 +2,24 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
 
-const SOURCING_GUIDE_PROMPT = (keyword: string) => `
+const LANG_NAMES: Record<string, string> = {
+  en: "English",
+  pl: "Polish",
+  de: "German",
+  fr: "French",
+};
+
+const SOURCING_GUIDE_PROMPT = (keyword: string, lang: string) => `
 You are a senior sourcing agent and logistics expert for Cargoo Import, a platform helping EU businesses import from China.
-Generate a comprehensive, high-converting sourcing guide for the targeting keyword/topic: "${keyword}".
+Generate a comprehensive, high-converting sourcing guide for the keyword/topic: "${keyword}".
+
+IMPORTANT: Write the entire response in ${LANG_NAMES[lang] ?? "English"}. Every field — title, metaDescription, and content — must be in ${LANG_NAMES[lang] ?? "English"}.
 
 Requirements:
-- Title: Catchy, professional, SEO-optimized (e.g. "The 2026 Guide to Importing [Topic]")
-- Slug: URL-safe hyphenated string based on the title.
-- Meta Description: Compelling summary under 160 chars.
-- Content: Long-form Markdown. Must include:
+- Title: Catchy, professional, SEO-optimized
+- Slug: URL-safe hyphenated string in English (Latin characters only, no accents)
+- Meta Description: Compelling summary under 160 chars, in ${LANG_NAMES[lang] ?? "English"}
+- Content: Long-form Markdown in ${LANG_NAMES[lang] ?? "English"}. Must include:
   ### 📦 Why Import [Topic]?
   ### 🛡️ Verified Sourcing & Quality Control
   ### 🚢 Logistics & Shipping to EU
@@ -30,10 +39,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { keyword } = await req.json();
+    const { keyword, lang = "en" } = await req.json();
     if (!keyword) {
       return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
     }
+    const safeLang = ["en", "pl", "de", "fr"].includes(lang) ? lang : "en";
 
     // API key goes in a header, not the URL — URL params appear in server logs and CDN access logs.
     const geminiRes = await fetch(
@@ -51,7 +61,7 @@ export async function POST(req: Request) {
           contents: [
             {
               role: "user",
-              parts: [{ text: SOURCING_GUIDE_PROMPT(keyword) }]
+              parts: [{ text: SOURCING_GUIDE_PROMPT(keyword, safeLang) }]
             }
           ],
           generationConfig: {
@@ -83,13 +93,17 @@ export async function POST(req: Request) {
       throw new Error("Failed to parse Gemini response as JSON: " + cleaned.slice(0, 200));
     }
 
+    // Prefix slug with lang code to avoid collisions between languages.
+    const langSlug = `${safeLang}-${contentData.slug}`;
+
     const savedPost = await prisma.blogPost.create({
       data: {
         title: contentData.title,
-        slug: contentData.slug,
+        slug: langSlug,
         metaDescription: contentData.metaDescription,
         content: contentData.content,
         targetKeyword: keyword,
+        lang: safeLang,
         status: "DRAFT",
       },
     });
