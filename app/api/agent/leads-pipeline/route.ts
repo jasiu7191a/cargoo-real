@@ -31,7 +31,7 @@ export async function POST(req: Request) {
   }
 
   // Build unique keyword list from product names
-  const keywords = [...new Set(recentLeads.map(l => l.productName.trim()).filter(Boolean))];
+  const keywords = Array.from(new Set(recentLeads.map(l => l.productName.trim()).filter(Boolean)));
 
   // Find which keywords already have a published article
   const existing = await prisma.blogPost.findMany({
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
   const uncovered = keywords.filter(k => {
     const lower = k.toLowerCase();
-    return ![...coveredKeywords].some(c => c?.includes(lower) || lower.includes(c ?? ""));
+    return !Array.from(coveredKeywords).some(c => c?.includes(lower) || lower.includes(c ?? ""));
   });
 
   if (uncovered.length === 0) {
