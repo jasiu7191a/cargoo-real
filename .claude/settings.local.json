@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:www.gardenowo.pl)",
+      "WebFetch(domain:pestar.pl)",
+      "WebFetch(domain:rolmarket.pl)",
+      "WebFetch(domain:ogrodniczy.com)",
+      "WebFetch(domain:domitech.pl)",
+      "WebFetch(domain:plantet.pl)",
+      "WebFetch(domain:sklepdlaogrodu.pl)",
+      "WebFetch(domain:www.narzedzia.pl)",
+      "Bash(curl -s -k -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer test' -d '{\"keyword\":\"test\",\"lang\":\"pl\"}' --max-time 15 -w '\\\\nHTTP_STATUS:%{http_code}')",
+      "Bash(curl -s -k -X POST https://admin.cargooimport.eu/api/admin/outreach/cold -H 'Content-Type: application/json' -H 'Authorization: Bearer test' -d '{\"email\":\"test@test.com\",\"name\":\"Test\",\"lang\":\"pl\",\"subject\":\"test\",\"bodyHtml\":\"<p>test</p>\"}' --max-time 10 -w '\\\\nHTTP_STATUS:%{http_code}')",
+      "mcp__scheduled-tasks__list_scheduled_tasks",
+      "mcp__scheduled-tasks__update_scheduled_task"
+    ]
+  }
+}
