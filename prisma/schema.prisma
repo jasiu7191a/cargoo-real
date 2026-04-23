@@ -100,3 +100,29 @@ model Unsubscribe {
   email     String   @unique
   createdAt DateTime @default(now())
 }
+
+// Tracks every email delivery event received from Resend webhooks
+model EmailEvent {
+  id        String   @id @default(cuid())
+  resendId  String   // Resend email ID
+  type      String   // DELIVERED, BOUNCED, SPAM, OPENED, CLICKED
+  toEmail   String
+  subject   String?
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([toEmail])
+}
+
+// Tracks SEO indexing status of published blog posts
+model SeoCheck {
+  id          String   @id @default(cuid())
+  postId      String
+  slug        String
+  lang        String
+  indexed     Boolean  @default(false)
+  checkedAt   DateTime @default(now())
+  searchSnippet String? // excerpt from search result if found
+
+  @@index([slug, lang])
+}
