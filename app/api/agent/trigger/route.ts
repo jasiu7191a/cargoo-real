@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "keyword is required (string, max 500 chars)" }, { status: 400 });
   }
 
-  const safeLang = ["en", "pl", "de", "fr"].includes(lang) ? lang : "en";
+  const safeLang = (["en", "pl", "de", "fr"].includes(lang) ? lang : "en") as "en" | "pl" | "de" | "fr";
 
   const geminiKey = process.env.GEMINI_API_KEY;
   if (!geminiKey) {
