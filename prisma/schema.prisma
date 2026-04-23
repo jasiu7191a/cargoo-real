@@ -64,6 +64,9 @@ model BlogPost {
   publishedAt    DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+
+  @@index([status, lang])
+  @@index([targetKeyword, status])
 }
 
 model Tag {

@@ -58,7 +58,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ checked: 0, message: "No published posts" });
   }
 
-  // For each post, find the latest SEO check
+  // Batch-load latest SEO check for all posts in one query
+  const postIds = posts.map(p => p.id);
+  const allChecks = await prisma.seoCheck.findMany({
+    where: { postId: { in: postIds } },
+    orderBy: { checkedAt: "desc" },
+  });
+
+  // Keep only the most recent check per post
+  const latestCheckByPost = new Map<string, typeof allChecks[number]>();
+  for (const check of allChecks) {
+    if (!latestCheckByPost.has(check.postId)) {
+      latestCheckByPost.set(check.postId, check);
+    }
+  }
+
   const results: Array<{
     postId: string;
     slug: string;
@@ -73,10 +87,7 @@ export async function POST(req: Request) {
   const needsCheck: typeof posts = [];
 
   for (const post of posts) {
-    const lastCheck = await prisma.seoCheck.findFirst({
-      where: { postId: post.id },
-      orderBy: { checkedAt: "desc" },
-    });
+    const lastCheck = latestCheckByPost.get(post.id);
 
     // Skip if: already indexed AND checked recently
     if (lastCheck?.indexed && lastCheck.checkedAt > sevenDaysAgo) {

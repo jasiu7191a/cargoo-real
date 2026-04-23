@@ -14,7 +14,8 @@ export async function GET() {
 
     const leads = await prisma.lead.findMany({
       orderBy: { createdAt: "desc" },
-      include: { user: true }
+      include: { user: true },
+      take: 200,
     });
 
     const formattedLeads = leads.map(lead => ({

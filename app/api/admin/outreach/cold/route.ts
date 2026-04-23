@@ -54,13 +54,17 @@ export async function POST(req: Request) {
       );
     }
 
+    // Write record first so we never lose track of an attempted send
+    const record = await prisma.coldOutreach.create({
+      data: { email, name, company, subject, body: bodyHtml, lang, status: "PENDING" },
+    });
+
     // Send via Resend — unsubscribe footer is appended inside sendColdEmail
     const result = await sendColdEmail({ to: email, name, subject, bodyHtml, lang });
 
-    const status = result.success ? "SENT" : "FAILED";
-
-    await prisma.coldOutreach.create({
-      data: { email, name, company, subject, body: bodyHtml, lang, status },
+    await prisma.coldOutreach.update({
+      where: { id: record.id },
+      data: { status: result.success ? "SENT" : "FAILED" },
     });
 
     if (!result.success) {

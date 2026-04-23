@@ -63,7 +63,7 @@ async function checkAndAlertIfNeeded() {
 
   // Send alert email to admin — non-blocking
   await sendEmail({
-    to: "cargooimport@gmail.com",
+    to: process.env.ADMIN_EMAIL ?? "cargooimport@gmail.com",
     subject: "⚠️ Cargoo Email Health Alert",
     html: `
       <div style="font-family:sans-serif;max-width:600px;padding:20px;">
