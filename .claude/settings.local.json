@@ -13,7 +13,9 @@
       "Bash(curl -s -k -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer test' -d '{\"keyword\":\"test\",\"lang\":\"pl\"}' --max-time 15 -w '\\\\nHTTP_STATUS:%{http_code}')",
       "Bash(curl -s -k -X POST https://admin.cargooimport.eu/api/admin/outreach/cold -H 'Content-Type: application/json' -H 'Authorization: Bearer test' -d '{\"email\":\"test@test.com\",\"name\":\"Test\",\"lang\":\"pl\",\"subject\":\"test\",\"bodyHtml\":\"<p>test</p>\"}' --max-time 10 -w '\\\\nHTTP_STATUS:%{http_code}')",
       "mcp__scheduled-tasks__list_scheduled_tasks",
-      "mcp__scheduled-tasks__update_scheduled_task"
+      "mcp__scheduled-tasks__update_scheduled_task",
+      "Bash(curl -s -k -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer __TRACKED_VAR__' -d '{\"keyword\":\"test connectivity check\",\"lang\":\"pl\"}' --max-time 15 -w '\\\\nHTTP:%{http_code}')",
+      "Bash(curl -s -k -X POST https://admin.cargooimport.eu/api/admin/outreach/cold -H 'Content-Type: application/json' -H 'Authorization: Bearer __TRACKED_VAR__' -d '{\"email\":\"test@example.com\",\"name\":\"Test\",\"lang\":\"pl\",\"subject\":\"test\",\"bodyHtml\":\"<p>test</p>\"}' --max-time 15 -w '\\\\nHTTP:%{http_code}')"
     ]
   }
 }
