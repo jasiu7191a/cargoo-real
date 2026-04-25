@@ -26,19 +26,30 @@ function esc(str: unknown): string {
     .replace(/'/g, "&#39;");
 }
 
+export function stripBodyPlaceholder(value: string): string {
+  return value.replace(/\{\{\s*BODY\s*\}\}/gi, "").trim();
+}
+
+export function getCargooSenderForLang(lang?: string | null): string {
+  const normalized = String(lang ?? "en").toLowerCase();
+  const mailbox = normalized === "pl" || normalized === "de" ? "kontakt" : "contact";
+  return `Cargoo Import <${mailbox}@cargooimport.eu>`;
+}
+
 interface MailOptions {
   to: string;
   subject: string;
   html: string;
+  from?: string;
 }
 
 /**
  * Basic helper to send email via Resend
  */
-export async function sendEmail({ to, subject, html }: MailOptions) {
+export async function sendEmail({ to, subject, html, from }: MailOptions) {
   try {
     const data = await resend.emails.send({
-      from: 'Cargoo Import <noreply@cargooimport.eu>',
+      from: from ?? getCargooSenderForLang(),
       to,
       subject,
       html,
@@ -158,7 +169,7 @@ export async function sendColdEmail({ to, name, subject, bodyHtml, lang = "en" }
   // Substitute the unsubscribe URL into the template footer ({{UNSUB_URL}} placeholder),
   // then wrap in a proper HTML document with explicit UTF-8 charset so email clients
   // that don't auto-detect encoding don't mangle ä/ö/ü/ß/ą/ę as replacement diamonds.
-  const assembled = bodyHtml.replace(/\{\{UNSUB_URL\}\}/g, unsubUrl);
+  const assembled = stripBodyPlaceholder(bodyHtml).replace(/\{\{UNSUB_URL\}\}/g, unsubUrl);
   const html = `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
@@ -171,7 +182,7 @@ export async function sendColdEmail({ to, name, subject, bodyHtml, lang = "en" }
 </body>
 </html>`;
 
-  return sendEmail({ to, subject, html });
+  return sendEmail({ to, subject, html, from: getCargooSenderForLang(lang) });
 }
 
 /**

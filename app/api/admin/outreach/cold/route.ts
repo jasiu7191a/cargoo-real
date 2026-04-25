@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
-import { sendColdEmail } from "@/lib/mail";
+import { sendColdEmail, stripBodyPlaceholder } from "@/lib/mail";
 
 export const dynamic = "force-dynamic";
 
@@ -27,8 +27,13 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { email, name, company, subject, bodyHtml, lang = "en" } = body ?? {};
 
-    if (!email || !subject || !bodyHtml) {
+    if (!email || !subject || typeof bodyHtml !== "string") {
       return NextResponse.json({ error: "email, subject, and bodyHtml are required" }, { status: 400 });
+    }
+
+    const cleanBodyHtml = stripBodyPlaceholder(bodyHtml);
+    if (!cleanBodyHtml) {
+      return NextResponse.json({ error: "bodyHtml must contain real email copy, not only a template placeholder" }, { status: 400 });
     }
 
     // Basic email format check
@@ -66,11 +71,11 @@ export async function POST(req: Request) {
 
     // Write record first so we never lose track of an attempted send
     const record = await prisma.coldOutreach.create({
-      data: { email, name, company, subject, body: bodyHtml, lang, status: "PENDING" },
+      data: { email, name, company, subject, body: cleanBodyHtml, lang, status: "PENDING" },
     });
 
     // Send via Resend — unsubscribe footer is appended inside sendColdEmail
-    const result = await sendColdEmail({ to: email, name, subject, bodyHtml, lang });
+    const result = await sendColdEmail({ to: email, name, subject, bodyHtml: cleanBodyHtml, lang });
 
     await prisma.coldOutreach.update({
       where: { id: record.id },

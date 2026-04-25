@@ -17,6 +17,7 @@ interface Lead {
   product: string;
   status: string;
   quantity: number;
+  targetPrice?: number | null;
   notes: string | null;
   createdAt: string;
 }
@@ -74,6 +75,37 @@ function OutreachContent() {
   const [campaignSegment, setCampaignSegment] = useState("NEW");
   const [preSelectedLead, setPreSelectedLead] = useState<Lead | null>(null);
 
+  const getDisplayName = (name: string) => {
+    const cleaned = name.trim();
+    if (!cleaned || cleaned === "Anonymous / Web Inquiry") return "there";
+    return cleaned.split(/\s+/)[0];
+  };
+
+  const buildSpecificDraftBody = (lead: Lead) => {
+    const name = getDisplayName(lead.name);
+    const quantity = Number.isFinite(lead.quantity) && lead.quantity > 0 ? lead.quantity : 1;
+    const targetPrice =
+      typeof lead.targetPrice === "number" && Number.isFinite(lead.targetPrice)
+        ? `\n\nI also saw your target price is around EUR ${lead.targetPrice.toFixed(2)} per unit, so I will check suppliers against that landed-cost target instead of sending you random catalog pricing.`
+        : "";
+    const trimmedNotes = lead.notes?.trim() ?? "";
+    const notes = trimmedNotes
+      ? `\n\nI noted your extra details: "${trimmedNotes.slice(0, 220)}${trimmedNotes.length > 220 ? "..." : ""}". I will use that when filtering factories.`
+      : "";
+
+    return `Hello ${name},
+
+I reviewed your Cargoo request for ${quantity}x ${lead.product}. I can check verified China factories for this exact item, compare realistic MOQ/pricing, and estimate the total landed cost before you commit.${targetPrice}${notes}
+
+The useful next step is for me to shortlist 2-3 supplier options with pricing, lead time, and quality-control notes for ${lead.product}.
+
+Would you like me to prepare that quote for you today?
+
+Best regards,
+The Cargoo Sourcing Team
+cargooimport.eu`;
+  };
+
   useEffect(() => {
     async function fetchLeads() {
       setLoadingLeads(true);
@@ -128,8 +160,8 @@ function OutreachContent() {
         leadName: lead.name,
         to: lead.email,
         product: lead.product,
-        subject: `Cargoo: Expert Sourcing for ${lead.product}`,
-        body: `Hello ${lead.name},\n\nI noticed your inquiry about ${lead.product}. At Cargoo, we specialize in direct-from-factory sourcing in China to get you much better rates than public marketplaces.\n\nWe handle all logistics, quality inspection, and customs — so you don't have to worry about a thing.\n\nWould you like a personalized quote for your order of ${lead.quantity}x ${lead.product}?\n\nBest regards,\nThe Cargoo Sourcing Team\ncargooimport.eu`,
+        subject: `Cargoo: Sourcing quote for ${lead.quantity}x ${lead.product}`,
+        body: buildSpecificDraftBody(lead),
       }));
 
       setDrafts((prev) => [...generated, ...prev]);

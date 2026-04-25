@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { to, subject, leadName, productName, personalizedSnippet } = body;
+    const { to, subject, leadName, productName, personalizedSnippet, lang = "en" } = body;
 
     if (!to || !subject || !leadName || !productName) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -26,6 +26,7 @@ export async function POST(request: Request) {
       leadName,
       productName,
       personalizedSnippet: personalizedSnippet || "",
+      lang,
     });
 
     if (!result.success) {

@@ -1,4 +1,4 @@
-import { resend } from '@/lib/mail';
+import { getCargooSenderForLang, resend, stripBodyPlaceholder } from "@/lib/mail";
 
 interface OutreachEmail {
   to: string;
@@ -6,25 +6,64 @@ interface OutreachEmail {
   leadName: string;
   productName: string;
   personalizedSnippet: string;
+  lang?: string;
+}
+
+function esc(str: unknown): string {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function fallbackBody(data: OutreachEmail): string {
+  const name = data.leadName?.trim() || "there";
+
+  return `Hello ${name},
+
+I reviewed your Cargoo request for ${data.productName}. We can check verified China factories for this exact item and prepare a realistic landed-cost quote before you commit.
+
+Would you like me to shortlist supplier options with pricing, lead time, and quality-control notes?
+
+Best regards,
+The Cargoo Sourcing Team
+cargooimport.eu`;
+}
+
+function renderPlainTextBody(text: string): string {
+  return text
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p style="margin:0 0 16px;">${esc(paragraph).replace(/\n/g, "<br />")}</p>`)
+    .join("");
 }
 
 export async function sendOutreachEmail(data: OutreachEmail) {
+  const bodyText = stripBodyPlaceholder(data.personalizedSnippet) || fallbackBody(data);
+
   try {
     const { data: resData, error } = await resend.emails.send({
-      from: 'Cargoo Sourcing <cargooimport@gmail.com>',
+      from: getCargooSenderForLang(data.lang),
       to: [data.to],
       subject: data.subject,
-      html: `
-        <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
-          <h2>Hello ${data.leadName.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")},</h2>
-          <p>I noticed you were looking for <strong>${data.productName.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</strong>. At Cargoo, we specialize in direct-from-factory sourcing to get you much better rates than public marketplaces.</p>
-          <p>${data.personalizedSnippet.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</p>
-          <p>We handle all the logistics, quality inspection, and customs so you don't have to worry about a thing.</p>
-          <p>Would you like me to generate a personalized quote for your order?</p>
-          <br />
-          <p>Best regards,<br />The Cargoo Sourcing Team</p>
-        </div>
-      `,
+      html: `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#f6f7f9;">
+  <div style="font-family:Arial,Helvetica,sans-serif;line-height:1.6;color:#1f2937;max-width:620px;margin:0 auto;padding:28px 18px;">
+    <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:14px;padding:28px;">
+      ${renderPlainTextBody(bodyText)}
+    </div>
+  </div>
+</body>
+</html>`,
     });
 
     if (error) {
