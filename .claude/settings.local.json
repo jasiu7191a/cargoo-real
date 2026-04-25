@@ -70,7 +70,12 @@
       "Bash(cp \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\email-template-en.html\" \"C:\\\\Users\\\\jasiu\\\\Desktop\\\\email-template-en.html\")",
       "Bash(cp \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\email-template-pl.html\" \"C:\\\\Users\\\\jasiu\\\\Desktop\\\\email-template-pl.html\")",
       "Bash(cp \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\email-template-de.html\" \"C:\\\\Users\\\\jasiu\\\\Desktop\\\\email-template-de.html\")",
-      "Bash(cp \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\email-template-fr.html\" \"C:\\\\Users\\\\jasiu\\\\Desktop\\\\email-template-fr.html\")"
+      "Bash(cp \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\email-template-fr.html\" \"C:\\\\Users\\\\jasiu\\\\Desktop\\\\email-template-fr.html\")",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\jasiu\\\\.antigravity\\\\cargoo-real-fixed\\\\app\\\\\" -Recurse | Where-Object { $_.Name -match \"outreach|cold|email|resend|agent\" } | Format-Table FullName, LastWriteTime)",
+      "PowerShell(cmd /c \"dir /S /B \"\"C:\\\\Users\\\\jasiu\\\\.antigravity\\\\cargoo-real-fixed\\\\app\"\" 2>&1\")",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }
