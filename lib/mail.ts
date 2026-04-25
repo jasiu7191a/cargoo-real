@@ -155,17 +155,10 @@ export async function sendColdEmail({ to, name, subject, bodyHtml, lang = "en" }
   const token = await createUnsubscribeToken(to);
   const unsubUrl = `https://admin.cargooimport.eu/api/unsubscribe?token=${token}`;
 
-  const footerByLang: Record<string, string> = {
-    en: `You received this email because we believe Cargoo's sourcing service is relevant to your business. <a href="${unsubUrl}">Unsubscribe</a>.`,
-    pl: `Otrzymałeś tę wiadomość, ponieważ uważamy, że usługi Cargoo mogą być przydatne dla Twojej firmy. <a href="${unsubUrl}">Wypisz się</a>.`,
-    de: `Sie erhalten diese E-Mail, weil wir glauben, dass Cargoos Beschaffungsservice für Ihr Unternehmen relevant ist. <a href="${unsubUrl}">Abmelden</a>.`,
-    fr: `Vous recevez cet e-mail car nous pensons que le service de sourcing Cargoo est pertinent pour votre entreprise. <a href="${unsubUrl}">Se désabonner</a>.`,
-  };
-
-  // Wrap in a proper HTML document with explicit UTF-8 charset declaration.
-  // Without this, email clients that don't auto-detect encoding render
-  // multi-byte characters (ä, ö, ü, ß, ą, ę, etc.) as replacement diamonds.
-  // The http-equiv meta is included for legacy email clients that ignore <meta charset>.
+  // Substitute the unsubscribe URL into the template footer ({{UNSUB_URL}} placeholder),
+  // then wrap in a proper HTML document with explicit UTF-8 charset so email clients
+  // that don't auto-detect encoding don't mangle ä/ö/ü/ß/ą/ę as replacement diamonds.
+  const assembled = bodyHtml.replace(/\{\{UNSUB_URL\}\}/g, unsubUrl);
   const html = `<!DOCTYPE html>
 <html lang="${lang}">
 <head>
@@ -174,12 +167,7 @@ export async function sendColdEmail({ to, name, subject, bodyHtml, lang = "en" }
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body style="margin:0;padding:0;background:#050505;">
-  ${bodyHtml}
-  <div style="font-family:sans-serif;max-width:580px;margin:0 auto;padding:6px 32px 20px;background:#050505;">
-    <p style="font-size:11px;line-height:1.6;color:#334155;margin:0;">
-      ${footerByLang[lang] ?? footerByLang.en}
-    </p>
-  </div>
+  ${assembled}
 </body>
 </html>`;
 
