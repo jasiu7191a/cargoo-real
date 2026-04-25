@@ -57,7 +57,20 @@
       "WebFetch(domain:wilkens-wohnstudio.de)",
       "Bash(curl -s -X POST https://admin.cargooimport.eu/api/admin/outreach/cold -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -k -d '{ *)",
       "Bash(curl -s -k https://admin.cargooimport.eu/api/admin/outreach/replies -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' --max-time 15)",
-      "Bash(curl -s -k -o /dev/null -w '%{http_code}' https://admin.cargooimport.eu/api/admin/__TRACKED_VAR__ -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' --max-time 10)"
+      "Bash(curl -s -k -o /dev/null -w '%{http_code}' https://admin.cargooimport.eu/api/admin/__TRACKED_VAR__ -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' --max-time 10)",
+      "WebFetch(domain:www.cargooimport.eu)",
+      "Bash(curl -s -k \"https://admin.cargooimport.eu\")",
+      "Bash(grep -oP '\\(#[0-9a-fA-F]{3,6}|--[a-z-]+:\\\\s*#[0-9a-fA-F]{3,6}\\)')",
+      "Bash(curl -s -k -A \"Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36\" \"https://cargooimport.eu\")",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "mcp__Claude_in_Chrome__tabs_create_mcp",
+      "Bash(curl -v -k -L -H 'User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/124.0.0.0 Safari/537.36' -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8' --compressed https://www.cargooimport.eu)",
+      "Bash(gunzip -c)",
+      "Bash(grep -oP '\\(--clr-[a-z\\\\-]+:\\\\s*[^;]+;|--[a-z\\\\-]+:\\\\s*#[0-9a-fA-F]{3,6}\\)')",
+      "Bash(cp \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\email-template-en.html\" \"C:\\\\Users\\\\jasiu\\\\Desktop\\\\email-template-en.html\")",
+      "Bash(cp \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\email-template-pl.html\" \"C:\\\\Users\\\\jasiu\\\\Desktop\\\\email-template-pl.html\")",
+      "Bash(cp \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\email-template-de.html\" \"C:\\\\Users\\\\jasiu\\\\Desktop\\\\email-template-de.html\")",
+      "Bash(cp \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\email-template-fr.html\" \"C:\\\\Users\\\\jasiu\\\\Desktop\\\\email-template-fr.html\")"
     ]
   }
 }
