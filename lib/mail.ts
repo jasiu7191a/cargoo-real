@@ -151,6 +151,15 @@ interface ColdEmailOptions {
   lang?: string;
 }
 
+/**
+ * Strips any stray {{BODY}} placeholders from caller-supplied body HTML.
+ * Returns null if nothing meaningful remains (caller should reject the request).
+ */
+export function stripBodyPlaceholder(html: string): string | null {
+  const cleaned = html.replace(/\{\{BODY\}\}/gi, "").trim();
+  return cleaned.length > 0 ? cleaned : null;
+}
+
 /** Sends a cold prospecting email using the branded language-specific template. */
 export async function sendColdEmail({ to, name, subject, bodyHtml, lang = "en" }: ColdEmailOptions) {
   const token = await createUnsubscribeToken(to);
