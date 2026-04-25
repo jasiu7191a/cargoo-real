@@ -43,7 +43,9 @@
       "Bash(curl -s -k \"https://cargooimport.eu/sitemap-blog.xml\" -H \"User-Agent: Mozilla/5.0\" --max-time 10)",
       "Bash(curl -s -k \"https://cargooimport.eu/blog-sitemap.xml\" -H \"User-Agent: Mozilla/5.0\" --max-time 10)",
       "Bash(npx tsc *)",
-      "Bash(./node_modules/.bin/tsc --noEmit --skipLibCheck)"
+      "Bash(./node_modules/.bin/tsc --noEmit --skipLibCheck)",
+      "Bash(curl -s -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\": \"China direkt importieren Deutschland 2026 US Zölle Chancen Risiken\", \"lang\": \"de\"}' --max-time 120)",
+      "Bash(curl -s -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\": \"China direkt importieren Deutschland 2026 US Zölle Chancen Risiken\", \"lang\": \"de\"}' --max-time 120 -k)"
     ]
   }
 }
