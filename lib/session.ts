@@ -13,6 +13,7 @@ export async function getAdminSession() {
   
   try {
     const { payload } = await jwtVerify(token, getSecret());
+    if (typeof payload.email !== "string" || typeof payload.role !== "string") return null;
     return {
       user: {
         email: payload.email,

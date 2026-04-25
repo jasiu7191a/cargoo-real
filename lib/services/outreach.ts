@@ -1,4 +1,5 @@
-import { resend } from '@/lib/mail';
+import { resend, createUnsubscribeToken } from '@/lib/mail';
+import { getEmailTemplate } from '@/lib/email-templates';
 
 interface OutreachEmail {
   to: string;
@@ -6,25 +7,39 @@ interface OutreachEmail {
   leadName: string;
   productName: string;
   personalizedSnippet: string;
+  lang?: string;
+}
+
+function esc(str: unknown): string {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 export async function sendOutreachEmail(data: OutreachEmail) {
   try {
+    const lang = data.lang ?? "en";
+    const token = await createUnsubscribeToken(data.to);
+    const unsubUrl = `https://admin.cargooimport.eu/api/unsubscribe?token=${token}`;
+
+    // Convert plain-text body to HTML paragraphs, preserving line breaks
+    const bodyHtml = data.personalizedSnippet
+      .split(/\n\n+/)
+      .map(para => `<p>${esc(para.replace(/\n/g, "<br>"))}</p>`)
+      .join("\n");
+
+    const html = getEmailTemplate(lang)
+      .replace(/\{\{BODY\}\}/g, bodyHtml)
+      .replace(/\{\{UNSUB_URL\}\}/g, unsubUrl);
+
     const { data: resData, error } = await resend.emails.send({
-      from: 'Cargoo Sourcing <cargooimport@gmail.com>',
+      from: 'Cargoo Sourcing <contact@cargooimport.eu>',
       to: [data.to],
       subject: data.subject,
-      html: `
-        <div style="font-family: sans-serif; line-height: 1.5; color: #333;">
-          <h2>Hello ${data.leadName.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")},</h2>
-          <p>I noticed you were looking for <strong>${data.productName.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</strong>. At Cargoo, we specialize in direct-from-factory sourcing to get you much better rates than public marketplaces.</p>
-          <p>${data.personalizedSnippet.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</p>
-          <p>We handle all the logistics, quality inspection, and customs so you don't have to worry about a thing.</p>
-          <p>Would you like me to generate a personalized quote for your order?</p>
-          <br />
-          <p>Best regards,<br />The Cargoo Sourcing Team</p>
-        </div>
-      `,
+      html,
     });
 
     if (error) {

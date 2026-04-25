@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     });
 
     const sendResult = await resend.emails.send({
-      from: "Cargoo Import <noreply@cargooimport.eu>",
+      from: "Cargoo Import <contact@cargooimport.eu>",
       to: lead.user.email,
       subject,
       html: htmlContent,
