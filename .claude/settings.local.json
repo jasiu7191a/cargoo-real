@@ -55,7 +55,9 @@
       "WebFetch(domain:deko-unlimited.de)",
       "WebFetch(domain:www.skandeko.de)",
       "WebFetch(domain:wilkens-wohnstudio.de)",
-      "Bash(curl -s -X POST https://admin.cargooimport.eu/api/admin/outreach/cold -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -k -d '{ *)"
+      "Bash(curl -s -X POST https://admin.cargooimport.eu/api/admin/outreach/cold -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -k -d '{ *)",
+      "Bash(curl -s -k https://admin.cargooimport.eu/api/admin/outreach/replies -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' --max-time 15)",
+      "Bash(curl -s -k -o /dev/null -w '%{http_code}' https://admin.cargooimport.eu/api/admin/__TRACKED_VAR__ -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' --max-time 10)"
     ]
   }
 }
