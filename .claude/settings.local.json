@@ -45,7 +45,17 @@
       "Bash(npx tsc *)",
       "Bash(./node_modules/.bin/tsc --noEmit --skipLibCheck)",
       "Bash(curl -s -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\": \"China direkt importieren Deutschland 2026 US Zölle Chancen Risiken\", \"lang\": \"de\"}' --max-time 120)",
-      "Bash(curl -s -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\": \"China direkt importieren Deutschland 2026 US Zölle Chancen Risiken\", \"lang\": \"de\"}' --max-time 120 -k)"
+      "Bash(curl -s -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\": \"China direkt importieren Deutschland 2026 US Zölle Chancen Risiken\", \"lang\": \"de\"}' --max-time 120 -k)",
+      "WebFetch(domain:werkzeugstore24.de)",
+      "WebFetch(domain:www.garten-werkzeug-shop.de)",
+      "WebFetch(domain:hop-sport.de)",
+      "WebFetch(domain:kleinspielwaren24.de)",
+      "WebFetch(domain:www.angeln-shop.de)",
+      "WebFetch(domain:www.angel-andis-meeresshop.de)",
+      "WebFetch(domain:deko-unlimited.de)",
+      "WebFetch(domain:www.skandeko.de)",
+      "WebFetch(domain:wilkens-wohnstudio.de)",
+      "Bash(curl -s -X POST https://admin.cargooimport.eu/api/admin/outreach/cold -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -k -d '{ *)"
     ]
   }
 }
