@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
 
+const generateSlug = (text: string): string => {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
+
 export const dynamic = 'force-dynamic';
 
 // GET: List all articles
@@ -37,15 +47,22 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, slug, metaDescription, content, targetKeyword } = await req.json();
+    const { title, slug, metaDescription, content, targetKeyword, lang = "en" } = await req.json();
+
+    if (!title) {
+      return NextResponse.json({ error: "Title is required" }, { status: 400 });
+    }
+
+    const finalSlug = slug && slug.trim() ? slug : generateSlug(title);
 
     const post = await prisma.blogPost.create({
       data: {
         title,
-        slug,
+        slug: finalSlug,
         metaDescription,
         content,
         targetKeyword,
+        lang,
         status: "DRAFT",
       },
     });
@@ -68,6 +85,17 @@ export async function PATCH(req: Request) {
 
     if (data.status === "PUBLISHED" && !data.publishedAt) {
       data.publishedAt = new Date();
+    }
+
+    const existingPost = await prisma.blogPost.findUnique({ where: { id } });
+    if (!existingPost) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    if (data.status === "PUBLISHED" && (!existingPost.slug || !data.slug)) {
+      if (!data.slug) {
+        data.slug = generateSlug(data.title || existingPost.title);
+      }
     }
 
     const post = await prisma.blogPost.update({

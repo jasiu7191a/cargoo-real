@@ -2,12 +2,22 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
 
+const generateSlug = (text: string): string => {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
+
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
     const session = await getAdminSession();
-    
+
     if (!session || session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -18,9 +28,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid action" }, { status: 400 });
     }
 
+    const post = await prisma.blogPost.findUnique({ where: { id } });
+    if (!post) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    const updateData: any = { status: "PUBLISHED", publishedAt: new Date() };
+
+    if (!post.slug || post.slug.trim() === "") {
+      updateData.slug = generateSlug(post.title);
+    }
+
     const updatedPost = await prisma.blogPost.update({
       where: { id },
-      data: { status: "PUBLISHED", publishedAt: new Date() },
+      data: updateData,
     });
 
     return NextResponse.json({ success: true, post: updatedPost });
