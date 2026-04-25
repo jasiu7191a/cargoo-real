@@ -1,4 +1,5 @@
 import { Resend } from 'resend';
+import { getEmailTemplate } from '@/lib/email-templates';
 
 // Instantiated lazily so a missing key only fails when email is actually sent,
 // not at module load time (which would crash all routes that import this file).
@@ -26,30 +27,19 @@ function esc(str: unknown): string {
     .replace(/'/g, "&#39;");
 }
 
-export function stripBodyPlaceholder(value: string): string {
-  return value.replace(/\{\{\s*BODY\s*\}\}/gi, "").trim();
-}
-
-export function getCargooSenderForLang(lang?: string | null): string {
-  const normalized = String(lang ?? "en").toLowerCase();
-  const mailbox = normalized === "pl" || normalized === "de" ? "kontakt" : "contact";
-  return `Cargoo Import <${mailbox}@cargooimport.eu>`;
-}
-
 interface MailOptions {
   to: string;
   subject: string;
   html: string;
-  from?: string;
 }
 
 /**
  * Basic helper to send email via Resend
  */
-export async function sendEmail({ to, subject, html, from }: MailOptions) {
+export async function sendEmail({ to, subject, html }: MailOptions) {
   try {
     const data = await resend.emails.send({
-      from: from ?? getCargooSenderForLang(),
+      from: 'Cargoo Import <contact@cargooimport.eu>',
       to,
       subject,
       html,
@@ -161,28 +151,16 @@ interface ColdEmailOptions {
   lang?: string;
 }
 
-/** Sends a cold prospecting email with a mandatory unsubscribe footer. */
+/** Sends a cold prospecting email using the branded language-specific template. */
 export async function sendColdEmail({ to, name, subject, bodyHtml, lang = "en" }: ColdEmailOptions) {
   const token = await createUnsubscribeToken(to);
   const unsubUrl = `https://admin.cargooimport.eu/api/unsubscribe?token=${token}`;
 
-  // Substitute the unsubscribe URL into the template footer ({{UNSUB_URL}} placeholder),
-  // then wrap in a proper HTML document with explicit UTF-8 charset so email clients
-  // that don't auto-detect encoding don't mangle ä/ö/ü/ß/ą/ę as replacement diamonds.
-  const assembled = stripBodyPlaceholder(bodyHtml).replace(/\{\{UNSUB_URL\}\}/g, unsubUrl);
-  const html = `<!DOCTYPE html>
-<html lang="${lang}">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin:0;padding:0;background:#050505;">
-  ${assembled}
-</body>
-</html>`;
+  const html = getEmailTemplate(lang)
+    .replace(/\{\{BODY\}\}/g, bodyHtml)
+    .replace(/\{\{UNSUB_URL\}\}/g, unsubUrl);
 
-  return sendEmail({ to, subject, html, from: getCargooSenderForLang(lang) });
+  return sendEmail({ to, subject, html });
 }
 
 /**

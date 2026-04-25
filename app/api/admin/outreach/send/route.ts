@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCargooSenderForLang, resend } from "@/lib/mail";
+import { resend } from "@/lib/mail";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
 
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     });
 
     const sendResult = await resend.emails.send({
-      from: getCargooSenderForLang("en"),
+      from: "Cargoo Import <contact@cargooimport.eu>",
       to: lead.user.email,
       subject,
       html: htmlContent,

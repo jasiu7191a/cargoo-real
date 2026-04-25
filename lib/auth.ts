@@ -23,12 +23,15 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        console.log("[AUTH] Authorize hit for:", credentials?.email);
-        return { 
-          id: "ghost-admin-999", 
-          email: "admin@cargooimport.eu", 
-          name: "Cargoo Admin", 
-          role: "ADMIN" 
+        const adminEmail = process.env.ADMIN_EMAIL;
+        const adminPassword = process.env.ADMIN_PASSWORD;
+        if (!adminEmail || !adminPassword) return null;
+        if (credentials?.email !== adminEmail || credentials?.password !== adminPassword) return null;
+        return {
+          id: "ghost-admin-999",
+          email: adminEmail,
+          name: "Cargoo Admin",
+          role: "ADMIN"
         };
       }
     })
