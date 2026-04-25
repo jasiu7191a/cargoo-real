@@ -3,8 +3,8 @@ import "./globals.css";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Providers } from "@/components/Providers";
 
-const jakarta = Plus_Jakarta_Sans({ 
-  subsets: ["latin"],
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin", "latin-ext"],  // latin-ext covers Polish (ą ę ó ś ź ż ć ń ł), French (é è ê ë), German (ä ö ü ß), etc.
   variable: '--font-main',
   display: 'swap',
 });

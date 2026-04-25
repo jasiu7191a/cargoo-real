@@ -162,16 +162,26 @@ export async function sendColdEmail({ to, name, subject, bodyHtml, lang = "en" }
     fr: `Vous recevez cet e-mail car nous pensons que le service de sourcing Cargoo est pertinent pour votre entreprise. <a href="${unsubUrl}">Se désabonner</a>.`,
   };
 
-  const html = `
-    <div style="font-family: sans-serif; max-width: 560px; color: #1a1a1a; line-height: 1.6;">
-      ${bodyHtml}
-      <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;" />
-      <p style="font-size: 11px; color: #999; margin: 0;">
-        Cargoo Import • cargooimport.eu<br/>
-        ${footerByLang[lang] ?? footerByLang.en}
-      </p>
-    </div>
-  `;
+  // Wrap in a proper HTML document with explicit UTF-8 charset declaration.
+  // Without this, email clients that don't auto-detect encoding render
+  // multi-byte characters (ä, ö, ü, ß, ą, ę, etc.) as replacement diamonds.
+  // The http-equiv meta is included for legacy email clients that ignore <meta charset>.
+  const html = `<!DOCTYPE html>
+<html lang="${lang}">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background:#050505;">
+  ${bodyHtml}
+  <div style="font-family:sans-serif;max-width:580px;margin:0 auto;padding:6px 32px 20px;background:#050505;">
+    <p style="font-size:11px;line-height:1.6;color:#334155;margin:0;">
+      ${footerByLang[lang] ?? footerByLang.en}
+    </p>
+  </div>
+</body>
+</html>`;
 
   return sendEmail({ to, subject, html });
 }
