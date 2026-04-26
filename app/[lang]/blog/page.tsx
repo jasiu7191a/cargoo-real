@@ -29,10 +29,33 @@ export default async function BlogIndexPage({ params }: { params: { lang: string
   return (
     <main style={{ background: "#050505", minHeight: "100vh", color: "#e2e8f0", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <header style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem 0" }}>
-        <div style={{ maxWidth: "960px", margin: "0 auto", padding: "0 1.5rem" }}>
+        <div style={{ maxWidth: "960px", margin: "0 auto", padding: "0 1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <Link href={`/${params.lang}`} style={{ color: "#ff5500", fontWeight: 800, textDecoration: "none", fontSize: "1.1rem", letterSpacing: "-0.03em" }}>
             {dict.common.brandBack}
           </Link>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            {["en", "pl", "de", "fr"].map((lang) => (
+              <Link
+                key={lang}
+                href={`/${lang}/blog`}
+                style={{
+                  padding: "0.5rem 0.75rem",
+                  borderRadius: "0.5rem",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  color: params.lang === lang ? "#000" : "#e2e8f0",
+                  backgroundColor: params.lang === lang ? "#ff5500" : "transparent",
+                  transition: "all 0.2s",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {lang}
+              </Link>
+            ))}
+          </div>
         </div>
       </header>
 

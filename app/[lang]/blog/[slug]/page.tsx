@@ -59,12 +59,37 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
       {/* Header */}
       <header style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem 0" }}>
         <div style={{ maxWidth: "800px", margin: "0 auto", padding: "0 1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Link href={`/${params.lang}`} style={{ color: "#ff5500", fontWeight: 800, textDecoration: "none", fontSize: "1.1rem", letterSpacing: "-0.03em" }}>
-            {dict.common.brandBack}
-          </Link>
-          <Link href={`/${params.lang}/blog`} style={{ color: "#94a3b8", fontWeight: 600, textDecoration: "none", fontSize: "0.85rem" }}>
-            {dict.common.allArticles}
-          </Link>
+          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+            <Link href={`/${params.lang}`} style={{ color: "#ff5500", fontWeight: 800, textDecoration: "none", fontSize: "1.1rem", letterSpacing: "-0.03em" }}>
+              {dict.common.brandBack}
+            </Link>
+            <Link href={`/${params.lang}/blog`} style={{ color: "#94a3b8", fontWeight: 600, textDecoration: "none", fontSize: "0.85rem" }}>
+              {dict.common.allArticles}
+            </Link>
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            {["en", "pl", "de", "fr"].map((lang) => (
+              <Link
+                key={lang}
+                href={`/${lang}/blog/${params.slug}`}
+                style={{
+                  padding: "0.4rem 0.6rem",
+                  borderRadius: "0.4rem",
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  border: "1px solid rgba(255,255,255,0.2)",
+                  color: params.lang === lang ? "#000" : "#e2e8f0",
+                  backgroundColor: params.lang === lang ? "#ff5500" : "transparent",
+                  transition: "all 0.2s",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {lang}
+              </Link>
+            ))}
+          </div>
         </div>
       </header>
 
