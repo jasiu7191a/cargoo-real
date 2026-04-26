@@ -13,14 +13,18 @@ export async function generateMetadata({ params }: { params: { lang: string } })
   };
 }
 
-export default async function BlogIndexPage({ params }: { params: { lang: string } }) {
+export default async function BlogIndexPage({ params, searchParams }: { params: { lang: string }; searchParams?: { all?: string } }) {
   const dict = getDictionary(params.lang);
+  const showAll = searchParams?.all === "true";
   let posts: any[] = [];
   try {
     posts = await prisma.blogPost.findMany({
-      where: { status: "PUBLISHED", lang: params.lang },
+      where: {
+        status: "PUBLISHED",
+        ...(showAll ? {} : { lang: params.lang })
+      },
       orderBy: { publishedAt: "desc" },
-      select: { id: true, title: true, slug: true, metaDescription: true, targetKeyword: true, publishedAt: true },
+      select: { id: true, title: true, slug: true, metaDescription: true, targetKeyword: true, publishedAt: true, lang: true },
     });
   } catch (e) {
     console.error("Failed to load blog posts:", e);
@@ -34,10 +38,28 @@ export default async function BlogIndexPage({ params }: { params: { lang: string
             {dict.common.brandBack}
           </Link>
           <div style={{ display: "flex", gap: "0.5rem" }}>
+            <Link
+              href={`/${params.lang}/blog`}
+              style={{
+                padding: "0.5rem 0.75rem",
+                borderRadius: "0.5rem",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                textDecoration: "none",
+                border: "1px solid rgba(255,255,255,0.2)",
+                color: !showAll ? "#000" : "#e2e8f0",
+                backgroundColor: !showAll ? "#ff5500" : "transparent",
+                transition: "all 0.2s",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+              }}
+            >
+              All
+            </Link>
             {["en", "pl", "de", "fr"].map((lang) => (
               <Link
                 key={lang}
-                href={`/${lang}/blog`}
+                href={`/${lang}/blog?all=true`}
                 style={{
                   padding: "0.5rem 0.75rem",
                   borderRadius: "0.5rem",
@@ -45,8 +67,8 @@ export default async function BlogIndexPage({ params }: { params: { lang: string
                   fontWeight: 700,
                   textDecoration: "none",
                   border: "1px solid rgba(255,255,255,0.2)",
-                  color: params.lang === lang ? "#000" : "#e2e8f0",
-                  backgroundColor: params.lang === lang ? "#ff5500" : "transparent",
+                  color: params.lang === lang && showAll ? "#000" : "#e2e8f0",
+                  backgroundColor: params.lang === lang && showAll ? "#ff5500" : "transparent",
                   transition: "all 0.2s",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
@@ -95,11 +117,18 @@ export default async function BlogIndexPage({ params }: { params: { lang: string
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap" }}>
                     <div style={{ flex: 1 }}>
-                      {post.targetKeyword && (
-                        <span style={{ background: "rgba(255,85,0,0.1)", color: "#ff5500", padding: "0.2rem 0.6rem", borderRadius: "9999px", fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", display: "inline-block", marginBottom: "0.75rem" }}>
-                          {post.targetKeyword}
-                        </span>
-                      )}
+                      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem", flexWrap: "wrap" }}>
+                        {showAll && (
+                          <span style={{ background: "rgba(100,200,255,0.1)", color: "#64c8ff", padding: "0.2rem 0.6rem", borderRadius: "9999px", fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                            {post.lang}
+                          </span>
+                        )}
+                        {post.targetKeyword && (
+                          <span style={{ background: "rgba(255,85,0,0.1)", color: "#ff5500", padding: "0.2rem 0.6rem", borderRadius: "9999px", fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+                            {post.targetKeyword}
+                          </span>
+                        )}
+                      </div>
                       <h2 style={{ fontSize: "1.25rem", fontWeight: 800, color: "#ffffff", letterSpacing: "-0.02em", lineHeight: 1.25, marginBottom: "0.75rem" }}>
                         {post.title}
                       </h2>
