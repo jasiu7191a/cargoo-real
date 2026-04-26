@@ -39,7 +39,7 @@ export default async function BlogIndexPage({ params, searchParams }: { params: 
           </Link>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <Link
-              href={`/${params.lang}/blog`}
+              href={`/${params.lang}/blog?all=true`}
               style={{
                 padding: "0.5rem 0.75rem",
                 borderRadius: "0.5rem",
@@ -47,8 +47,8 @@ export default async function BlogIndexPage({ params, searchParams }: { params: 
                 fontWeight: 700,
                 textDecoration: "none",
                 border: "1px solid rgba(255,255,255,0.2)",
-                color: !showAll ? "#000" : "#e2e8f0",
-                backgroundColor: !showAll ? "#ff5500" : "transparent",
+                color: showAll ? "#000" : "#e2e8f0",
+                backgroundColor: showAll ? "#ff5500" : "transparent",
                 transition: "all 0.2s",
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
@@ -59,7 +59,7 @@ export default async function BlogIndexPage({ params, searchParams }: { params: 
             {["en", "pl", "de", "fr"].map((lang) => (
               <Link
                 key={lang}
-                href={`/${lang}/blog?all=true`}
+                href={`/${lang}/blog`}
                 style={{
                   padding: "0.5rem 0.75rem",
                   borderRadius: "0.5rem",
@@ -67,8 +67,8 @@ export default async function BlogIndexPage({ params, searchParams }: { params: 
                   fontWeight: 700,
                   textDecoration: "none",
                   border: "1px solid rgba(255,255,255,0.2)",
-                  color: params.lang === lang && showAll ? "#000" : "#e2e8f0",
-                  backgroundColor: params.lang === lang && showAll ? "#ff5500" : "transparent",
+                  color: params.lang === lang && !showAll ? "#000" : "#e2e8f0",
+                  backgroundColor: params.lang === lang && !showAll ? "#ff5500" : "transparent",
                   transition: "all 0.2s",
                   textTransform: "uppercase",
                   letterSpacing: "0.05em",
