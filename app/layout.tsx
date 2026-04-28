@@ -12,6 +12,9 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Cargoo | Import from China Made Simple",
   description: "Cargoo helps you source, ship, and deliver products with zero hassle.",
+  verification: {
+    google: "398bc0be0968cd96",
+  },
 };
 
 export default function RootLayout({
