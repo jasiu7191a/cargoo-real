@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 import prisma from "@/lib/prisma";
 
-const BASE_URL = "https://cargooimport.eu";
+const BASE_URL = "https://blog.cargooimport.eu";
 const LANGS = ["en", "pl", "de", "fr"] as const;
 
 export const dynamic = "force-dynamic";

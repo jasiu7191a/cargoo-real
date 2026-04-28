@@ -6,9 +6,15 @@ import { getDictionary } from "@/lib/dictionaries";
 
 export const dynamic = "force-dynamic";
 
-// Generate SEO metadata from the blog post
+const BASE_URL = "https://blog.cargooimport.eu";
+
 export async function generateMetadata({ params }: { params: { slug: string; lang: string } }) {
-  const post = await prisma.blogPost.findFirst({ where: { slug: params.slug, lang: params.lang } });
+  let post: any = null;
+  try {
+    post = await prisma.blogPost.findFirst({ where: { slug: params.slug, lang: params.lang } });
+  } catch (e) {
+    console.error("[generateMetadata] DB error for", params.slug, e);
+  }
   if (!post) return {};
   return {
     title: post.title + " | Cargoo Import",
@@ -20,41 +26,71 @@ export async function generateMetadata({ params }: { params: { slug: string; lan
       publishedTime: post.publishedAt?.toISOString(),
     },
     alternates: {
-      canonical: `https://cargooimport.eu/${params.lang}/blog/${params.slug}`,
+      canonical: `${BASE_URL}/${params.lang}/blog/${params.slug}`,
     },
   };
 }
 
 export default async function BlogPostPage({ params }: { params: { slug: string; lang: string } }) {
   const dict = getDictionary(params.lang);
-  const post = await prisma.blogPost.findFirst({ where: { slug: params.slug, lang: params.lang } });
+
+  let post: any = null;
+  try {
+    post = await prisma.blogPost.findFirst({ where: { slug: params.slug, lang: params.lang } });
+  } catch (e) {
+    console.error("[BlogPostPage] DB error:", e);
+    return (
+      <main style={{ background: "#050505", minHeight: "100vh", color: "#e2e8f0", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <div style={{ textAlign: "center", padding: "4rem" }}>
+          <h1 style={{ color: "#ff5500", fontSize: "2rem", fontWeight: 900 }}>Temporarily unavailable</h1>
+          <p style={{ color: "#94a3b8", marginTop: "1rem" }}>We're having trouble loading this article. Please try again in a moment.</p>
+          <Link href={`/${params.lang}/blog`} style={{ display: "inline-block", marginTop: "2rem", color: "#ff5500", fontWeight: 700, textDecoration: "underline" }}>
+            ← Back to blog
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   if (!post || post.status !== "PUBLISHED") {
     notFound();
   }
 
+  const canonicalUrl = `${BASE_URL}/${params.lang}/blog/${params.slug}`;
+  const blogListUrl = `${BASE_URL}/${params.lang}/blog`;
+
+  const blogPostingSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.metaDescription,
+    inLanguage: params.lang,
+    datePublished: post.publishedAt?.toISOString(),
+    dateModified: post.updatedAt.toISOString(),
+    mainEntityOfPage: { "@type": "WebPage", "@id": canonicalUrl },
+    author: { "@type": "Organization", name: "Cargoo Import", url: BASE_URL },
+    publisher: {
+      "@type": "Organization",
+      name: "Cargoo Import",
+      url: BASE_URL,
+      logo: { "@type": "ImageObject", url: `${BASE_URL}/img/logo.png` },
+    },
+  };
+
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${BASE_URL}/${params.lang}` },
+      { "@type": "ListItem", position: 2, name: "Blog", item: blogListUrl },
+      { "@type": "ListItem", position: 3, name: post.title, item: canonicalUrl },
+    ],
+  };
+
   return (
     <main style={{ background: "#050505", minHeight: "100vh", color: "#e2e8f0", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      {/* JSON-LD for SEO */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Article",
-            headline: post.title,
-            description: post.metaDescription,
-            datePublished: post.publishedAt?.toISOString(),
-            dateModified: post.updatedAt.toISOString(),
-            author: { "@type": "Organization", name: "Cargoo Import" },
-            publisher: {
-              "@type": "Organization",
-              name: "Cargoo Import",
-              logo: { "@type": "ImageObject", url: "https://cargooimport.eu/img/logo.png" },
-            },
-          }),
-        }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
 
       {/* Header */}
       <header style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem 0" }}>
@@ -95,6 +131,15 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
 
       {/* Article */}
       <article style={{ maxWidth: "800px", margin: "0 auto", padding: "4rem 1.5rem" }}>
+        {/* Breadcrumb nav */}
+        <nav aria-label="Breadcrumb" style={{ marginBottom: "2rem", fontSize: "0.8rem", color: "#64748b" }}>
+          <Link href={`/${params.lang}`} style={{ color: "#64748b", textDecoration: "none" }}>Home</Link>
+          <span style={{ margin: "0 0.4rem" }}>›</span>
+          <Link href={`/${params.lang}/blog`} style={{ color: "#64748b", textDecoration: "none" }}>Blog</Link>
+          <span style={{ margin: "0 0.4rem" }}>›</span>
+          <span style={{ color: "#94a3b8" }}>{post.title}</span>
+        </nav>
+
         {/* Meta */}
         <div style={{ marginBottom: "1.5rem", display: "flex", alignItems: "center", gap: "1rem" }}>
           {post.targetKeyword && (

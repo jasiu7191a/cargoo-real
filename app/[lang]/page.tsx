@@ -5,9 +5,40 @@ import { PricingCalculator } from "@/components/PricingCalculator";
 import { Footer } from "@/components/Footer";
 import { CheckCircle, Truck, ShieldCheck, Zap } from "lucide-react";
 
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Cargoo Import",
+  url: "https://blog.cargooimport.eu",
+  potentialAction: {
+    "@type": "SearchAction",
+    target: {
+      "@type": "EntryPoint",
+      urlTemplate: "https://blog.cargooimport.eu/en/products?q={search_term_string}",
+    },
+    "query-input": "required name=search_term_string",
+  },
+};
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Cargoo Import",
+  url: "https://blog.cargooimport.eu",
+  logo: "https://blog.cargooimport.eu/img/logo.png",
+  contactPoint: {
+    "@type": "ContactPoint",
+    telephone: "+48-500-685-000",
+    contactType: "customer service",
+  },
+  sameAs: [],
+};
+
 export default function Home() {
   return (
     <main className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
       <Navbar />
       <Hero />
       
