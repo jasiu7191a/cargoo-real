@@ -18,11 +18,12 @@ export async function GET() {
     console.error("[sitemap] DB error:", e);
   }
 
-  const staticUrls = LANGS.flatMap((lang) => [
-    { loc: `${BASE_URL}/${lang}`, priority: "1.0", changefreq: "weekly" },
-    { loc: `${BASE_URL}/${lang}/blog`, priority: "0.8", changefreq: "daily" },
-    { loc: `${BASE_URL}/${lang}/products`, priority: "0.7", changefreq: "monthly" },
-  ]);
+  const staticUrls: { loc: string; priority: string; changefreq: string; lastmod?: string }[] =
+    LANGS.flatMap((lang) => [
+      { loc: `${BASE_URL}/${lang}`, priority: "1.0", changefreq: "weekly" },
+      { loc: `${BASE_URL}/${lang}/blog`, priority: "0.8", changefreq: "daily" },
+      { loc: `${BASE_URL}/${lang}/products`, priority: "0.7", changefreq: "monthly" },
+    ]);
 
   const blogUrls = posts.map((post) => ({
     loc: `${BASE_URL}/${post.lang}/blog/${post.slug}`,
