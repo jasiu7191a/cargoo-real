@@ -23,4 +23,4 @@ Disallow: /
 User-agent: meta-externalagent
 Disallow: /
 
-Sitemap: https://blog.cargooimport.eu/api/sitemap.xml
+Sitemap: https://blog.cargooimport.eu/sitemap

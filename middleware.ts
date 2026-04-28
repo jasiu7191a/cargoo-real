@@ -71,6 +71,6 @@ export const config = {
     '/admin',
     '/admin/:path*',
     // Public pages matcher
-    '/((?!api|_next/static|_next/image|favicon.ico|assets|img|js|admin-assets|google[^/]*).*)',
+    '/((?!api|sitemap|_next/static|_next/image|favicon.ico|assets|img|js|admin-assets|google[^/]*).*)',
   ],
 }
