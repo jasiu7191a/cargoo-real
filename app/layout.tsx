@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "Cargoo | Import from China Made Simple",
   description: "Cargoo helps you source, ship, and deliver products with zero hassle.",
   verification: {
-    google: "398bc0be0968cd96",
+    google: "FrgLQ6zedzPxzSk0B3-piVkLyup3BGo006w22pl8yG4",
   },
 };
 
