@@ -43,6 +43,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  try {
   // Get published posts not yet confirmed indexed, or checked more than 7 days ago
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -156,4 +157,11 @@ export async function POST(req: Request) {
     notIndexedCount,
     results,
   });
+  } catch (error: any) {
+    console.error("seo-check route error:", error);
+    return NextResponse.json(
+      { error: "Internal error", message: error?.message ?? String(error) },
+      { status: 500 }
+    );
+  }
 }
