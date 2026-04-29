@@ -7,4 +7,7 @@ module.exports = {
   ],
   theme: { extend: {} },
   plugins: [],
+  corePlugins: {
+    preflight: false, // Tailwind reset was overriding style.css layouts
+  },
 };
