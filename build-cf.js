@@ -66,7 +66,6 @@ async function runBuild() {
         "/_next/image*",
         "/favicon.ico",
         "/robots.txt",
-        "/sitemap.xml",
         "/*.png",
         "/*.jpg",
         "/*.svg",
