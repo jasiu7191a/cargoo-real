@@ -1,112 +1,140 @@
 import React from "react";
 import prisma from "@/lib/prisma";
-
-export const dynamic = 'force-dynamic';
+import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { Search, Filter, ArrowRight, Star, TrendingUp } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import Script from "next/script";
 
-async function getProducts() {
-  // In a real app, these would be the seeded products or recently sourced ones
-  return await prisma.lead.findMany({
-    where: { status: { in: ["PAID", "SHIPPED", "DELIVERED"] } },
-    take: 12,
-  });
-}
+export const dynamic = "force-dynamic";
+
+const CATEGORIES = ["All", "Sneakers", "Electronics", "Apparel", "Watches", "Handbags", "Accessories"];
+
+const PLACEHOLDER_PRODUCTS = [
+  { id: "1", name: "Air Jordan 1 Retro High OG", brand: "Jordan", category: "Sneakers", cargooPrice: "€120", retailPrice: "€190", img: "/img/placeholders/sneaker.png" },
+  { id: "2", name: "Dyson Airwrap Styler", brand: "Dyson", category: "Electronics", cargooPrice: "€310", retailPrice: "€549", img: "/img/placeholders/tech.png" },
+  { id: "3", name: "Prada Re-Edition 2005", brand: "Prada", category: "Handbags", cargooPrice: "€650", retailPrice: "€1,200", img: "/img/placeholders/bag.png" },
+  { id: "4", name: "Rolex Datejust 41", brand: "Rolex", category: "Watches", cargooPrice: "€4,200", retailPrice: "€8,100", img: "/img/placeholders/watch.png" },
+  { id: "5", name: "Off-White Hoodie", brand: "Off-White", category: "Apparel", cargooPrice: "€180", retailPrice: "€420", img: "/img/placeholders/apparel.png" },
+  { id: "6", name: "Ray-Ban Aviators", brand: "Ray-Ban", category: "Accessories", cargooPrice: "€55", retailPrice: "€170", img: "/img/placeholders/accessory.png" },
+  { id: "7", name: "Nike Dunk Low Retro", brand: "Nike", category: "Sneakers", cargooPrice: "€90", retailPrice: "€130", img: "/img/placeholders/sneaker.png" },
+  { id: "8", name: "Sony WH-1000XM5", brand: "Sony", category: "Electronics", cargooPrice: "€220", retailPrice: "€380", img: "/img/placeholders/tech.png" },
+];
 
 export default async function ProductsPage({ params }: { params: { lang: string } }) {
-  const products = await getProducts();
+  const lang = params.lang || "en";
 
   return (
-    <main className="min-h-screen">
-      <Navbar />
+    <>
+      <Navbar lang={lang} />
 
-      <section className="pt-40 pb-20 bg-[#050505]">
-        <div className="container">
-          <div className="flex flex-col lg:flex-row justify-between items-end gap-8 mb-16">
-            <div className="max-w-[700px]">
-              <div className="flex items-center gap-2 text-[#ff5500] font-black uppercase tracking-widest text-xs mb-4">
-                 <TrendingUp size={16} /> Market Insights
+      <main id="productsPageContainer">
+        <section style={{ padding: "120px 0 80px" }}>
+          <div className="container">
+            <div style={{ marginBottom: "5rem", textAlign: "center", position: "relative", paddingTop: "2rem" }}>
+              <div style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--clr-orange)", textTransform: "uppercase", letterSpacing: "4px", marginBottom: "1.5rem", opacity: 0.8 }}>
+                <i className="fa-solid fa-earth-americas" style={{ marginRight: "8px" }}></i> Global Sourcing
               </div>
-              <h1 className="text-6xl font-black uppercase tracking-tighter leading-none mb-6">
-                Trending Sourcing <br /><span className="text-[#94a3b8]">Catalog 2026</span>
+              <h1 style={{ fontSize: "clamp(3rem, 8vw, 5rem)", fontWeight: 900, lineHeight: 1, marginBottom: "1.5rem", textTransform: "uppercase", letterSpacing: "-2px", display: "inline-block", background: "linear-gradient(135deg, #fff 0%, var(--clr-orange) 100%)", WebkitBackgroundClip: "text", backgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                All Products
               </h1>
-              <p className="text-[#94a3b8] text-xl">
-                Explore items recently sourced for our community of resellers and collectors. Direct factory pricing with verified quality.
+              <div style={{ height: "4px", width: "60px", background: "var(--clr-orange)", margin: "0 auto 2rem", borderRadius: "2px" }}></div>
+              <p className="text-muted" style={{ fontSize: "clamp(1.1rem, 2vw, 1.4rem)", maxWidth: "800px", margin: "0 auto", lineHeight: 1.6, fontWeight: 500 }}>
+                Hand-picked, factory-verified, and priced without the middleman markup. Tap any item to request a quote — we&apos;ll send an all-in price on WhatsApp.
               </p>
             </div>
-          </div>
 
-          <div className="flex gap-4 mb-12">
-             <div className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 flex items-center gap-4 focus-within:border-[#2962ff] transition-all">
-                <Search className="text-[#94a3b8]" size={20} />
-                <input className="bg-transparent border-none text-white w-full focus:outline-none" placeholder="Search by brand, product or category..." />
-             </div>
-             <button className="bg-white/5 border border-white/10 px-8 rounded-2xl font-bold uppercase text-sm flex items-center gap-2 hover:bg-white/10 transition-all">
-                <Filter size={18} /> Filters
-             </button>
-          </div>
+            {/* Category filter pills */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", justifyContent: "center", marginBottom: "3rem" }}>
+              {CATEGORIES.map((cat) => (
+                <span
+                  key={cat}
+                  style={{
+                    padding: "0.4rem 1.2rem",
+                    borderRadius: "9999px",
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    border: "1px solid var(--clr-border)",
+                    color: cat === "All" ? "#fff" : "var(--clr-text-muted)",
+                    background: cat === "All" ? "var(--clr-orange)" : "transparent",
+                    cursor: "pointer",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                  }}
+                >
+                  {cat}
+                </span>
+              ))}
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {products.length === 0 ? (
-              // Mock items if DB is empty
-              <>
-                <ProductCard name="Air Jordan 1 Retro Low OG" brand="Jordan" price="€120" target="€190" />
-                <ProductCard name="Dyson Airwrap Styler" brand="Dyson" price="€310" target="€549" />
-                <ProductCard name="Sony PlayStation 5 Slim" brand="Sony" price="€380" target="€499" />
-                <ProductCard name="Prada Re-Edition 2005" brand="Prada" price="€650" target="€1200" />
-              </>
-            ) : products.map((p: any) => (
-              <ProductCard 
-                key={p.id} 
-                name={p.productName} 
-                brand="Verified Supplier" 
-                price="€???" 
-                target="Estimate" 
-              />
-            ))}
-          </div>
-          
-          <div className="mt-20 glass-panel p-16 text-center relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-80 h-80 bg-[#ff5500]/10 blur-[100px] z-[-1]" />
-             <h2 className="text-4xl font-black uppercase mb-6">Didn't find what you wanted?</h2>
-             <p className="text-[#94a3b8] mb-10 max-w-[600px] mx-auto">Our sourcing team can find almost any product manufactured in China. Send us a link and we'll handle the rest.</p>
-             <Button size="lg" glow>Submit Custom Request</Button>
-          </div>
-        </div>
-      </section>
+            {/* Product grid */}
+            <div id="productsGrid" className="grid-layout">
+              {PLACEHOLDER_PRODUCTS.map((p) => (
+                <a
+                  key={p.id}
+                  href={`https://wa.me/48500685000?text=Hi%20Cargoo%2C%20I%27d%20like%20a%20quote%20for%20${encodeURIComponent(p.name)}`}
+                  target="_blank"
+                  rel="noopener"
+                  className="product-card-v2"
+                >
+                  <span className="pc-badge" style={{ background: "rgba(0,200,83,0.15)", color: "#00c853", padding: "0.2rem 0.6rem", borderRadius: "9999px", fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase" }}>
+                    ~40% Off Retail
+                  </span>
+                  <div className="pc-img">
+                    <img src={p.img} alt={p.name} loading="lazy" />
+                  </div>
+                  <div className="pc-body">
+                    <span className="pc-cat">{p.category}</span>
+                    <h3 className="pc-name">{p.name}</h3>
+                    <div className="pc-meta">
+                      <span className="pc-price">{p.cargooPrice}</span>
+                      <span style={{ textDecoration: "line-through", color: "var(--clr-text-muted)", fontSize: "0.85rem" }}>{p.retailPrice}</span>
+                    </div>
+                  </div>
+                  <div className="pc-cta">
+                    <i className="fa-brands fa-whatsapp"></i> Get Quote
+                  </div>
+                </a>
+              ))}
+            </div>
 
-      <Footer />
-    </main>
-  );
-}
+            {/* CTA banner */}
+            <div
+              className="glass-panel"
+              style={{ marginTop: "5rem", padding: "4rem 2rem", textAlign: "center", position: "relative", overflow: "hidden" }}
+            >
+              <div style={{ position: "absolute", top: 0, right: 0, width: "20rem", height: "20rem", background: "rgba(255,85,0,0.06)", filter: "blur(80px)", pointerEvents: "none" }}></div>
+              <h2 style={{ fontSize: "clamp(1.8rem, 4vw, 2.5rem)", fontWeight: 900, textTransform: "uppercase", marginBottom: "1.5rem" }}>
+                Didn&apos;t find what you wanted?
+              </h2>
+              <p style={{ color: "var(--clr-text-muted)", fontSize: "1.1rem", maxWidth: "600px", margin: "0 auto 2.5rem" }}>
+                Our sourcing team can find almost any product from China. Send us a link or description and we&apos;ll quote it within 24 hours.
+              </p>
+              <a
+                href="https://wa.me/48500685000?text=Hi%20Cargoo%2C%20I%27d%20like%20a%20quote%20for..."
+                target="_blank"
+                rel="noopener"
+                className="btn btn-primary btn-lg btn-glow"
+              >
+                <i className="fa-brands fa-whatsapp"></i> Send Us a Link
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
 
-function ProductCard({ name, brand, price, target }: { name: string; brand: string; price: string; target: string }) {
-  return (
-    <div className="glass-panel p-2 flex flex-col group transition-all duration-500">
-      <div className="aspect-square bg-[#111] rounded-[1.4rem] mb-6 flex items-center justify-center relative overflow-hidden">
-         <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase text-[#00c853] z-10">
-           ~40% Saved
-         </div>
-         <div className="h-20 w-20 bg-white/5 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-700">
-            <Star className="text-white/20" size={32} />
-         </div>
-      </div>
-      <div className="px-4 pb-6">
-        <div className="text-[10px] font-black uppercase text-[#ff5500] mb-2">{brand}</div>
-        <h3 className="font-bold text-lg mb-4 line-clamp-1 leading-tight group-hover:text-[#ff5500] transition-colors">{name}</h3>
-        <div className="flex justify-between items-end border-t border-white/5 pt-4">
-           <div>
-              <div className="text-[10px] uppercase font-black text-[#94a3b8]">Cargoo Price</div>
-              <div className="text-xl font-black text-white">{price}</div>
-           </div>
-           <div className="text-right">
-              <div className="text-[10px] uppercase font-black text-[#94a3b8]">Retail</div>
-              <div className="text-sm font-bold text-[#94a3b8] line-through">{target}</div>
-           </div>
-        </div>
-      </div>
-    </div>
+      <a
+        href="https://wa.me/48500685000?text=Hi%20Cargoo%2C%20I%27d%20like%20a%20quote%20for..."
+        target="_blank"
+        rel="noopener"
+        className="floating-whatsapp"
+        aria-label="Contact on WhatsApp"
+      >
+        <i className="fa-brands fa-whatsapp"></i>
+      </a>
+
+      <Footer lang={lang} />
+
+      <Script src="/js/main.js" strategy="lazyOnload" />
+    </>
   );
 }

@@ -132,7 +132,18 @@
       "Bash(python3 \"C:/Users/jasiu/.claude/scheduled-tasks/cargoo-daily-growth-agent/send_emails.py\")",
       "Bash(curl -sk -X POST https://admin.cargooimport.eu/api/admin/outreach/cold -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d @C:/Users/jasiu/.claude/scheduled-tasks/cargoo-daily-growth-agent/email1_payload.json --max-time 60 -w '\\\\nHTTP_STATUS:%{http_code}')",
       "Bash(curl -sk -X POST https://admin.cargooimport.eu/api/admin/outreach/cold -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d @C:/Users/jasiu/.claude/scheduled-tasks/cargoo-daily-growth-agent/email2_payload.json --max-time 60 -w '\\\\nHTTP_STATUS:%{http_code}')",
-      "Bash(curl -sk -X POST https://admin.cargooimport.eu/api/admin/outreach/cold -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d @C:/Users/jasiu/.claude/scheduled-tasks/cargoo-daily-growth-agent/email3_payload.json --max-time 60 -w '\\\\nHTTP_STATUS:%{http_code}')"
+      "Bash(curl -sk -X POST https://admin.cargooimport.eu/api/admin/outreach/cold -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d @C:/Users/jasiu/.claude/scheduled-tasks/cargoo-daily-growth-agent/email3_payload.json --max-time 60 -w '\\\\nHTTP_STATUS:%{http_code}')",
+      "Bash(curl -s -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\":\"how to calculate landed cost importing from China EU 2026 step-by-step guide for EU businesses\",\"lang\":\"en\"}' --max-time 120)",
+      "Bash(curl -s -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' --data-raw '{\"keyword\":\"how to calculate landed cost importing from China EU 2026 step-by-step guide for EU businesses\",\"lang\":\"en\"}' --connect-timeout 30 --max-time 150 -w '\\\\nHTTP_STATUS:%{http_code}')",
+      "WebFetch(domain:www.sportlaedchen.de)",
+      "WebFetch(domain:www.fitness-store24.de)",
+      "WebFetch(domain:www.sport-kanze.de)",
+      "WebFetch(domain:heimverliebt.de)",
+      "WebFetch(domain:www.emilundpaula.de)",
+      "WebFetch(domain:www.vintagehaus.de)",
+      "WebFetch(domain:www.fellby.de)",
+      "WebFetch(domain:www.hundeshop.de)",
+      "Bash(python3 -c \"import json; data=json.load\\(open\\(r'C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\outreach-tracker.json'\\)\\); print\\(f'Entries: {len\\(data\\)}'\\); [print\\(f\\\\\"{e['email']} | touch={e['touch']} | nextDue={e['nextDue']} | errors={e['consecutiveErrors']}\\\\\"\\) for e in data]\")"
     ]
   }
 }

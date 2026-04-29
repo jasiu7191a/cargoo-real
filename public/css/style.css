@@ -8,6 +8,7 @@
     /* Gen-Z Viral Dark Mode Palette */
     --clr-bg: #050505;
     --clr-bg-surface: #111111;
+    --clr-bg-surface-elevated: #1c1c1c;
     --clr-bg-panel: rgba(255, 255, 255, 0.03);
     
     --clr-blue: #2962ff;

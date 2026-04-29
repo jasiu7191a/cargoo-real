@@ -1,88 +1,145 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Button } from "./ui/Button";
-import { CubeIcon } from "./ui/Icons"; // Helper icon component
-import { Package, Menu, X, Rocket } from "lucide-react";
-import { RequestDrawer } from "./RequestDrawer";
 
-export function Navbar() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, []);
-  const [requestDrawerOpen, setRequestDrawerOpen] = useState(false);
+interface NavbarProps {
+  lang?: string;
+}
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+export function Navbar({ lang = "en" }: NavbarProps) {
+  const [open, setOpen] = useState(false);
+  const langs = ["en", "pl", "de", "fr"] as const;
+
+  const toggle = () => {
+    setOpen((v) => {
+      document.body.style.overflow = !v ? "hidden" : "";
+      return !v;
+    });
+  };
+
+  const close = () => {
+    setOpen(false);
+    document.body.style.overflow = "";
+  };
 
   return (
     <>
-      <header className={`fixed top-0 left-0 w-full z-[1000] border-b transition-all duration-300 ${
-        scrolled 
-          ? "h-[75px] bg-[#050505]/85 backdrop-blur-3xl border-[rgba(255,255,255,0.1)]" 
-          : "h-[90px] bg-transparent border-[rgba(255,255,255,0.05)]"
-      }`}>
-        <div className="container h-full flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 bg-[#ff5500] rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(255,85,0,0.3)] group-hover:rotate-12 transition-transform">
-              <Package className="text-[#050505]" size={20} />
-            </div>
-            <span className="text-2xl font-black text-white">Cargoo</span>
+      <header className="header" id="header">
+        <div className="container nav-container">
+          <Link
+            href={`/${lang}`}
+            className="logo"
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 800, fontSize: "1.5rem", color: "#fff" }}
+          >
+            <i className="fa-solid fa-cube" style={{ color: "var(--clr-orange)" }}></i> Cargoo
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-1.5 bg-white/5 p-1.5 rounded-full border border-white/10">
-            <Link href="/products" className="flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase text-[#ff5500] hover:text-white transition-colors">
-              <Rocket size={14} className="animate-pulse" /> Trending Products
-            </Link>
-            <Link href="#how-it-works" className="px-5 py-2 text-xs font-bold uppercase text-[#94a3b8] hover:text-white transition-colors">How it works</Link>
-            <Link href="#services" className="px-5 py-2 text-xs font-bold uppercase text-[#94a3b8] hover:text-white transition-colors">Services</Link>
-            <Link href="/blog" className="px-5 py-2 text-xs font-bold uppercase text-[#94a3b8] hover:text-white transition-colors">Blog</Link>
+          <nav className="desktop-nav">
+            <ul className="nav-links">
+              <li>
+                <Link href={`/${lang}/products`} className="nav-highlight-cta">
+                  <i className="fa-solid fa-sparkles"></i> Products
+                </Link>
+              </li>
+              <li><Link href={`/${lang}#how-it-works`}>How It Works</Link></li>
+              <li><Link href={`/${lang}#services`}>Services</Link></li>
+              <li><Link href={`/${lang}#pricing`}>Calculator</Link></li>
+              <li><a href={`https://blog.cargooimport.eu/${lang}/blog`}>Blog</a></li>
+            </ul>
           </nav>
 
-          <div className="flex items-center gap-4">
-             <Button 
-              variant="outline" 
-              className="hidden md:flex gap-2"
-              onClick={() => setRequestDrawerOpen(true)}
+          <div className="nav-actions">
+            <div
+              className="lang-switch"
+              style={{ display: "flex", gap: "0.3rem", background: "rgba(255,255,255,0.05)", padding: "0.2rem", borderRadius: "2rem", border: "1px solid var(--clr-border)" }}
             >
-              <Package size={18} /> Request Sourcing
-            </Button>
-            <button 
-              className="lg:hidden p-2 text-white bg-white/5 rounded-xl border border-[rgba(255,85,0,0.2)]"
-              onClick={() => setMobileMenuOpen(true)}
+              {langs.map((l) => (
+                <Link
+                  key={l}
+                  href={`/${l}/products`}
+                  className={`lang-link${lang === l ? " active" : ""}`}
+                  style={{
+                    padding: "0.2rem 0.5rem",
+                    borderRadius: "1rem",
+                    fontSize: "0.7rem",
+                    fontWeight: 700,
+                    color: lang === l ? "#fff" : "#888",
+                    background: lang === l ? "var(--clr-orange)" : "transparent",
+                    textDecoration: "none",
+                  }}
+                >
+                  {l.toUpperCase()}
+                </Link>
+              ))}
+            </div>
+
+            <a
+              href="https://wa.me/48500685000?text=Hi%20Cargoo%2C%20I%27d%20like%20a%20quote%20for..."
+              target="_blank"
+              rel="noopener"
+              className="btn btn-primary btn-nav"
             >
-              <Menu size={24} />
+              <i className="fa-brands fa-whatsapp"></i> Get Quote
+            </a>
+            <button className="mobile-toggle" aria-label="Toggle Navigation" onClick={toggle}>
+              <i className="fa-solid fa-bars"></i>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Mobile Drawer — only rendered when open, so it never flashes on page load */}
-      {mounted && mobileMenuOpen && (
-        <div className="fixed inset-0 z-[2000]">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)} />
-          <div className="absolute top-0 right-0 w-full max-w-[320px] h-full bg-[#0b0b0b] p-8 border-l border-white/10">
-            <div className="flex justify-between items-center mb-12">
-              <span className="text-2xl font-black">Cargoo</span>
-              <button onClick={() => setMobileMenuOpen(false)} className="p-2 bg-white/5 rounded-full"><X /></button>
-            </div>
-            <div className="flex flex-col gap-6">
-              <Link href="/products" className="text-3xl font-black uppercase tracking-tighter hover:text-[#ff5500]" onClick={() => setMobileMenuOpen(false)}>Products</Link>
-              <Link href="#how-it-works" className="text-3xl font-black uppercase tracking-tighter hover:text-[#ff5500]" onClick={() => setMobileMenuOpen(false)}>Process</Link>
-              <Link href="#services" className="text-3xl font-black uppercase tracking-tighter hover:text-[#ff5500]" onClick={() => setMobileMenuOpen(false)}>Services</Link>
-              <Link href="/blog" className="text-3xl font-black uppercase tracking-tighter hover:text-[#ff5500]" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
-              <Button className="mt-8" onClick={() => { setMobileMenuOpen(false); setRequestDrawerOpen(true); }}>Contact Us</Button>
-            </div>
-          </div>
+      <div className={`mobile-menu${open ? " active" : ""}`} id="mobileMenu">
+        <div className="mobile-menu-header">
+          <Link
+            href={`/${lang}`}
+            className="logo"
+            style={{ color: "white", display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 800 }}
+            onClick={close}
+          >
+            <i className="fa-solid fa-cube" style={{ color: "var(--clr-orange)" }}></i> Cargoo
+          </Link>
+          <button className="close-menu" aria-label="Close menu" onClick={close}>
+            <i className="fa-solid fa-xmark"></i>
+          </button>
         </div>
-      )}
-
-      <RequestDrawer isOpen={requestDrawerOpen} onClose={() => setRequestDrawerOpen(false)} />
+        <ul className="mobile-nav-links">
+          <li><Link href={`/${lang}/products`} className="mobile-link" onClick={close}>Products</Link></li>
+          <li><Link href={`/${lang}#how-it-works`} className="mobile-link" onClick={close}>How It Works</Link></li>
+          <li><Link href={`/${lang}#services`} className="mobile-link" onClick={close}>Services</Link></li>
+          <li><Link href={`/${lang}#pricing`} className="mobile-link" onClick={close}>Calculator</Link></li>
+          <li><a href={`https://blog.cargooimport.eu/${lang}/blog`} className="mobile-link" onClick={close}>Blog</a></li>
+        </ul>
+        <div className="mobile-nav-cta">
+          <div className="lang-switch-mobile" style={{ display: "flex", gap: "1rem", marginBottom: "2rem", padding: "0 1.5rem" }}>
+            {langs.map((l) => (
+              <Link
+                key={l}
+                href={`/${l}/products`}
+                onClick={close}
+                style={{
+                  color: lang === l ? "var(--clr-orange)" : "#fff",
+                  textDecoration: "none",
+                  opacity: lang === l ? 1 : 0.5,
+                  fontWeight: 700,
+                  borderBottom: lang === l ? "2px solid var(--clr-orange)" : "none",
+                }}
+              >
+                {l.toUpperCase()}
+              </Link>
+            ))}
+          </div>
+          <a
+            href="https://wa.me/48500685000?text=Hi%20Cargoo%2C%20I%27d%20like%20a%20quote%20for..."
+            target="_blank"
+            rel="noopener"
+            className="btn btn-primary btn-block mobile-link"
+          >
+            <i className="fa-brands fa-whatsapp"></i> Get Quote
+          </a>
+        </div>
+      </div>
+      <div className={`mobile-overlay${open ? " active" : ""}`} id="mobileOverlay" onClick={close}></div>
     </>
   );
 }

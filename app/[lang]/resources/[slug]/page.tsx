@@ -3,9 +3,9 @@ import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Button } from "@/components/ui/Button";
 import Link from "next/link";
-import { ArrowLeft, Clock, Calendar, Share2, MoveRight } from "lucide-react";
+import { Navbar } from "@/components/Navbar";
+import { Footer } from "@/components/Footer";
 
 interface ResourcePageProps {
   params: {
@@ -15,116 +15,153 @@ interface ResourcePageProps {
 }
 
 export async function generateMetadata({ params }: ResourcePageProps) {
-  const post = await prisma.blogPost.findUnique({
-    where: { slug: params.slug },
-  });
-
+  let post: any = null;
+  try {
+    post = await prisma.blogPost.findUnique({ where: { slug: params.slug } });
+  } catch (e) {
+    return { title: "Article Not Found" };
+  }
   if (!post) return { title: "Article Not Found" };
-
   return {
     title: `${post.title} | Cargoo Import`,
     description: post.metaDescription,
     alternates: {
-      canonical: `https://cargooimport.eu/${params.lang}/resources/${params.slug}`,
+      canonical: `https://www.cargooimport.eu/${params.lang}/resources/${params.slug}`,
     },
   };
 }
 
 export default async function ResourcePage({ params }: ResourcePageProps) {
-  const post = await prisma.blogPost.findUnique({
-    where: { 
-      slug: params.slug,
-      status: "PUBLISHED" 
-    },
-  });
-
-  if (!post) {
-    notFound();
+  let post: any = null;
+  try {
+    post = await prisma.blogPost.findUnique({
+      where: { slug: params.slug, status: "PUBLISHED" },
+    });
+  } catch (e) {
+    console.error("DB error:", e);
   }
 
+  if (!post) notFound();
+
   return (
-    <div className="min-h-screen bg-[#050505] text-white pt-32 pb-20">
-      <div className="container mx-auto px-6 max-w-4xl">
-        {/* Back Button */}
-        <Link 
-          href={`/${params.lang}`} 
-          className="inline-flex items-center gap-2 text-[#94a3b8] hover:text-[#ff5500] transition-colors mb-12 group"
-        >
-          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back to Home
-        </Link>
+    <>
+      <Navbar lang={params.lang} />
 
-        {/* Header Section */}
-        <div className="space-y-6 mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#ff5500]/10 border border-[#ff5500]/20 text-[#ff5500] text-xs font-black uppercase tracking-widest">
-            Sourcing Guide
+      <main style={{ paddingTop: "120px", paddingBottom: "80px" }}>
+        <div className="container" style={{ maxWidth: "900px" }}>
+          <Link
+            href={`/${params.lang}/resources`}
+            style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", color: "var(--clr-text-muted)", textDecoration: "none", marginBottom: "3rem", fontWeight: 700, fontSize: "0.9rem" }}
+          >
+            <i className="fa-solid fa-arrow-left"></i> Back to Guides
+          </Link>
+
+          <div style={{ marginBottom: "3rem" }}>
+            <span
+              style={{
+                background: "rgba(255,85,0,0.1)",
+                color: "var(--clr-orange)",
+                padding: "0.3rem 0.75rem",
+                borderRadius: "9999px",
+                fontSize: "0.65rem",
+                fontWeight: 800,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                display: "inline-block",
+                marginBottom: "1.5rem",
+              }}
+            >
+              {post.targetKeyword || "Sourcing Guide"}
+            </span>
+            <h1
+              style={{
+                fontSize: "clamp(2rem, 6vw, 3.5rem)",
+                fontWeight: 900,
+                lineHeight: 1.05,
+                letterSpacing: "-0.03em",
+                color: "#fff",
+                textTransform: "uppercase",
+                marginBottom: "1.5rem",
+              }}
+            >
+              {post.title}
+            </h1>
+            <div style={{ display: "flex", gap: "2rem", color: "var(--clr-text-muted)", fontSize: "0.85rem", fontWeight: 700 }}>
+              <span>
+                <i className="fa-regular fa-calendar" style={{ marginRight: "6px", color: "var(--clr-orange)" }}></i>
+                {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
+              </span>
+              <span>
+                <i className="fa-regular fa-clock" style={{ marginRight: "6px", color: "var(--clr-orange)" }}></i>
+                6 min read
+              </span>
+            </div>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-none">
-            {post.title}
-          </h1>
-          <div className="flex flex-wrap items-center gap-6 text-sm text-[#94a3b8] font-bold uppercase tracking-wider">
-            <div className="flex items-center gap-2">
-              <Calendar size={16} /> {new Date(post.publishedAt || post.createdAt).toLocaleDateString()}
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock size={16} /> 6 min read
-            </div>
-            <div className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors">
-              <Share2 size={16} /> Share
-            </div>
+
+          <div
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "1.25rem",
+              padding: "2.5rem",
+              marginBottom: "4rem",
+              color: "var(--clr-text)",
+              lineHeight: 1.8,
+              fontSize: "1.05rem",
+            }}
+          >
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ children }) => <h1 style={{ fontSize: "1.8rem", fontWeight: 900, color: "#fff", textTransform: "uppercase", letterSpacing: "-0.02em", marginBottom: "1rem", marginTop: "2rem" }}>{children}</h1>,
+                h2: ({ children }) => <h2 style={{ fontSize: "1.5rem", fontWeight: 900, color: "#fff", textTransform: "uppercase", letterSpacing: "-0.02em", marginBottom: "0.75rem", marginTop: "2rem" }}>{children}</h2>,
+                h3: ({ children }) => <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: "#fff", marginBottom: "0.5rem", marginTop: "1.5rem" }}>{children}</h3>,
+                p: ({ children }) => <p style={{ color: "var(--clr-text-muted)", marginBottom: "1.25rem" }}>{children}</p>,
+                strong: ({ children }) => <strong style={{ color: "#fff", fontWeight: 800 }}>{children}</strong>,
+                a: ({ href, children }) => <a href={href} style={{ color: "var(--clr-orange)", textDecoration: "underline" }}>{children}</a>,
+                ul: ({ children }) => <ul style={{ paddingLeft: "1.5rem", marginBottom: "1.25rem", color: "var(--clr-text-muted)" }}>{children}</ul>,
+                ol: ({ children }) => <ol style={{ paddingLeft: "1.5rem", marginBottom: "1.25rem", color: "var(--clr-text-muted)" }}>{children}</ol>,
+                li: ({ children }) => <li style={{ marginBottom: "0.5rem" }}>{children}</li>,
+                blockquote: ({ children }) => <blockquote style={{ borderLeft: "3px solid var(--clr-orange)", paddingLeft: "1.25rem", color: "var(--clr-text-muted)", fontStyle: "italic", margin: "1.5rem 0" }}>{children}</blockquote>,
+              }}
+            >
+              {post.content}
+            </ReactMarkdown>
+          </div>
+
+          <div
+            className="glass-panel"
+            style={{ padding: "2.5rem", textAlign: "center" }}
+          >
+            <h3 style={{ fontSize: "1.4rem", fontWeight: 900, textTransform: "uppercase", marginBottom: "1rem", color: "#fff" }}>
+              Ready to start importing?
+            </h3>
+            <p style={{ color: "var(--clr-text-muted)", marginBottom: "1.5rem" }}>
+              Send us a product link on WhatsApp — we&apos;ll quote it within 24 hours.
+            </p>
+            <a
+              href="https://wa.me/48500685000?text=Hi%20Cargoo%2C%20I%27d%20like%20a%20quote%20for..."
+              target="_blank"
+              rel="noopener"
+              className="btn btn-primary btn-glow"
+            >
+              <i className="fa-brands fa-whatsapp"></i> Get a Free Quote
+            </a>
           </div>
         </div>
+      </main>
 
-        {/* Featured Image Placeholder (Rich Aesthetic) */}
-        <div className="w-full h-[400px] bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a] rounded-3xl border border-white/5 mb-16 flex items-center justify-center relative overflow-hidden">
-           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-30 brightness-50 grayscale hover:grayscale-0 hover:opacity-50 transition-all duration-1000"></div>
-           <div className="relative z-10 text-center space-y-4">
-              <div className="text-[#ff5500] font-black text-7xl opacity-20">CARGOO</div>
-           </div>
-        </div>
+      <a
+        href="https://wa.me/48500685000?text=Hi%20Cargoo%2C%20I%27d%20like%20a%20quote%20for..."
+        target="_blank"
+        rel="noopener"
+        className="floating-whatsapp"
+        aria-label="Contact on WhatsApp"
+      >
+        <i className="fa-brands fa-whatsapp"></i>
+      </a>
 
-        {/* Content Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-          <div className="lg:col-span-8">
-            <article className="prose prose-invert prose-orange max-w-none prose-headings:uppercase prose-headings:font-black prose-headings:tracking-tighter prose-p:text-[#94a3b8] prose-p:leading-relaxed prose-strong:text-white prose-a:text-[#ff5500] hover:prose-a:underline">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {post.content}
-              </ReactMarkdown>
-            </article>
-          </div>
-
-          {/* Sidebar CTA */}
-          <div className="lg:col-span-4">
-            <div className="sticky top-32 space-y-6">
-              <div className="glass-panel p-8 bg-gradient-to-b from-[#ff5500]/20 to-transparent border-[#ff5500]/30 shadow-[0_20px_50px_rgba(255,85,0,0.1)]">
-                <h3 className="text-xl font-black uppercase mb-4 leading-tight">Ready to start importing?</h3>
-                <p className="text-sm text-[#94a3b8] mb-8 font-medium">Use our real-time calculator to get an instant landed cost estimate for your shipment.</p>
-                <Link href={`/${params.lang}#calculator`}>
-                  <Button className="w-full py-6 text-base" glow>
-                    Calculate Now <MoveRight size={20} />
-                  </Button>
-                </Link>
-                <div className="mt-6 pt-6 border-t border-white/10 text-center text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">
-                   100% Free • Secure • Instant
-                </div>
-              </div>
-
-              <div className="glass-panel p-8">
-                <h4 className="text-xs font-black uppercase tracking-widest text-[#94a3b8] mb-6 underline decoration-[#ff5500] underline-offset-8">Related Strategy</h4>
-                <ul className="space-y-6">
-                  <li className="group cursor-pointer">
-                    <div className="text-[10px] text-[#ff5500] font-black uppercase mb-1 tracking-tighter tracking-widest">Pricing</div>
-                    <p className="text-sm font-bold group-hover:text-[#ff5500] transition-colors">How to calculate VAT and Import Duties in 2026</p>
-                  </li>
-                  <li className="group cursor-pointer">
-                    <div className="text-[10px] text-[#ff5500] font-black uppercase mb-1 tracking-widest">Quality</div>
-                    <p className="text-sm font-bold group-hover:text-[#ff5500] transition-colors">The Inspection Checklist: 5 things to check</p>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+      <Footer lang={params.lang} />
+    </>
   );
 }
