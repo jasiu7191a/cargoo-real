@@ -51,7 +51,7 @@ export function Hero() {
         </div>
         
         <h1 className="text-[clamp(3.5rem,8vw,6rem)] font-black uppercase tracking-tighter leading-[0.9] text-white mb-6">
-          Source Direct.<br />
+          Source Direct. <br />
           <span className="gradient-text">Zero <span className="line-through text-white/30 decoration-white/30">Middleman</span>.</span>
         </h1>
         

@@ -18,12 +18,11 @@ export async function GET() {
     console.error("[sitemap] DB error:", e);
   }
 
-  const staticUrls: { loc: string; priority: string; changefreq: string; lastmod?: string }[] =
-    LANGS.flatMap((lang) => [
-      { loc: `${BASE_URL}/${lang}`, priority: "1.0", changefreq: "weekly" },
-      { loc: `${BASE_URL}/${lang}/blog`, priority: "0.8", changefreq: "daily" },
-      { loc: `${BASE_URL}/${lang}/products`, priority: "0.7", changefreq: "monthly" },
-    ]);
+  const staticUrls = LANGS.flatMap((lang) => [
+    { loc: `${BASE_URL}/${lang}`, priority: "1.0", changefreq: "weekly" },
+    { loc: `${BASE_URL}/${lang}/blog`, priority: "0.8", changefreq: "daily" },
+    { loc: `${BASE_URL}/${lang}/products`, priority: "0.7", changefreq: "monthly" },
+  ]);
 
   const blogUrls = posts.map((post) => ({
     loc: `${BASE_URL}/${post.lang}/blog/${post.slug}`,
@@ -35,13 +34,13 @@ export async function GET() {
   const allUrls = [...staticUrls, ...blogUrls];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${allUrls
   .map(
     (u) => `  <url>
     <loc>${u.loc}</loc>
-    ${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}
-    <changefreq>${u.changefreq}</changefreq>
+    ${"lastmod" in u && u.lastmod ? `<lastmod>${u.lastmod}</lastmod>\n    ` : ""}<changefreq>${u.changefreq}</changefreq>
     <priority>${u.priority}</priority>
   </url>`
   )

@@ -4,6 +4,12 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
   },
+  async rewrites() {
+    return [
+      { source: '/sitemap.xml', destination: '/sitemap' },
+      { source: '/sitemap_index.xml', destination: '/sitemap' },
+    ];
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
