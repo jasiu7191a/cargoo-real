@@ -27,6 +27,19 @@ function getLocale(request: NextRequest) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // Redirect non-www to www (canonical domain)
+  const host = request.headers.get('host') || ''
+  if (
+    !host.startsWith('www.') &&
+    !host.includes('localhost') &&
+    !host.includes('127.0.0.1') &&
+    !host.endsWith('.vercel.app')
+  ) {
+    const url = request.nextUrl.clone()
+    url.host = `www.${host}`
+    return NextResponse.redirect(url, { status: 301 })
+  }
   
   // 1. BYPASS & AUTH: Handle all admin routes in one block
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {

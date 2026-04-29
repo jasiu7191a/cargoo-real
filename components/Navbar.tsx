@@ -9,7 +9,9 @@ import { RequestDrawer } from "./RequestDrawer";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, []);
   const [requestDrawerOpen, setRequestDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -61,7 +63,7 @@ export function Navbar() {
       </header>
 
       {/* Mobile Drawer */}
-      <div className={`fixed inset-0 z-[2000] lg:hidden transition-all duration-500 ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
+      <div className={`fixed inset-0 z-[2000] lg:hidden transition-all duration-500 ${mounted && mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
         <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)} />
         <div className={`absolute top-0 right-0 w-full max-w-[320px] h-full bg-[#0b0b0b] p-8 border-l border-white/10 transition-transform duration-500 ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
           <div className="flex justify-between items-center mb-12">

@@ -40,3 +40,6 @@ next-env.d.ts
 # cloudflare
 /.open-next
 /dist
+
+# Claude Code local settings (contains secrets - never commit)
+.claude/settings.local.json
