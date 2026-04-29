@@ -62,23 +62,25 @@ export function Navbar() {
         </div>
       </header>
 
-      {/* Mobile Drawer */}
-      <div className={`fixed inset-0 z-[2000] lg:hidden transition-all duration-500 ${mounted && mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)} />
-        <div className={`absolute top-0 right-0 w-full max-w-[320px] h-full bg-[#0b0b0b] p-8 border-l border-white/10 transition-transform duration-500 ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"}`}>
-          <div className="flex justify-between items-center mb-12">
-            <span className="text-2xl font-black">Cargoo</span>
-            <button onClick={() => setMobileMenuOpen(false)} className="p-2 bg-white/5 rounded-full"><X /></button>
-          </div>
-          <div className="flex flex-col gap-6">
-            <Link href="/products" className="text-3xl font-black uppercase tracking-tighter hover:text-[#ff5500]" onClick={() => setMobileMenuOpen(false)}>Products</Link>
-            <Link href="#how-it-works" className="text-3xl font-black uppercase tracking-tighter hover:text-[#ff5500]" onClick={() => setMobileMenuOpen(false)}>Process</Link>
-            <Link href="#services" className="text-3xl font-black uppercase tracking-tighter hover:text-[#ff5500]" onClick={() => setMobileMenuOpen(false)}>Services</Link>
-            <Link href="/blog" className="text-3xl font-black uppercase tracking-tighter hover:text-[#ff5500]" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
-            <Button className="mt-8" onClick={() => { setMobileMenuOpen(false); setRequestDrawerOpen(true); }}>Contact Us</Button>
+      {/* Mobile Drawer — only rendered when open, so it never flashes on page load */}
+      {mounted && mobileMenuOpen && (
+        <div className="fixed inset-0 z-[2000]">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={() => setMobileMenuOpen(false)} />
+          <div className="absolute top-0 right-0 w-full max-w-[320px] h-full bg-[#0b0b0b] p-8 border-l border-white/10">
+            <div className="flex justify-between items-center mb-12">
+              <span className="text-2xl font-black">Cargoo</span>
+              <button onClick={() => setMobileMenuOpen(false)} className="p-2 bg-white/5 rounded-full"><X /></button>
+            </div>
+            <div className="flex flex-col gap-6">
+              <Link href="/products" className="text-3xl font-black uppercase tracking-tighter hover:text-[#ff5500]" onClick={() => setMobileMenuOpen(false)}>Products</Link>
+              <Link href="#how-it-works" className="text-3xl font-black uppercase tracking-tighter hover:text-[#ff5500]" onClick={() => setMobileMenuOpen(false)}>Process</Link>
+              <Link href="#services" className="text-3xl font-black uppercase tracking-tighter hover:text-[#ff5500]" onClick={() => setMobileMenuOpen(false)}>Services</Link>
+              <Link href="/blog" className="text-3xl font-black uppercase tracking-tighter hover:text-[#ff5500]" onClick={() => setMobileMenuOpen(false)}>Blog</Link>
+              <Button className="mt-8" onClick={() => { setMobileMenuOpen(false); setRequestDrawerOpen(true); }}>Contact Us</Button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <RequestDrawer isOpen={requestDrawerOpen} onClose={() => setRequestDrawerOpen(false)} />
     </>
