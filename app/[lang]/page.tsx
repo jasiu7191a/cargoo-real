@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import prisma from "@/lib/prisma";
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
@@ -204,10 +205,22 @@ const t: Record<Lang, Record<string, string>> = {
   },
 };
 
-export default function Home({ params }: { params: { lang: string } }) {
+export default async function Home({ params }: { params: { lang: string } }) {
   const lang = (langs.includes(params.lang as Lang) ? params.lang : 'en') as Lang;
   const s = t[lang];
   const blogBase = `https://blog.cargooimport.eu/${lang}/blog`;
+
+  let latestPosts: { title: string; slug: string; metaDescription: string | null; targetKeyword: string | null }[] = [];
+  try {
+    latestPosts = await prisma.blogPost.findMany({
+      where: { status: "PUBLISHED", lang },
+      orderBy: { publishedAt: "desc" },
+      take: 3,
+      select: { title: true, slug: true, metaDescription: true, targetKeyword: true },
+    });
+  } catch (e) {
+    console.error("Failed to load blog posts for homepage:", e);
+  }
 
   return (
     <>
@@ -587,18 +600,22 @@ export default function Home({ params }: { params: { lang: string } }) {
             <a href={blogBase} style={{color:'var(--clr-orange)',fontWeight:700,textDecoration:'none',fontSize:'0.9rem'}}>{s.allArticles}</a>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:'1.5rem'}}>
-            {[
-              {tag:'Import Guide',title:'How to Import from China to the EU in 2026',desc:'Step-by-step guide covering supplier vetting, customs duties, and logistics for EU importers.'},
-              {tag:'Sourcing',title:'China Plus One Strategy for EU Supply Chain Resilience',desc:'How European businesses are diversifying their sourcing to reduce risk in 2026.'},
-              {tag:'Logistics',title:'Sea Freight vs Air Freight from China: Full Cost Breakdown',desc:'When to choose sea vs air and how each affects your landed cost and delivery time.'},
-            ].map((post,i) => (
-              <a key={i} href={blogBase} style={{textDecoration:'none',display:'block',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'1.25rem',padding:'1.75rem',transition:'border-color 0.2s'}}>
-                <span style={{background:'rgba(255,85,0,0.1)',color:'var(--clr-orange)',padding:'0.2rem 0.6rem',borderRadius:'9999px',fontSize:'0.65rem',fontWeight:800,textTransform:'uppercase',letterSpacing:'0.1em'}}>{post.tag}</span>
+            {latestPosts.length > 0 ? latestPosts.map((post) => (
+              <a key={post.slug} href={`${blogBase}/${post.slug}`} style={{textDecoration:'none',display:'block',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'1.25rem',padding:'1.75rem',transition:'border-color 0.2s'}}>
+                {post.targetKeyword && (
+                  <span style={{background:'rgba(255,85,0,0.1)',color:'var(--clr-orange)',padding:'0.2rem 0.6rem',borderRadius:'9999px',fontSize:'0.65rem',fontWeight:800,textTransform:'uppercase',letterSpacing:'0.1em'}}>{post.targetKeyword}</span>
+                )}
                 <h3 style={{color:'#fff',fontSize:'1.1rem',fontWeight:800,letterSpacing:'-0.02em',margin:'0.85rem 0 0.5rem'}}>{post.title}</h3>
-                <p style={{color:'#94a3b8',fontSize:'0.85rem',lineHeight:1.6}}>{post.desc}</p>
+                {post.metaDescription && (
+                  <p style={{color:'#94a3b8',fontSize:'0.85rem',lineHeight:1.6}}>{post.metaDescription}</p>
+                )}
                 <div style={{color:'var(--clr-orange)',fontWeight:700,fontSize:'0.8rem',marginTop:'1.25rem'}}>Read guide →</div>
               </a>
-            ))}
+            )) : (
+              <p style={{color:'#94a3b8',fontSize:'0.9rem'}}>
+                <a href={blogBase} style={{color:'var(--clr-orange)',textDecoration:'none'}}>Visit our blog →</a>
+              </p>
+            )}
           </div>
         </div>
       </section>

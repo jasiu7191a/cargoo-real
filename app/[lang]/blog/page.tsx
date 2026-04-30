@@ -133,7 +133,7 @@ export default async function BlogIndexPage({
                 {posts.map((post) => (
                   <Link
                     key={post.id}
-                    href={`/${params.lang}/blog/${post.slug}`}
+                    href={`/${post.lang}/blog/${post.slug}`}
                     style={{ textDecoration: "none", display: "block" }}
                   >
                     <article

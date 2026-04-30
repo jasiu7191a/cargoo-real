@@ -73,6 +73,16 @@ export function Navbar({ lang = "en" }: NavbarProps) {
     return pathname.replace(/^\/(en|pl|de|fr)(\/|$)/, `/${l}$2`) || `/${l}`;
   };
 
+  const productsUrl = (l: string) => {
+    const map: Record<string, string> = {
+      en: "https://www.cargooimport.eu/products.html",
+      pl: "https://www.cargooimport.eu/cargoo-pl/products.html",
+      de: "https://www.cargooimport.eu/cargoo-de/products.html",
+      fr: "https://www.cargooimport.eu/cargoo-fr/products.html",
+    };
+    return map[l] ?? map.en;
+  };
+
   return (
     <>
       <header className="header" id="header">
@@ -88,9 +98,9 @@ export function Navbar({ lang = "en" }: NavbarProps) {
           <nav className="desktop-nav">
             <ul className="nav-links">
               <li>
-                <Link href={`/${lang}/products`} className="nav-highlight-cta">
+                <a href={productsUrl(lang)} className="nav-highlight-cta">
                   <i className="fa-solid fa-sparkles"></i> {t.products}
-                </Link>
+                </a>
               </li>
               <li><Link href={`/${lang}#how-it-works`}>{t.howItWorks}</Link></li>
               <li><Link href={`/${lang}#services`}>{t.services}</Link></li>
@@ -154,7 +164,7 @@ export function Navbar({ lang = "en" }: NavbarProps) {
           </button>
         </div>
         <ul className="mobile-nav-links">
-          <li><Link href={`/${lang}/products`} className="mobile-link" onClick={close}>{t.products}</Link></li>
+          <li><a href={productsUrl(lang)} className="mobile-link" onClick={close}>{t.products}</a></li>
           <li><Link href={`/${lang}#how-it-works`} className="mobile-link" onClick={close}>{t.howItWorks}</Link></li>
           <li><Link href={`/${lang}#services`} className="mobile-link" onClick={close}>{t.services}</Link></li>
           <li><Link href={`/${lang}#pricing`} className="mobile-link" onClick={close}>{t.calculator}</Link></li>
