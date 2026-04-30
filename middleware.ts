@@ -25,24 +25,47 @@ function getLocale(request: NextRequest) {
   }
 }
 
+// The bare root domain — only this gets the non-www → www redirect.
+const ROOT_DOMAIN = 'cargooimport.eu'
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-
-  // Redirect non-www to www (canonical domain)
   const host = request.headers.get('host') || ''
-  if (
-    !host.startsWith('www.') &&
-    !host.includes('localhost') &&
-    !host.includes('127.0.0.1') &&
-    !host.endsWith('.vercel.app') &&
-    !host.endsWith('.pages.dev')
-  ) {
+
+  // 1. CANONICAL REDIRECT: cargooimport.eu → www.cargooimport.eu only.
+  //    Subdomains (blog., admin.) and preview URLs (*.pages.dev) are left alone.
+  if (host === ROOT_DOMAIN) {
     const url = request.nextUrl.clone()
-    url.host = `www.${host}`
+    url.host = `www.${ROOT_DOMAIN}`
     return NextResponse.redirect(url, { status: 301 })
   }
-  
-  // 1. BYPASS & AUTH: Handle all admin routes in one block
+
+  // 2. SMART SUBDOMAIN SHORTCUTS
+  //    blog.cargooimport.eu  → /<locale>/blog  (unless already on a blog path)
+  //    admin.cargooimport.eu → /admin          (unless already on an admin path)
+  if (host === `blog.${ROOT_DOMAIN}`) {
+    if (!pathname.startsWith('/en/blog') &&
+        !pathname.startsWith('/pl/blog') &&
+        !pathname.startsWith('/de/blog') &&
+        !pathname.startsWith('/fr/blog') &&
+        !pathname.startsWith('/api/') &&
+        !pathname.startsWith('/_next/')) {
+      const locale = getLocale(request)
+      const url = request.nextUrl.clone()
+      url.pathname = `/${locale}/blog`
+      return NextResponse.redirect(url, { status: 302 })
+    }
+  }
+
+  if (host === `admin.${ROOT_DOMAIN}`) {
+    if (!pathname.startsWith('/admin') && !pathname.startsWith('/api/') && !pathname.startsWith('/_next/')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/admin'
+      return NextResponse.redirect(url, { status: 302 })
+    }
+  }
+
+  // 3. BYPASS & AUTH: Handle all admin routes in one block
   if (pathname === '/admin' || pathname.startsWith('/admin/')) {
     // Skip protection for login page and its assets
     if (pathname === '/admin/login' || pathname.startsWith('/admin-assets/')) {
@@ -62,12 +85,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 2. BYPASS: Never touch api routes
+  // 4. BYPASS: Never touch api routes
   if (pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
 
-  // 3. LOCALIZATION: Handle language redirects for public pages only
+  // 5. LOCALIZATION: Handle language redirects for public pages only
   const pathnameHasLocale = locales.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   )
