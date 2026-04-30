@@ -9,7 +9,7 @@ export async function generateMetadata({ params }: { params: { lang: string } })
   return {
     title: dict.blog.metaTitle,
     description: dict.blog.metaDescription,
-    alternates: { canonical: `https://blog.cargooimport.eu/${params.lang}/blog` },
+    alternates: { canonical: `https://www.cargooimport.eu/${params.lang}/blog` },
   };
 }
 

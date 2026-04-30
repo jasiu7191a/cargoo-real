@@ -6,7 +6,7 @@ import { getDictionary } from "@/lib/dictionaries";
 
 export const dynamic = "force-dynamic";
 
-const BASE_URL = "https://blog.cargooimport.eu";
+const BASE_URL = "https://www.cargooimport.eu";
 
 export async function generateMetadata({ params }: { params: { slug: string; lang: string } }) {
   let post: any = null;

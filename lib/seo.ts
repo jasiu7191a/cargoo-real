@@ -15,7 +15,7 @@ export function generateCargooMetadata({
   path,
   image = "/og-image.png"
 }: MetadataProps): Metadata {
-  const baseUrl = "https://blog.cargooimport.eu";
+  const baseUrl = "https://www.cargooimport.eu";
   const url = `${baseUrl}/${lang}/${path}`;
 
   return {
