@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 // Secured by a dedicated AGENT_SECRET — separate from admin credentials.
 // Set this in Cloudflare env vars. Generate with: openssl rand -base64 32
@@ -67,7 +68,7 @@ Return ONLY a raw JSON object with keys: title, slug, metaDescription, content.
             parts: [{ text: "Return only valid JSON with no markdown, backticks, or explanation." }],
           },
           contents: [{ role: "user", parts: [{ text: SOURCING_GUIDE_PROMPT }] }],
-          generationConfig: { maxOutputTokens: 2000 },
+          generationConfig: { maxOutputTokens: 4000 },
         }),
       }
     );
@@ -88,7 +89,9 @@ Return ONLY a raw JSON object with keys: title, slug, metaDescription, content.
   }
 
   const raw = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-  const cleaned = raw.trim().replace(/^```json?\n?/, "").replace(/```$/, "").trim();
+  // Extract the first {...} block — handles markdown fences, leading text, and partial wrapping
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  const cleaned = jsonMatch ? jsonMatch[0] : raw.trim().replace(/^```json?\n?/, "").replace(/```$/, "").trim();
 
   let contentData: any;
   try {
