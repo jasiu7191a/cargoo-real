@@ -34,7 +34,8 @@ export async function middleware(request: NextRequest) {
     !host.startsWith('www.') &&
     !host.includes('localhost') &&
     !host.includes('127.0.0.1') &&
-    !host.endsWith('.vercel.app')
+    !host.endsWith('.vercel.app') &&
+    !host.endsWith('.pages.dev')
   ) {
     const url = request.nextUrl.clone()
     url.host = `www.${host}`
