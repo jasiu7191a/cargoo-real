@@ -5,11 +5,80 @@ interface FooterProps {
   lang?: string;
 }
 
+const T = {
+  en: {
+    tagline:    "Import from China Made Simple. We help you easily order brand items, small electronics, fashion items, and more.",
+    company:    "Company",
+    aboutUs:    "About Us",
+    howItWorks: "How It Works",
+    services:   "Services",
+    blog:       "Blog & Insights",
+    careers:    "Careers",
+    contact:    "Contact Us",
+    legal:      "Legal",
+    terms:      "Terms of Service",
+    privacy:    "Privacy Policy",
+    refund:     "Refund Policy",
+    copyright:  "All rights reserved.",
+  },
+  pl: {
+    tagline:    "Import z Chin bez stresu. Pomagamy łatwo zamawiać markowe rzeczy, drobną elektronikę, modę i więcej.",
+    company:    "Firma",
+    aboutUs:    "O nas",
+    howItWorks: "Jak to działa",
+    services:   "Usługi",
+    blog:       "Blog i Wiedza",
+    careers:    "Kariera",
+    contact:    "Kontakt",
+    legal:      "Prawne",
+    terms:      "Regulamin",
+    privacy:    "Polityka prywatności",
+    refund:     "Polityka zwrotów",
+    copyright:  "Wszelkie prawa zastrzeżone.",
+  },
+  de: {
+    tagline:    "Import aus China leicht gemacht. Wir helfen dir, Markenprodukte, Elektronik, Mode und mehr einfach zu bestellen.",
+    company:    "Unternehmen",
+    aboutUs:    "Über uns",
+    howItWorks: "So funktioniert's",
+    services:   "Leistungen",
+    blog:       "Blog & Ratgeber",
+    careers:    "Karriere",
+    contact:    "Kontakt",
+    legal:      "Rechtliches",
+    terms:      "AGB",
+    privacy:    "Datenschutz",
+    refund:     "Rückgabe-Richtlinie",
+    copyright:  "Alle Rechte vorbehalten.",
+  },
+  fr: {
+    tagline:    "Import depuis la Chine simplifié. Nous vous aidons à commander des articles de marque, de l'électronique, de la mode et bien plus.",
+    company:    "Société",
+    aboutUs:    "À propos",
+    howItWorks: "Comment ça marche",
+    services:   "Services",
+    blog:       "Blog & Guides",
+    careers:    "Carrières",
+    contact:    "Contact",
+    legal:      "Légal",
+    terms:      "Conditions générales",
+    privacy:    "Politique de confidentialité",
+    refund:     "Politique de remboursement",
+    copyright:  "Tous droits réservés.",
+  },
+} as const;
+
+type Lang = keyof typeof T;
+
 export function Footer({ lang = "en" }: FooterProps) {
+  const t = T[(lang as Lang)] ?? T.en;
+
   return (
     <footer className="footer">
       <div className="container">
         <div className="footer-grid">
+
+          {/* Brand */}
           <div className="footer-brand">
             <Link
               href={`/${lang}`}
@@ -18,7 +87,7 @@ export function Footer({ lang = "en" }: FooterProps) {
             >
               <i className="fa-solid fa-cube" style={{ color: "var(--clr-orange)" }}></i> Cargoo
             </Link>
-            <p>Import from China Made Simple. We help you easily order brand items, small electronics, fashion items, and more.</p>
+            <p>{t.tagline}</p>
             <div className="social-links">
               <a href="https://www.facebook.com/profile.php?id=61578665194191" target="_blank" rel="noopener" aria-label="Facebook">
                 <i className="fa-brands fa-facebook-f"></i>
@@ -32,18 +101,20 @@ export function Footer({ lang = "en" }: FooterProps) {
             </div>
           </div>
 
+          {/* Company */}
           <div className="footer-links">
-            <h4>Company</h4>
+            <h4>{t.company}</h4>
             <ul>
-              <li><Link href={`/${lang}#what-is-cargoo`}>About Us</Link></li>
-              <li><Link href={`/${lang}#how-it-works`}>How It Works</Link></li>
-              <li><Link href={`/${lang}#services`}>Services</Link></li>
-              <li><a href={`https://blog.cargooimport.eu/${lang}/blog`}>Blog &amp; Insights</a></li>
+              <li><Link href={`/${lang}#what-is-cargoo`}>{t.aboutUs}</Link></li>
+              <li><Link href={`/${lang}#how-it-works`}>{t.howItWorks}</Link></li>
+              <li><Link href={`/${lang}#services`}>{t.services}</Link></li>
+              <li><Link href={`/${lang}/blog`}>{t.blog}</Link></li>
             </ul>
           </div>
 
+          {/* Contact */}
           <div className="footer-links">
-            <h4>Contact Us</h4>
+            <h4>{t.contact}</h4>
             <ul style={{ gap: "1rem", display: "flex", flexDirection: "column" }}>
               <li>
                 <a href="mailto:contact@cargooimport.eu">
@@ -60,18 +131,19 @@ export function Footer({ lang = "en" }: FooterProps) {
             </ul>
           </div>
 
+          {/* Legal */}
           <div className="footer-links">
-            <h4>Legal</h4>
+            <h4>{t.legal}</h4>
             <ul>
-              <li><Link href={`/${lang}/terms`}>Terms of Service</Link></li>
-              <li><Link href={`/${lang}/privacy`}>Privacy Policy</Link></li>
-              <li><Link href={`/${lang}/refund`}>Refund Policy</Link></li>
+              <li><Link href={`/${lang}/terms`}>{t.terms}</Link></li>
+              <li><Link href={`/${lang}/privacy`}>{t.privacy}</Link></li>
+              <li><Link href={`/${lang}/refund`}>{t.refund}</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="footer-bottom">
-          <p>&copy; 2026 Cargoo. All rights reserved.</p>
+          <p>&copy; 2026 Cargoo. {t.copyright}</p>
           <div className="payment-methods">
             <i className="fa-brands fa-cc-visa"></i>
             <i className="fa-brands fa-cc-mastercard"></i>
