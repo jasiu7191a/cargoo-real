@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: ResourcePageProps) {
     title: `${post.title} | Cargoo Import`,
     description: post.metaDescription,
     alternates: {
-      canonical: `https://www.cargooimport.eu/${params.lang}/resources/${params.slug}`,
+      canonical: `https://blog.cargooimport.eu/${params.lang}/resources/${params.slug}`,
     },
   };
 }

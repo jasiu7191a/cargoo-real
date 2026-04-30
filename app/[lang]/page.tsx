@@ -207,7 +207,7 @@ const t: Record<Lang, Record<string, string>> = {
 export default function Home({ params }: { params: { lang: string } }) {
   const lang = (langs.includes(params.lang as Lang) ? params.lang : 'en') as Lang;
   const s = t[lang];
-  const blogBase = `https://www.cargooimport.eu/${lang}/blog`;
+  const blogBase = `https://blog.cargooimport.eu/${lang}/blog`;
 
   return (
     <>

@@ -8,7 +8,8 @@ import { Footer } from "@/components/Footer";
 
 export const dynamic = "force-dynamic";
 
-const BASE_URL = "https://www.cargooimport.eu";
+const BASE_URL = "https://blog.cargooimport.eu";
+const MAIN_SITE_URL = "https://www.cargooimport.eu";
 
 export async function generateMetadata({ params }: { params: { slug: string; lang: string } }) {
   let post: any = null;
@@ -92,7 +93,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: `${BASE_URL}/${params.lang}` },
+      { "@type": "ListItem", position: 1, name: "Home", item: `${MAIN_SITE_URL}/${params.lang}` },
       { "@type": "ListItem", position: 2, name: "Blog", item: blogListUrl },
       { "@type": "ListItem", position: 3, name: post.title, item: canonicalUrl },
     ],
