@@ -31,7 +31,10 @@ export default async function BlogIndexPage({
         status: "PUBLISHED",
         ...(showAll ? {} : { lang: params.lang }),
       },
-      orderBy: { publishedAt: "desc" },
+      orderBy: [
+        { publishedAt: { sort: "desc", nulls: "last" } },
+        { createdAt: "desc" },
+      ],
       select: {
         id: true,
         title: true,
