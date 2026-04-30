@@ -9,7 +9,14 @@ import { Footer } from "@/components/Footer";
 export const dynamic = "force-dynamic";
 
 const BASE_URL = "https://blog.cargooimport.eu";
-const MAIN_SITE_URL = "https://www.cargooimport.eu";
+
+const HOME_URLS: Record<string, string> = {
+  en: "https://www.cargooimport.eu",
+  pl: "https://www.cargooimport.eu/cargoo-pl/",
+  de: "https://www.cargooimport.eu/cargoo-de/",
+  fr: "https://www.cargooimport.eu/cargoo-fr/",
+};
+const homeUrl = (lang: string) => HOME_URLS[lang] ?? HOME_URLS.en;
 
 export async function generateMetadata({ params }: { params: { slug: string; lang: string } }) {
   let post: any = null;
@@ -93,7 +100,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Home", item: `${MAIN_SITE_URL}/${params.lang}` },
+      { "@type": "ListItem", position: 1, name: "Home", item: homeUrl(params.lang) },
       { "@type": "ListItem", position: 2, name: "Blog", item: blogListUrl },
       { "@type": "ListItem", position: 3, name: post.title, item: canonicalUrl },
     ],
@@ -111,9 +118,9 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
 
           {/* Breadcrumb */}
           <nav aria-label="Breadcrumb" style={{ marginBottom: "2rem", fontSize: "0.8rem", color: "var(--clr-text-muted)" }}>
-            <Link href={`/${params.lang}`} style={{ color: "var(--clr-text-muted)", textDecoration: "none" }}>
+            <a href={homeUrl(params.lang)} style={{ color: "var(--clr-text-muted)", textDecoration: "none" }}>
               Home
-            </Link>
+            </a>
             <span style={{ margin: "0 0.4rem" }}>›</span>
             <Link href={`/${params.lang}/blog`} style={{ color: "var(--clr-text-muted)", textDecoration: "none" }}>
               Blog
@@ -198,8 +205,8 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
             <p style={{ color: "var(--clr-text-muted)", marginBottom: "2rem", lineHeight: 1.7 }}>
               {dict.blogPost.ctaDescription}
             </p>
-            <Link
-              href={`/${params.lang}`}
+            <a
+              href={homeUrl(params.lang)}
               style={{
                 display: "inline-block",
                 background: "var(--clr-orange)",
@@ -214,7 +221,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
               }}
             >
               {dict.blogPost.ctaButton}
-            </Link>
+            </a>
           </div>
         </div>
       </main>

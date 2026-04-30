@@ -1,6 +1,16 @@
 import React from "react";
 import Link from "next/link";
 
+function homeUrl(lang: string) {
+  const map: Record<string, string> = {
+    en: "https://www.cargooimport.eu",
+    pl: "https://www.cargooimport.eu/cargoo-pl/",
+    de: "https://www.cargooimport.eu/cargoo-de/",
+    fr: "https://www.cargooimport.eu/cargoo-fr/",
+  };
+  return map[lang] ?? map.en;
+}
+
 interface FooterProps {
   lang?: string;
 }
@@ -80,13 +90,13 @@ export function Footer({ lang = "en" }: FooterProps) {
 
           {/* Brand */}
           <div className="footer-brand">
-            <Link
-              href={`/${lang}`}
+            <a
+              href={homeUrl(lang)}
               className="logo footer-logo"
               style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 800, color: "#fff" }}
             >
               <i className="fa-solid fa-cube" style={{ color: "var(--clr-orange)" }}></i> Cargoo
-            </Link>
+            </a>
             <p>{t.tagline}</p>
             <div className="social-links">
               <a href="https://www.facebook.com/profile.php?id=61578665194191" target="_blank" rel="noopener" aria-label="Facebook">
@@ -105,9 +115,9 @@ export function Footer({ lang = "en" }: FooterProps) {
           <div className="footer-links">
             <h4>{t.company}</h4>
             <ul>
-              <li><Link href={`/${lang}#what-is-cargoo`}>{t.aboutUs}</Link></li>
-              <li><Link href={`/${lang}#how-it-works`}>{t.howItWorks}</Link></li>
-              <li><Link href={`/${lang}#services`}>{t.services}</Link></li>
+              <li><a href={`${homeUrl(lang)}#what-is-cargoo`}>{t.aboutUs}</a></li>
+              <li><a href={`${homeUrl(lang)}#how-it-works`}>{t.howItWorks}</a></li>
+              <li><a href={`${homeUrl(lang)}#services`}>{t.services}</a></li>
               <li><Link href={`/${lang}/blog`}>{t.blog}</Link></li>
             </ul>
           </div>

@@ -83,17 +83,27 @@ export function Navbar({ lang = "en" }: NavbarProps) {
     return map[l] ?? map.en;
   };
 
+  const homeUrl = (l: string) => {
+    const map: Record<string, string> = {
+      en: "https://www.cargooimport.eu",
+      pl: "https://www.cargooimport.eu/cargoo-pl/",
+      de: "https://www.cargooimport.eu/cargoo-de/",
+      fr: "https://www.cargooimport.eu/cargoo-fr/",
+    };
+    return map[l] ?? map.en;
+  };
+
   return (
     <>
       <header className="header" id="header">
         <div className="container nav-container">
-          <Link
-            href={`/${lang}`}
+          <a
+            href={homeUrl(lang)}
             className="logo"
             style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 800, fontSize: "1.5rem", color: "#fff" }}
           >
             <i className="fa-solid fa-cube" style={{ color: "var(--clr-orange)" }}></i> Cargoo
-          </Link>
+          </a>
 
           <nav className="desktop-nav">
             <ul className="nav-links">
@@ -102,9 +112,9 @@ export function Navbar({ lang = "en" }: NavbarProps) {
                   <i className="fa-solid fa-sparkles"></i> {t.products}
                 </a>
               </li>
-              <li><Link href={`/${lang}#how-it-works`}>{t.howItWorks}</Link></li>
-              <li><Link href={`/${lang}#services`}>{t.services}</Link></li>
-              <li><Link href={`/${lang}#pricing`}>{t.calculator}</Link></li>
+              <li><a href={`${homeUrl(lang)}#how-it-works`}>{t.howItWorks}</a></li>
+              <li><a href={`${homeUrl(lang)}#services`}>{t.services}</a></li>
+              <li><a href={`${homeUrl(lang)}#pricing`}>{t.calculator}</a></li>
               <li><Link href={`/${lang}/blog`}>{t.blog}</Link></li>
             </ul>
           </nav>
@@ -151,23 +161,23 @@ export function Navbar({ lang = "en" }: NavbarProps) {
 
       <div className={`mobile-menu${open ? " active" : ""}`} id="mobileMenu">
         <div className="mobile-menu-header">
-          <Link
-            href={`/${lang}`}
+          <a
+            href={homeUrl(lang)}
             className="logo"
             style={{ color: "white", display: "flex", alignItems: "center", gap: "0.5rem", fontWeight: 800 }}
             onClick={close}
           >
             <i className="fa-solid fa-cube" style={{ color: "var(--clr-orange)" }}></i> Cargoo
-          </Link>
+          </a>
           <button className="close-menu" aria-label="Close menu" onClick={close}>
             <i className="fa-solid fa-xmark"></i>
           </button>
         </div>
         <ul className="mobile-nav-links">
           <li><a href={productsUrl(lang)} className="mobile-link" onClick={close}>{t.products}</a></li>
-          <li><Link href={`/${lang}#how-it-works`} className="mobile-link" onClick={close}>{t.howItWorks}</Link></li>
-          <li><Link href={`/${lang}#services`} className="mobile-link" onClick={close}>{t.services}</Link></li>
-          <li><Link href={`/${lang}#pricing`} className="mobile-link" onClick={close}>{t.calculator}</Link></li>
+          <li><a href={`${homeUrl(lang)}#how-it-works`} className="mobile-link" onClick={close}>{t.howItWorks}</a></li>
+          <li><a href={`${homeUrl(lang)}#services`} className="mobile-link" onClick={close}>{t.services}</a></li>
+          <li><a href={`${homeUrl(lang)}#pricing`} className="mobile-link" onClick={close}>{t.calculator}</a></li>
           <li><Link href={`/${lang}/blog`} className="mobile-link" onClick={close}>{t.blog}</Link></li>
         </ul>
         <div className="mobile-nav-cta">
