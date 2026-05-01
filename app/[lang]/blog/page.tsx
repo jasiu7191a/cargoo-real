@@ -5,13 +5,49 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
 export const dynamic = "force-dynamic";
+const BASE_URL = "https://www.cargooimport.eu";
+
+function formatPostDate(date: Date, lang: string) {
+  try {
+    return new Date(date).toLocaleDateString(lang, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return new Date(date).toISOString().slice(0, 10);
+  }
+}
 
 export async function generateMetadata({ params }: { params: { lang: string } }) {
   const dict = getDictionary(params.lang);
   return {
     title: dict.blog.metaTitle,
     description: dict.blog.metaDescription,
-    alternates: { canonical: `https://blog.cargooimport.eu/${params.lang}/blog` },
+    alternates: {
+      canonical: `${BASE_URL}/${params.lang}/blog`,
+      languages: {
+        en: `${BASE_URL}/en/blog`,
+        pl: `${BASE_URL}/pl/blog`,
+        de: `${BASE_URL}/de/blog`,
+        fr: `${BASE_URL}/fr/blog`,
+        "x-default": `${BASE_URL}/en/blog`,
+      },
+    },
+    openGraph: {
+      title: dict.blog.metaTitle,
+      description: dict.blog.metaDescription,
+      url: `${BASE_URL}/${params.lang}/blog`,
+      siteName: "Cargoo Import",
+      type: "website",
+      images: [{ url: `${BASE_URL}/assets/images/logo-image.jpg`, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: dict.blog.metaTitle,
+      description: dict.blog.metaDescription,
+      images: [`${BASE_URL}/assets/images/logo-image.jpg`],
+    },
   };
 }
 
@@ -221,13 +257,7 @@ export default async function BlogIndexPage({
                         </div>
                         <div style={{ textAlign: "right", flexShrink: 0 }}>
                           <div style={{ color: "var(--clr-text-muted)", fontSize: "0.75rem" }}>
-                            {post.publishedAt
-                              ? new Date(post.publishedAt).toLocaleDateString(params.lang, {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                })
-                              : ""}
+                            {post.publishedAt ? formatPostDate(post.publishedAt, params.lang) : ""}
                           </div>
                           <div
                             style={{

@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const BASE_URL = "https://blog.cargooimport.eu";
+const BASE_URL = "https://www.cargooimport.eu";
 const LANGS = ["en", "pl", "de", "fr"] as const;
 
 export async function GET() {

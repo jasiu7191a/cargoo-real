@@ -1,11 +1,10 @@
 import React from "react";
-import prisma from "@/lib/prisma";
-import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import Script from "next/script";
 
 export const dynamic = "force-dynamic";
+const BASE_URL = "https://www.cargooimport.eu";
 
 const CATEGORIES = ["All", "Sneakers", "Electronics", "Apparel", "Watches", "Handbags", "Accessories"];
 
@@ -19,6 +18,41 @@ const PLACEHOLDER_PRODUCTS = [
   { id: "7", name: "Nike Dunk Low Retro", brand: "Nike", category: "Sneakers", cargooPrice: "€90", retailPrice: "€130", img: "/img/placeholders/sneaker.png" },
   { id: "8", name: "Sony WH-1000XM5", brand: "Sony", category: "Electronics", cargooPrice: "€220", retailPrice: "€380", img: "/img/placeholders/tech.png" },
 ];
+
+export async function generateMetadata({ params }: { params: { lang: string } }) {
+  const lang = params.lang || "en";
+  const title = "All Products | Cargoo Marketplace";
+  const description = "Browse product categories Cargoo can help source from China, then request an all-in quote with inspection, shipping, and customs support.";
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: `${BASE_URL}/${lang}/products`,
+      languages: {
+        en: `${BASE_URL}/en/products`,
+        pl: `${BASE_URL}/pl/products`,
+        de: `${BASE_URL}/de/products`,
+        fr: `${BASE_URL}/fr/products`,
+        "x-default": `${BASE_URL}/en/products`,
+      },
+    },
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/${lang}/products`,
+      siteName: "Cargoo Import",
+      type: "website",
+      images: [{ url: `${BASE_URL}/assets/images/logo-image.jpg`, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [`${BASE_URL}/assets/images/logo-image.jpg`],
+    },
+  };
+}
 
 export default async function ProductsPage({ params }: { params: { lang: string } }) {
   const lang = params.lang || "en";
@@ -40,6 +74,9 @@ export default async function ProductsPage({ params }: { params: { lang: string 
               <div style={{ height: "4px", width: "60px", background: "var(--clr-orange)", margin: "0 auto 2rem", borderRadius: "2px" }}></div>
               <p className="text-muted" style={{ fontSize: "clamp(1.1rem, 2vw, 1.4rem)", maxWidth: "800px", margin: "0 auto", lineHeight: 1.6, fontWeight: 500 }}>
                 Hand-picked, factory-verified, and priced without the middleman markup. Tap any item to request a quote — we&apos;ll send an all-in price on WhatsApp.
+              </p>
+              <p className="text-muted" style={{ fontSize: "0.9rem", maxWidth: "760px", margin: "1rem auto 0", lineHeight: 1.6 }}>
+                We only support lawful, non-counterfeit sourcing. Brand-owner restrictions, customs rules, and documentation requirements are checked before any order proceeds.
               </p>
             </div>
 

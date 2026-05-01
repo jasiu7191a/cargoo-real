@@ -4,16 +4,30 @@ import { sendAdminNotification, sendClientConfirmation } from '@/lib/mail';
 
 export const dynamic = 'force-dynamic';
 
-// Allow the public website (cargooimport.eu) to POST leads cross-origin
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': 'https://cargooimport.eu',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
-};
+const ALLOWED_ORIGINS = new Set([
+  'https://www.cargooimport.eu',
+  'https://cargooimport.eu',
+  'https://blog.cargooimport.eu',
+  'https://admin.cargooimport.eu',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+]);
+
+function corsHeaders(req: Request) {
+  const origin = req.headers.get('origin') || '';
+  const allowedOrigin = ALLOWED_ORIGINS.has(origin) ? origin : 'https://www.cargooimport.eu';
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Vary': 'Origin',
+  };
+}
 
 // Handle CORS preflight
-export async function OPTIONS() {
-  return new Response(null, { status: 204, headers: CORS_HEADERS });
+export async function OPTIONS(req: Request) {
+  return new Response(null, { status: 204, headers: corsHeaders(req) });
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -70,10 +84,10 @@ export async function POST(req: Request) {
       console.error('Non-critical Mail Error:', mailError);
     }
 
-    return NextResponse.json({ success: true, leadId: lead.id }, { status: 201, headers: CORS_HEADERS });
+    return NextResponse.json({ success: true, leadId: lead.id }, { status: 201, headers: corsHeaders(req) });
   } catch (error) {
     console.error('Lead Generation Error:', error);
     // Never expose internal error details to untrusted callers.
-    return NextResponse.json({ error: 'Failed to create lead' }, { status: 500, headers: CORS_HEADERS });
+    return NextResponse.json({ error: 'Failed to create lead' }, { status: 500, headers: corsHeaders(req) });
   }
 }

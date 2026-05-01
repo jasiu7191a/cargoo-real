@@ -8,7 +8,7 @@ import { Footer } from "@/components/Footer";
 
 export const dynamic = "force-dynamic";
 
-const BASE_URL = "https://blog.cargooimport.eu";
+const BASE_URL = "https://www.cargooimport.eu";
 
 const HOME_URLS: Record<string, string> = {
   en: "https://www.cargooimport.eu",
@@ -17,6 +17,18 @@ const HOME_URLS: Record<string, string> = {
   fr: "https://www.cargooimport.eu/cargoo-fr/",
 };
 const homeUrl = (lang: string) => HOME_URLS[lang] ?? HOME_URLS.en;
+
+function formatPostDate(date: Date, lang: string) {
+  try {
+    return new Date(date).toLocaleDateString(lang, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return new Date(date).toISOString().slice(0, 10);
+  }
+}
 
 export async function generateMetadata({ params }: { params: { slug: string; lang: string } }) {
   let post: any = null;
@@ -32,8 +44,17 @@ export async function generateMetadata({ params }: { params: { slug: string; lan
     openGraph: {
       title: post.title,
       description: post.metaDescription || "",
+      url: `${BASE_URL}/${params.lang}/blog/${params.slug}`,
+      siteName: "Cargoo Import",
       type: "article",
       publishedTime: post.publishedAt?.toISOString(),
+      images: [{ url: `${BASE_URL}/assets/images/logo-image.jpg`, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.metaDescription || "",
+      images: [`${BASE_URL}/assets/images/logo-image.jpg`],
     },
     alternates: {
       canonical: `${BASE_URL}/${params.lang}/blog/${params.slug}`,
@@ -92,7 +113,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
       "@type": "Organization",
       name: "Cargoo Import",
       url: BASE_URL,
-      logo: { "@type": "ImageObject", url: `${BASE_URL}/img/logo.png` },
+      logo: { "@type": "ImageObject", url: `${BASE_URL}/assets/images/favicon.png` },
     },
   };
 
@@ -149,11 +170,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
             )}
             {post.publishedAt && (
               <span style={{ color: "var(--clr-text-muted)", fontSize: "0.8rem" }}>
-                {new Date(post.publishedAt).toLocaleDateString(params.lang, {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {formatPostDate(post.publishedAt, params.lang)}
               </span>
             )}
           </div>

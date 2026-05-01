@@ -143,7 +143,8 @@
       "WebFetch(domain:www.vintagehaus.de)",
       "WebFetch(domain:www.fellby.de)",
       "WebFetch(domain:www.hundeshop.de)",
-      "Bash(python3 -c \"import json; data=json.load\\(open\\(r'C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\outreach-tracker.json'\\)\\); print\\(f'Entries: {len\\(data\\)}'\\); [print\\(f\\\\\"{e['email']} | touch={e['touch']} | nextDue={e['nextDue']} | errors={e['consecutiveErrors']}\\\\\"\\) for e in data]\")"
+      "Bash(python3 -c \"import json; data=json.load\\(open\\(r'C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\outreach-tracker.json'\\)\\); print\\(f'Entries: {len\\(data\\)}'\\); [print\\(f\\\\\"{e['email']} | touch={e['touch']} | nextDue={e['nextDue']} | errors={e['consecutiveErrors']}\\\\\"\\) for e in data]\")",
+      "Bash(curl -s -w '\\\\nHTTP_STATUS:%{http_code}' -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\":\"EU Made in Europe Industrial Accelerator Act 2026 impact China importers EU businesses adapt\",\"lang\":\"en\"}')"
     ]
   }
 }

@@ -69,7 +69,7 @@ export async function sendAdminNotification(lead: any) {
         <p><strong>Notes:</strong> ${esc(lead.notes ?? 'None')}</p>
       </div>
 
-      <a href="https://cargooimport.eu/admin/leads" style="background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+      <a href="https://admin.cargooimport.eu/admin/leads" style="background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
         Open Dashboard
       </a>
     </div>
@@ -153,10 +153,28 @@ interface ColdEmailOptions {
 
 /**
  * Strips any stray {{BODY}} placeholders from caller-supplied body HTML.
+ * Also handles the case where the caller accidentally passes a full HTML document
+ * (e.g. the complete branded template shell) instead of just the body paragraphs —
+ * in that case it extracts only the body content from the <!-- BODY --> section.
  * Returns null if nothing meaningful remains (caller should reject the request).
  */
 export function stripBodyPlaceholder(html: string): string | null {
-  const cleaned = html.replace(/\{\{BODY\}\}/gi, "").trim();
+  let cleaned = html.replace(/\{\{BODY\}\}/gi, "").trim();
+  if (!cleaned) return null;
+
+  if (/<!DOCTYPE|<html\b/i.test(cleaned)) {
+    // Try to extract content from the branded <!-- BODY --> td section
+    const bodySection = cleaned.match(
+      /<!--\s*BODY\s*-->[\s\S]*?<td[^>]*background-color:#111111[^>]*>([\s\S]*?)<\/td>/i
+    );
+    if (bodySection?.[1]?.trim()) {
+      cleaned = bodySection[1].trim();
+    } else {
+      // Fallback: grab <p> tags without inline styles (body paragraphs, not footer)
+      cleaned = (cleaned.match(/<p>[\s\S]*?<\/p>/gi) ?? []).join("\n");
+    }
+  }
+
   return cleaned.length > 0 ? cleaned : null;
 }
 

@@ -17,7 +17,7 @@ interface FooterProps {
 
 const T = {
   en: {
-    tagline:    "Import from China Made Simple. We help you easily order brand items, small electronics, fashion items, and more.",
+    tagline:    "Import from China Made Simple. We help you source verified products, small electronics, fashion items, and more.",
     company:    "Company",
     aboutUs:    "About Us",
     howItWorks: "How It Works",
@@ -32,7 +32,7 @@ const T = {
     copyright:  "All rights reserved.",
   },
   pl: {
-    tagline:    "Import z Chin bez stresu. Pomagamy łatwo zamawiać markowe rzeczy, drobną elektronikę, modę i więcej.",
+    tagline:    "Import z Chin bez stresu. Pomagamy zamawiac zweryfikowane produkty, drobna elektronike, mode i wiecej.",
     company:    "Firma",
     aboutUs:    "O nas",
     howItWorks: "Jak to działa",
@@ -47,7 +47,7 @@ const T = {
     copyright:  "Wszelkie prawa zastrzeżone.",
   },
   de: {
-    tagline:    "Import aus China leicht gemacht. Wir helfen dir, Markenprodukte, Elektronik, Mode und mehr einfach zu bestellen.",
+    tagline:    "Import aus China leicht gemacht. Wir helfen dir, gepruefte Produkte, Elektronik, Mode und mehr einfach zu bestellen.",
     company:    "Unternehmen",
     aboutUs:    "Über uns",
     howItWorks: "So funktioniert's",
@@ -62,7 +62,7 @@ const T = {
     copyright:  "Alle Rechte vorbehalten.",
   },
   fr: {
-    tagline:    "Import depuis la Chine simplifié. Nous vous aidons à commander des articles de marque, de l'électronique, de la mode et bien plus.",
+    tagline:    "Import depuis la Chine simplifie. Nous vous aidons a commander des produits verifies, de l'electronique, de la mode et bien plus.",
     company:    "Société",
     aboutUs:    "À propos",
     howItWorks: "Comment ça marche",
@@ -145,9 +145,9 @@ export function Footer({ lang = "en" }: FooterProps) {
           <div className="footer-links">
             <h4>{t.legal}</h4>
             <ul>
-              <li><Link href={`/${lang}/terms`}>{t.terms}</Link></li>
-              <li><Link href={`/${lang}/privacy`}>{t.privacy}</Link></li>
-              <li><Link href={`/${lang}/refund`}>{t.refund}</Link></li>
+              <li><a href="https://www.cargooimport.eu/terms">{t.terms}</a></li>
+              <li><a href="https://www.cargooimport.eu/privacy">{t.privacy}</a></li>
+              <li><a href="https://www.cargooimport.eu/refund">{t.refund}</a></li>
             </ul>
           </div>
         </div>

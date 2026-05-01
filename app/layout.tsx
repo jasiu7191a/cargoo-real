@@ -10,8 +10,26 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.cargooimport.eu"),
   title: "Cargoo | Import from China Made Simple",
   description: "Cargoo helps you source, ship, and deliver products with zero hassle.",
+  alternates: {
+    canonical: "https://www.cargooimport.eu",
+  },
+  openGraph: {
+    title: "Cargoo | Import from China Made Simple",
+    description: "Cargoo helps you source, ship, and deliver products with zero hassle.",
+    url: "https://www.cargooimport.eu",
+    siteName: "Cargoo Import",
+    type: "website",
+    images: [{ url: "/assets/images/logo-image.jpg", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Cargoo | Import from China Made Simple",
+    description: "Cargoo helps you source, ship, and deliver products with zero hassle.",
+    images: ["/assets/images/logo-image.jpg"],
+  },
   verification: {
     google: "FrgLQ6zedzPxzSk0B3-piVkLyup3BGo006w22pl8yG4",
   },

@@ -52,7 +52,7 @@ const t: Record<Lang, Record<string, string>> = {
     ctaTitle: "Got a link?", ctaHighlight: "We'll quote it.",
     ctaDesc: "Average quote turnaround: under 24 hours. Message us on WhatsApp — a real bilingual human replies, not a bot.",
     blogSubtitle: "Knowledge Base", blogTitle: "From our blog", allArticles: "All articles →",
-    footerDesc: "Import from China Made Simple. We help you easily order brand items, small electronics, fashion items, and more.",
+    footerDesc: "Import from China Made Simple. We help you source verified products, small electronics, fashion items, and more.",
     footerCompany: "Company", footerContact: "Contact Us", footerLegal: "Legal",
     calcSubtitle: "Cost Calculator", calcTitle: "See your landed cost in 10 seconds",
     calcDesc: "A ballpark estimate — your real quote on WhatsApp will be this price or less.",
@@ -100,7 +100,7 @@ const t: Record<Lang, Record<string, string>> = {
     ctaTitle: "Masz link?", ctaHighlight: "Wycenimy to.",
     ctaDesc: "Średni czas realizacji wyceny: poniżej 24 godzin. Napisz do nas na WhatsApp — odpowiada prawdziwy dwujęzyczny człowiek, nie bot.",
     blogSubtitle: "Baza Wiedzy", blogTitle: "Z naszego bloga", allArticles: "Wszystkie artykuły →",
-    footerDesc: "Import z Chin Made Simple. Pomagamy łatwo zamawiać markowe produkty, elektronikę, modę i wiele więcej.",
+    footerDesc: "Import z Chin Made Simple. Pomagamy zamawiac zweryfikowane produkty, elektronike, mode i wiele wiecej.",
     footerCompany: "Firma", footerContact: "Kontakt", footerLegal: "Prawne",
     calcSubtitle: "Kalkulator Kosztów", calcTitle: "Poznaj swój koszt lądowania w 10 sekund",
     calcDesc: "Przybliżone szacunki — Twoja prawdziwa wycena na WhatsApp będzie równa tej cenie lub niższa.",
@@ -148,7 +148,7 @@ const t: Record<Lang, Record<string, string>> = {
     ctaTitle: "Hast du einen Link?", ctaHighlight: "Wir machen ein Angebot.",
     ctaDesc: "Durchschnittliche Angebotslaufzeit: unter 24 Stunden. Schreib uns auf WhatsApp — ein echter zweisprachiger Mensch antwortet.",
     blogSubtitle: "Wissensdatenbank", blogTitle: "Aus unserem Blog", allArticles: "Alle Artikel →",
-    footerDesc: "Import aus China leicht gemacht. Wir helfen dir, Markenartikel, Elektronik, Mode und mehr zu bestellen.",
+    footerDesc: "Import aus China leicht gemacht. Wir helfen dir, gepruefte Produkte, Elektronik, Mode und mehr zu bestellen.",
     footerCompany: "Unternehmen", footerContact: "Kontakt", footerLegal: "Rechtliches",
     calcSubtitle: "Kostenkalkulator", calcTitle: "Sieh deine Landekosten in 10 Sekunden",
     calcDesc: "Eine grobe Schätzung — dein echtes Angebot auf WhatsApp wird diesen Preis haben oder niedriger sein.",
@@ -196,7 +196,7 @@ const t: Record<Lang, Record<string, string>> = {
     ctaTitle: "Vous avez un lien?", ctaHighlight: "On vous fait un devis.",
     ctaDesc: "Délai moyen de devis: moins de 24 heures. Écrivez-nous sur WhatsApp — un vrai humain bilingue répond.",
     blogSubtitle: "Base de Connaissances", blogTitle: "De notre blog", allArticles: "Tous les articles →",
-    footerDesc: "Importer de Chine, c'est simple. On vous aide à commander des articles de marque, électronique, mode et plus encore.",
+    footerDesc: "Importer de Chine, c'est simple. On vous aide a commander des produits verifies, electronique, mode et plus encore.",
     footerCompany: "Entreprise", footerContact: "Contact", footerLegal: "Légal",
     calcSubtitle: "Calculateur de Coûts", calcTitle: "Voyez votre coût de débarquement en 10 secondes",
     calcDesc: "Une estimation approximative — votre vrai devis sur WhatsApp sera ce prix ou moins.",
@@ -208,7 +208,7 @@ const t: Record<Lang, Record<string, string>> = {
 export default async function Home({ params }: { params: { lang: string } }) {
   const lang = (langs.includes(params.lang as Lang) ? params.lang : 'en') as Lang;
   const s = t[lang];
-  const blogBase = `https://blog.cargooimport.eu/${lang}/blog`;
+  const blogBase = `https://www.cargooimport.eu/${lang}/blog`;
 
   let latestPosts: { title: string; slug: string; metaDescription: string | null; targetKeyword: string | null }[] = [];
   try {
