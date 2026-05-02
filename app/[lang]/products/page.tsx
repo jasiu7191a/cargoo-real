@@ -7,6 +7,24 @@ export const dynamic = "force-dynamic";
 const BASE_URL = "https://www.cargooimport.eu";
 
 const CATEGORIES = ["All", "Sneakers", "Electronics", "Apparel", "Watches", "Handbags", "Accessories"];
+const PRODUCT_META = {
+  en: {
+    title: "All Products | Cargoo Marketplace",
+    description: "Browse product categories Cargoo can help source from China, then request an all-in quote with inspection, shipping, and customs support.",
+  },
+  pl: {
+    title: "Wszystkie Produkty | Cargoo Marketplace",
+    description: "Przeglądaj kategorie produktów, które Cargoo może pozyskać z Chin, i poproś o wycenę all-in z kontrolą jakości, wysyłką i obsługą celną.",
+  },
+  de: {
+    title: "Alle Produkte | Cargoo Marktplatz",
+    description: "Durchsuche Produktkategorien, die Cargoo aus China beschaffen kann, und fordere ein All-in-Angebot mit Prüfung, Versand und Zollsupport an.",
+  },
+  fr: {
+    title: "Produits | Cargoo Marketplace",
+    description: "Parcourez les catégories de produits que Cargoo peut sourcer en Chine, puis demandez un devis tout compris avec inspection, expédition et douane.",
+  },
+} as const;
 
 const PLACEHOLDER_PRODUCTS = [
   { id: "1", name: "Air Jordan 1 Retro High OG", brand: "Jordan", category: "Sneakers", cargooPrice: "€120", retailPrice: "€190", img: "/img/placeholders/sneaker.png" },
@@ -21,8 +39,8 @@ const PLACEHOLDER_PRODUCTS = [
 
 export async function generateMetadata({ params }: { params: { lang: string } }) {
   const lang = params.lang || "en";
-  const title = "All Products | Cargoo Marketplace";
-  const description = "Browse product categories Cargoo can help source from China, then request an all-in quote with inspection, shipping, and customs support.";
+  const meta = PRODUCT_META[lang as keyof typeof PRODUCT_META] ?? PRODUCT_META.en;
+  const { title, description } = meta;
 
   return {
     title,

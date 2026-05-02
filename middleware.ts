@@ -32,6 +32,15 @@ function isPublicAppPath(pathname: string) {
   return /^\/(en|pl|de|fr)\/(blog|resources)(\/|$)/.test(pathname)
 }
 
+function publicLegalPath(pathname: string) {
+  const match = pathname.match(/^\/(en|pl|de|fr)\/(terms|privacy|refund)\/?$/)
+  if (!match) return null
+
+  const [, lang, slug] = match
+  if (lang === 'en') return `/${slug}`
+  return `/cargoo-${lang}/${slug}`
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const host = request.headers.get('host') || ''
@@ -41,6 +50,15 @@ export async function middleware(request: NextRequest) {
   if (host === ROOT_DOMAIN) {
     const url = request.nextUrl.clone()
     url.host = `www.${ROOT_DOMAIN}`
+    return NextResponse.redirect(url, { status: 301 })
+  }
+
+  const legalPath = publicLegalPath(pathname)
+  if (legalPath) {
+    const url = request.nextUrl.clone()
+    url.protocol = 'https:'
+    url.host = `www.${ROOT_DOMAIN}`
+    url.pathname = legalPath
     return NextResponse.redirect(url, { status: 301 })
   }
 

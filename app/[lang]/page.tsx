@@ -2,13 +2,65 @@ import type { Metadata } from "next";
 import prisma from "@/lib/prisma";
 export const dynamic = 'force-dynamic';
 
-export const metadata: Metadata = {
-  title: "Cargoo | Import from China Made Simple",
-  description: "Cargoo helps you source, ship, and deliver products with zero hassle. Beginner-friendly importing for everyday people.",
-};
-
 const langs = ['en','pl','de','fr'] as const;
 type Lang = typeof langs[number];
+
+const HOME_META: Record<Lang, { title: string; description: string; canonical: string }> = {
+  en: {
+    title: "Cargoo | Import from China Made Simple",
+    description: "Cargoo helps EU customers source, inspect, and ship lawful products from China with clear pricing and delivery support.",
+    canonical: "https://www.cargooimport.eu/",
+  },
+  pl: {
+    title: "Cargoo | Import z Chin bez stresu",
+    description: "Cargoo pomaga klientom z UE legalnie pozyskiwać, sprawdzać i wysyłać produkty z Chin, z jasną ceną i wsparciem w dostawie.",
+    canonical: "https://www.cargooimport.eu/cargoo-pl/",
+  },
+  de: {
+    title: "Cargoo | Import aus China leicht gemacht",
+    description: "Cargoo hilft EU-Kunden, legale Produkte aus China zu beschaffen, zu prüfen und zu versenden - mit klaren Preisen und Lieferunterstützung.",
+    canonical: "https://www.cargooimport.eu/cargoo-de/",
+  },
+  fr: {
+    title: "Cargoo | Import depuis la Chine simplifié",
+    description: "Cargoo aide les clients de l'UE à sourcer, contrôler et expédier légalement des produits depuis la Chine, avec des prix clairs et un accompagnement livraison.",
+    canonical: "https://www.cargooimport.eu/cargoo-fr/",
+  },
+};
+
+export function generateMetadata({ params }: { params: { lang: string } }): Metadata {
+  const lang = (langs.includes(params.lang as Lang) ? params.lang : 'en') as Lang;
+  const meta = HOME_META[lang];
+
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates: {
+      canonical: meta.canonical,
+      languages: {
+        en: HOME_META.en.canonical,
+        pl: HOME_META.pl.canonical,
+        de: HOME_META.de.canonical,
+        fr: HOME_META.fr.canonical,
+        "x-default": HOME_META.en.canonical,
+      },
+    },
+    openGraph: {
+      title: meta.title,
+      description: meta.description,
+      url: meta.canonical,
+      siteName: "Cargoo Import",
+      type: "website",
+      images: [{ url: "https://www.cargooimport.eu/assets/images/logo-image.jpg", width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: meta.title,
+      description: meta.description,
+      images: ["https://www.cargooimport.eu/assets/images/logo-image.jpg"],
+    },
+  };
+}
 
 const t: Record<Lang, Record<string, string>> = {
   en: {
@@ -204,6 +256,13 @@ const t: Record<Lang, Record<string, string>> = {
     faqDesc: "Encore incertain? Écrivez-nous sur WhatsApp — on répond en minutes pendant les heures ouvrables européennes.",
   },
 };
+
+type LegalSlug = "terms" | "privacy" | "refund";
+
+function publicLegalUrl(lang: Lang, slug: LegalSlug) {
+  if (lang === "en") return `https://www.cargooimport.eu/${slug}`;
+  return `https://www.cargooimport.eu/cargoo-${lang}/${slug}`;
+}
 
 export default async function Home({ params }: { params: { lang: string } }) {
   const lang = (langs.includes(params.lang as Lang) ? params.lang : 'en') as Lang;
@@ -657,9 +716,9 @@ export default async function Home({ params }: { params: { lang: string } }) {
             <div className="footer-links">
               <h4>{s.footerLegal}</h4>
               <ul>
-                <li><a href={`/${lang}/terms`}>Terms of Service</a></li>
-                <li><a href={`/${lang}/privacy`}>Privacy Policy</a></li>
-                <li><a href={`/${lang}/refund`}>Refund Policy</a></li>
+                <li><a href={publicLegalUrl(lang, "terms")}>Terms of Service</a></li>
+                <li><a href={publicLegalUrl(lang, "privacy")}>Privacy Policy</a></li>
+                <li><a href={publicLegalUrl(lang, "refund")}>Refund Policy</a></li>
               </ul>
             </div>
           </div>
