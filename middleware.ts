@@ -28,6 +28,10 @@ function getLocale(request: NextRequest) {
 // The bare root domain — only this gets the non-www → www redirect.
 const ROOT_DOMAIN = 'cargooimport.eu'
 
+function isPublicAppPath(pathname: string) {
+  return /^\/(en|pl|de|fr)\/(blog|resources)(\/|$)/.test(pathname)
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const host = request.headers.get('host') || ''
@@ -58,7 +62,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (host === `admin.${ROOT_DOMAIN}`) {
-    if (!pathname.startsWith('/admin') && !pathname.startsWith('/api/') && !pathname.startsWith('/_next/')) {
+    if (!pathname.startsWith('/admin') &&
+        !pathname.startsWith('/api/') &&
+        !pathname.startsWith('/_next/') &&
+        !isPublicAppPath(pathname)) {
       const url = request.nextUrl.clone()
       url.pathname = '/admin'
       return NextResponse.redirect(url, { status: 302 })
