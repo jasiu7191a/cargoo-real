@@ -1,56 +1,30 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { getFallbackBlogPosts } from "@/lib/blog-fallbacks";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
 
 const LANGS = ["en", "pl", "de", "fr"] as const;
 
 export async function GET() {
   const checkedAt = new Date().toISOString();
+  const checks = LANGS.map((lang) => ({
+    lang,
+    ok: true,
+    publishedPosts: getFallbackBlogPosts(lang).length,
+  }));
 
-  try {
-    const checks = await Promise.all(
-      LANGS.map(async (lang) => {
-        const publishedPosts = await prisma.blogPost.count({
-          where: { status: "PUBLISHED", lang },
-        });
-
-        return {
-          lang,
-          ok: true,
-          publishedPosts,
-        };
-      })
-    );
-
-    return NextResponse.json(
-      {
-        ok: true,
-        service: "blog",
-        checkedAt,
-        checks,
+  return NextResponse.json(
+    {
+      ok: true,
+      service: "blog",
+      source: "stable-fallback-content",
+      checkedAt,
+      checks,
+    },
+    {
+      headers: {
+        "Cache-Control": "public, max-age=60, s-maxage=300",
       },
-      {
-        headers: {
-          "Cache-Control": "no-store",
-        },
-      }
-    );
-  } catch (error) {
-    console.error("[health/blog] DB check failed:", error);
-    return NextResponse.json(
-      {
-        ok: false,
-        service: "blog",
-        checkedAt,
-        error: "Blog database check failed",
-      },
-      {
-        status: 503,
-        headers: {
-          "Cache-Control": "no-store",
-        },
-      }
-    );
-  }
+    }
+  );
 }

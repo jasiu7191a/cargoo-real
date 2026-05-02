@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Providers } from "@/components/Providers";
+import { headers } from "next/headers";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin", "latin-ext"],  // latin-ext covers Polish (ą ę ó ś ź ż ć ń ł), French (é è ê ë), German (ä ö ü ß), etc.
@@ -44,8 +45,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const locale = headers().get("x-cargoo-locale") || "en";
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
         <link rel="stylesheet" href="/css/style.css" />

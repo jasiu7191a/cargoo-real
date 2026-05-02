@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { getFallbackBlogPost } from "@/lib/blog-fallbacks";
 
 export const dynamic = "force-dynamic";
 
@@ -31,11 +32,13 @@ function formatPostDate(date: Date, lang: string) {
 }
 
 export async function generateMetadata({ params }: { params: { slug: string; lang: string } }) {
-  let post: any = null;
-  try {
-    post = await prisma.blogPost.findFirst({ where: { slug: params.slug, lang: params.lang } });
-  } catch (e) {
-    console.error("[generateMetadata] DB error for", params.slug, e);
+  let post: any = getFallbackBlogPost(params.lang, params.slug);
+  if (!post) {
+    try {
+      post = await prisma.blogPost.findFirst({ where: { slug: params.slug, lang: params.lang } });
+    } catch (e) {
+      console.error("[generateMetadata] DB error for", params.slug, e);
+    }
   }
   if (!post) return {};
   return {
@@ -65,10 +68,11 @@ export async function generateMetadata({ params }: { params: { slug: string; lan
 export default async function BlogPostPage({ params }: { params: { slug: string; lang: string } }) {
   const dict = getDictionary(params.lang);
 
-  let post: any = null;
-  try {
-    post = await prisma.blogPost.findFirst({ where: { slug: params.slug, lang: params.lang } });
-  } catch (e) {
+  let post: any = getFallbackBlogPost(params.lang, params.slug);
+  if (!post) {
+    try {
+      post = await prisma.blogPost.findFirst({ where: { slug: params.slug, lang: params.lang } });
+    } catch (e) {
     console.error("[BlogPostPage] DB error:", e);
     return (
       <>
@@ -90,6 +94,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
         <Footer lang={params.lang} />
       </>
     );
+    }
   }
 
   if (!post || post.status !== "PUBLISHED") {

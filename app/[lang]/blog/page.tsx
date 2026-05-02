@@ -1,10 +1,10 @@
 import Link from "next/link";
-import prisma from "@/lib/prisma";
 import { getDictionary } from "@/lib/dictionaries";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { getFallbackBlogPosts } from "@/lib/blog-fallbacks";
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-static";
 const BASE_URL = "https://www.cargooimport.eu";
 
 function formatPostDate(date: Date, lang: string) {
@@ -60,30 +60,7 @@ export default async function BlogIndexPage({
 }) {
   const dict = getDictionary(params.lang);
   const showAll = searchParams?.all === "true";
-  let posts: any[] = [];
-  try {
-    posts = await prisma.blogPost.findMany({
-      where: {
-        status: "PUBLISHED",
-        ...(showAll ? {} : { lang: params.lang }),
-      },
-      orderBy: [
-        { publishedAt: { sort: "desc", nulls: "last" } },
-        { createdAt: "desc" },
-      ],
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        metaDescription: true,
-        targetKeyword: true,
-        publishedAt: true,
-        lang: true,
-      },
-    });
-  } catch (e) {
-    console.error("Failed to load blog posts:", e);
-  }
+  const posts = getFallbackBlogPosts(params.lang, showAll);
 
   return (
     <>

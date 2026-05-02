@@ -41,6 +41,12 @@ function publicLegalPath(pathname: string) {
   return `/cargoo-${lang}/${slug}`
 }
 
+function nextWithLocale(request: NextRequest, locale: string) {
+  const headers = new Headers(request.headers)
+  headers.set('x-cargoo-locale', locale)
+  return NextResponse.next({ request: { headers } })
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const host = request.headers.get('host') || ''
@@ -119,7 +125,10 @@ export async function middleware(request: NextRequest) {
   const pathnameHasLocale = locales.some(
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   )
-  if (pathnameHasLocale) return
+  if (pathnameHasLocale) {
+    const locale = pathname.split('/')[1] || defaultLocale
+    return nextWithLocale(request, locale)
+  }
 
   const locale = getLocale(request)
   const url = request.nextUrl.clone()
