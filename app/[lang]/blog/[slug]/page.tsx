@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import prisma from "@/lib/prisma";
 import ReactMarkdown from "react-markdown";
 import Link from "next/link";
 import { getDictionary } from "@/lib/dictionaries";
@@ -31,15 +30,20 @@ function formatPostDate(date: Date, lang: string) {
   }
 }
 
+async function loadAdminBlogPost(lang: string, slug: string) {
+  const { default: prisma } = await import("@/lib/prisma");
+  return prisma.blogPost.findFirst({ where: { slug, lang } });
+}
+
 export async function generateMetadata({ params }: { params: { slug: string; lang: string } }) {
-  let post: any = getFallbackBlogPost(params.lang, params.slug);
-  if (!post) {
-    try {
-      post = await prisma.blogPost.findFirst({ where: { slug: params.slug, lang: params.lang } });
-    } catch (e) {
-      console.error("[generateMetadata] DB error for", params.slug, e);
-    }
+  let post: any = null;
+  try {
+    post = await loadAdminBlogPost(params.lang, params.slug);
+  } catch (e) {
+    console.error("[generateMetadata] Admin content error for", params.slug, e);
   }
+
+  post = post || getFallbackBlogPost(params.lang, params.slug);
   if (!post) return {};
   return {
     title: post.title + " | Cargoo Import",
@@ -68,13 +72,13 @@ export async function generateMetadata({ params }: { params: { slug: string; lan
 export default async function BlogPostPage({ params }: { params: { slug: string; lang: string } }) {
   const dict = getDictionary(params.lang);
 
-  let post: any = getFallbackBlogPost(params.lang, params.slug);
+  let post: any = null;
   if (!post) {
     try {
-      post = await prisma.blogPost.findFirst({ where: { slug: params.slug, lang: params.lang } });
+      post = await loadAdminBlogPost(params.lang, params.slug);
     } catch (e) {
-    console.error("[BlogPostPage] DB error:", e);
-    return (
+      console.error("[BlogPostPage] DB error:", e);
+      return (
       <>
         <Navbar lang={params.lang} />
         <main style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -93,9 +97,11 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
         </main>
         <Footer lang={params.lang} />
       </>
-    );
+      );
     }
   }
+
+  post = post || getFallbackBlogPost(params.lang, params.slug);
 
   if (!post || post.status !== "PUBLISHED") {
     notFound();

@@ -4,7 +4,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { getFallbackBlogPosts } from "@/lib/blog-fallbacks";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 const BASE_URL = "https://www.cargooimport.eu";
 
 function formatPostDate(date: Date, lang: string) {
@@ -16,6 +16,36 @@ function formatPostDate(date: Date, lang: string) {
     });
   } catch {
     return new Date(date).toISOString().slice(0, 10);
+  }
+}
+
+async function loadBlogPosts(lang: string, showAll: boolean) {
+  try {
+    const { default: prisma } = await import("@/lib/prisma");
+    const posts = await prisma.blogPost.findMany({
+      where: {
+        status: "PUBLISHED",
+        ...(showAll ? {} : { lang }),
+      },
+      orderBy: [
+        { publishedAt: { sort: "desc", nulls: "last" } },
+        { createdAt: "desc" },
+      ],
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        metaDescription: true,
+        targetKeyword: true,
+        publishedAt: true,
+        lang: true,
+      },
+    });
+
+    return posts.length > 0 ? posts : getFallbackBlogPosts(lang, showAll);
+  } catch (e) {
+    console.error("Failed to load blog posts from admin content:", e);
+    return getFallbackBlogPosts(lang, showAll);
   }
 }
 
@@ -60,7 +90,7 @@ export default async function BlogIndexPage({
 }) {
   const dict = getDictionary(params.lang);
   const showAll = searchParams?.all === "true";
-  const posts = getFallbackBlogPosts(params.lang, showAll);
+  const posts = await loadBlogPosts(params.lang, showAll);
 
   return (
     <>
