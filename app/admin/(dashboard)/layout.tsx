@@ -1,6 +1,6 @@
 import { getAdminSession } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, Users, FileText, Send, Settings } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Send, Settings, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { LogoutButton } from "../view-components/logout-button";
@@ -31,6 +31,7 @@ export default async function ProtectedAdminLayout({
 
         <nav className="flex-1 space-y-2">
           <AdminNavLink href="/admin" icon={<LayoutDashboard size={18} />} label="Dashboard" />
+          <AdminNavLink href="/admin/quote-requests" icon={<ClipboardList size={18} />} label="Quote Requests" />
           <AdminNavLink href="/admin/content" icon={<FileText size={18} />} label="SEO Engine" />
           <AdminNavLink href="/admin/outreach" icon={<Send size={18} />} label="Outreach HQ" />
           <AdminNavLink href="/admin/leads" icon={<Users size={18} />} label="Inbound Leads" />

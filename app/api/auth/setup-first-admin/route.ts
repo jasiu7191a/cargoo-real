@@ -1,36 +1,38 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { hashPassword, normalizeEmail, isValidEmail } from "@/lib/account-auth";
+import { query, queryOne } from "@/lib/account-db";
 
-export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
-  const userCount = await prisma.user.count();
+export async function GET() {
+  try {
+    const existing = await queryOne<{ count: string }>("SELECT COUNT(*)::text AS count FROM users", []);
+    if (Number(existing?.count ?? 0) > 0) {
+      return NextResponse.json({ error: "System already initialized." }, { status: 403 });
+    }
 
-  if (userCount > 0) {
-    return NextResponse.json({ error: "System already initialized." }, { status: 403 });
-  }
+    const email = normalizeEmail(process.env.ADMIN_EMAIL);
+    const password = process.env.ADMIN_PASSWORD;
+    if (!isValidEmail(email) || !password || password.length < 12) {
+      return NextResponse.json(
+        { error: "ADMIN_EMAIL and a 12+ character ADMIN_PASSWORD must be set before setup." },
+        { status: 503 }
+      );
+    }
 
-  // Credentials MUST come from env vars — never hardcoded defaults.
-  const email = process.env.ADMIN_EMAIL;
-  const password = process.env.ADMIN_PASSWORD;
-
-  if (!email || !password) {
-    return NextResponse.json(
-      { error: "ADMIN_EMAIL and ADMIN_PASSWORD env vars must be set before running setup." },
-      { status: 503 }
+    const passwordHash = await hashPassword(password);
+    await query(
+      "INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'admin')",
+      [email, passwordHash]
     );
+
+    return NextResponse.json({
+      success: true,
+      message: `Admin created for ${email}. Disable this endpoint after setup.`,
+    });
+  } catch (error) {
+    console.error("First admin setup failed:", error);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  await prisma.user.create({
-    data: { email, password: hashedPassword, name: "Cargoo Admin", role: "ADMIN" },
-  });
-
-  // Never return the plaintext password in the response.
-  return NextResponse.json({
-    success: true,
-    message: `Admin created for ${email}. This endpoint should be disabled or removed now.`,
-  });
 }
