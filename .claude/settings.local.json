@@ -156,7 +156,27 @@
       "Bash(curl -s -w '\\\\n%{http_code}' --max-time 120 --ssl-no-revoke -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\":\"CE-Kennzeichnung beim China-Import was deutsche Online-Händler wissen müssen 2026\",\"lang\":\"de\"}')",
       "Bash(curl -s -w '\\\\n%{http_code}' --max-time 120 --ssl-no-revoke -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\":\"Direktimport aus China wie man Qualitätsmängel vermeidet und den besten Fabrikpartner findet 2026\",\"lang\":\"de\"}')",
       "Bash(curl -s -w '\\\\n%{http_code}' --max-time 120 --ssl-no-revoke -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\":\"importer de Chine France les erreurs à éviter et comment trouver un bon fournisseur fiable 2026\",\"lang\":\"fr\"}')",
-      "Bash(git -C \"C:/Users/jasiu/.claude/scheduled-tasks\" status)"
+      "Bash(git -C \"C:/Users/jasiu/.claude/scheduled-tasks\" status)",
+      "Bash(python \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\send_emails.py\")",
+      "Bash(curl -s -w '\\\\n%{http_code}' --max-time 30 --ssl-no-revoke -X POST https://admin.cargooimport.eu/api/admin/outreach/cold -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"email\":\"sklep@tech-led.waw.pl\",\"name\":\"Tech-Led\",\"company\":\"Tech-Led.com.pl\",\"lang\":\"pl\",\"subject\":\"kontrola jakosci LED\",\"bodyHtml\":\"<p>Test</p>\"}')",
+      "WebFetch(domain:www.yogashop.ie)",
+      "WebFetch(domain:ivylinegb.co.uk)",
+      "WebFetch(domain:www.yogastudiostore.com)",
+      "WebFetch(domain:www.gainsboroughgiftware.com)",
+      "WebFetch(domain:www.rosefields.co.uk)",
+      "WebFetch(domain:www.thepetempire.com)",
+      "WebFetch(domain:hetvachtje.nl)",
+      "WebFetch(domain:www.tuinartikelen.nu)",
+      "WebFetch(domain:www.clearance-king.co.uk)",
+      "WebFetch(domain:petdreamhouse.co.uk)",
+      "WebFetch(domain:gorpets.co.uk)",
+      "WebFetch(domain:www.bivakshop.nl)",
+      "WebFetch(domain:wholesaleledlights.co.uk)",
+      "WebFetch(domain:www.factoryweights.co.uk)",
+      "WebFetch(domain:www.gym-flooring.com)",
+      "WebFetch(domain:www.mad-hq.com)",
+      "Bash(python -)",
+      "Bash(python \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\log_entry.py\")"
     ]
   }
 }
