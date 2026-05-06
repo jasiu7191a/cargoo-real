@@ -1,0 +1,84 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cargoo | My Account</title>
+    <meta name="description" content="Log in to your Cargoo account to request quotes, review offers, and track shipments.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css?v=20260503-account">
+    <link rel="stylesheet" href="css/account.css?v=20260503-account">
+    <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.svg">
+</head>
+<body>
+    <header class="header" id="header">
+        <div class="container nav-container">
+            <a href="index.html" class="logo" style="display:flex; align-items:center; gap:0.5rem; font-weight:800; font-size:1.5rem; color:#fff;">
+                <i class="fa-solid fa-cube" style="color:var(--clr-orange);"></i> Cargoo
+            </a>
+            <nav class="desktop-nav">
+                <ul class="nav-links">
+                    <li><a href="products.html" class="nav-highlight-cta">Products</a></li>
+                    <li><a href="index.html#how-it-works">How It Works</a></li>
+                    <li><a href="index.html#services">Services</a></li>
+                    <li><a href="index.html#pricing">Calculator</a></li>
+                    <li><a href="/en/blog">Blog</a></li>
+                </ul>
+            </nav>
+            <div class="nav-actions">
+                <div class="lang-switch" style="display:flex; gap:0.3rem; background:rgba(255,255,255,0.05); padding:0.2rem; border-radius:2rem; border:1px solid var(--clr-border);">
+                    <a href="account.html" class="lang-link active" style="padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem; font-weight:700; color:#fff; background:var(--clr-orange);">EN</a>
+                    <a href="cargoo-pl/account.html" class="lang-link" style="padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem; font-weight:700; color:#888;">PL</a>
+                    <a href="cargoo-de/account.html" class="lang-link" style="padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem; font-weight:700; color:#888;">DE</a>
+                    <a href="cargoo-fr/account.html" class="lang-link" style="padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem; font-weight:700; color:#888;">FR</a>
+                </div>
+                <a href="https://wa.me/48500685000" target="_blank" rel="noopener" class="btn btn-primary btn-nav"><i class="fa-brands fa-whatsapp"></i> Get Quote</a>
+                <button class="mobile-toggle" aria-label="Toggle Navigation"><i class="fa-solid fa-bars"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <a href="index.html" class="logo" style="color:white; display:flex; align-items:center; gap:0.5rem; font-weight:800;">
+                <i class="fa-solid fa-cube" style="color:var(--clr-orange);"></i> Cargoo
+            </a>
+            <button class="close-menu" id="closeMenu" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <ul class="mobile-nav-links">
+            <li><a href="products.html" class="mobile-link">Products</a></li>
+            <li><a href="index.html#how-it-works" class="mobile-link">How It Works</a></li>
+            <li><a href="index.html#services" class="mobile-link">Services</a></li>
+            <li><a href="index.html#pricing" class="mobile-link">Calculator</a></li>
+        </ul>
+        <div class="mobile-nav-cta">
+            <div class="lang-switch-mobile" style="display:flex; gap:1rem; margin-bottom:2rem; padding:0 1.5rem;">
+                <a href="account.html" style="color:var(--clr-orange); text-decoration:none; font-weight:700;">EN</a>
+                <a href="cargoo-pl/account.html" style="color:#fff; text-decoration:none; opacity:0.5; font-weight:700;">PL</a>
+                <a href="cargoo-de/account.html" style="color:#fff; text-decoration:none; opacity:0.5; font-weight:700;">DE</a>
+                <a href="cargoo-fr/account.html" style="color:#fff; text-decoration:none; opacity:0.5; font-weight:700;">FR</a>
+            </div>
+            <a href="https://wa.me/48500685000" target="_blank" rel="noopener" class="btn btn-primary btn-block mobile-link">Contact Us</a>
+        </div>
+    </div>
+    <div class="mobile-overlay" id="mobileOverlay"></div>
+
+    <main class="account-page" id="accountApp"></main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="currentYear"></span> Cargoo. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script defer src="js/main.js"></script>
+    <script defer src="js/customer-account.js?v=20260504-login-dashboard-fix"></script>
+</body>
+</html>
+
+

@@ -2,3 +2,25 @@ name = "cargoo-platform"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 pages_build_output_dir = ".open-next"
+
+# -----------------------------------------------------------------------------
+# Non-secret build/runtime config. Safe to commit. Cloudflare Pages will inject
+# these into the Worker as process.env.<NAME>.
+# -----------------------------------------------------------------------------
+[vars]
+PUBLIC_SITE_URL = "https://www.cargooimport.eu"
+FROM_EMAIL = "Cargoo Import <contact@cargooimport.eu>"
+
+# -----------------------------------------------------------------------------
+# Secrets (NOT declared here — managed via Cloudflare Pages dashboard or
+# `wrangler pages secret put <NAME>`). Code expects:
+#
+#   DATABASE_URL       Neon Postgres connection string (postgres://...)
+#   SESSION_SECRET     Customer-account JWT signing secret (32+ random bytes,
+#                      base64). Used by lib/account-auth.ts and lib/mail.ts.
+#                      NEXTAUTH_SECRET is accepted as a fallback for back-compat.
+#   NEXTAUTH_SECRET    Admin NextAuth signing secret (kept for legacy admin path)
+#   RESEND_API_KEY     Resend API key for outbound email
+#   ADMIN_EMAIL        Hardcoded admin login email (lib/auth.ts)
+#   ADMIN_PASSWORD     Hardcoded admin login password (lib/auth.ts)
+# -----------------------------------------------------------------------------

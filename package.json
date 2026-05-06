@@ -10,6 +10,7 @@
     "build:cf": "node build-cf.js",
     "start": "next start",
     "lint": "next lint",
+    "sync-emails": "node scripts/sync-email-templates.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {

@@ -1,5 +1,15 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
+//
+// IMPORTANT: This schema covers the blog / lead / outreach / admin-actions
+// surface only. The customer-account surface (users, quote_requests, quotes,
+// shipments, email_logs, login_attempts) is intentionally NOT modeled here —
+// those tables are accessed via raw SQL through @neondatabase/serverless in
+// lib/account-db.ts, because Prisma was unreliable on the Cloudflare Worker
+// runtime when those tables were added (see neon-migrations/20260503_*).
+//
+// Apply schema changes with `prisma migrate`. Apply customer-account changes
+// by running the SQL files in neon-migrations/ directly against the database.
 
 generator client {
   provider        = "prisma-client-js"

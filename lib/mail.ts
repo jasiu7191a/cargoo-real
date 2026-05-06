@@ -39,7 +39,7 @@ interface MailOptions {
 export async function sendEmail({ to, subject, html }: MailOptions) {
   try {
     const data = await resend.emails.send({
-      from: 'Cargoo Import <contact@cargooimport.eu>',
+      from: process.env.FROM_EMAIL || 'Cargoo Import <contact@cargooimport.eu>',
       to,
       subject,
       html,
@@ -116,8 +116,8 @@ export async function sendClientConfirmation(email: string, productName: string)
 
 /** Generates a signed unsubscribe token for a given email using HMAC-SHA256. */
 export async function createUnsubscribeToken(email: string): Promise<string> {
-  const secret = process.env.NEXTAUTH_SECRET;
-  if (!secret) throw new Error("NEXTAUTH_SECRET not set");
+  const secret = process.env.SESSION_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("SESSION_SECRET (or NEXTAUTH_SECRET) not set");
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),

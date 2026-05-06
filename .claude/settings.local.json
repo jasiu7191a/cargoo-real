@@ -176,7 +176,13 @@
       "WebFetch(domain:www.gym-flooring.com)",
       "WebFetch(domain:www.mad-hq.com)",
       "Bash(python -)",
-      "Bash(python \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\log_entry.py\")"
+      "Bash(python \"C:\\\\Users\\\\jasiu\\\\.claude\\\\scheduled-tasks\\\\cargoo-daily-growth-agent\\\\log_entry.py\")",
+      "Bash(curl -s -w '\\\\n%{http_code}' -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\":\"how to protect your EU ecommerce business from the july 2026 china parcel customs duty increase\",\"lang\":\"en\"}' --max-time 90)",
+      "Bash(curl -s -w '\\\\n%{http_code}' --ssl-no-revoke -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\":\"how to protect your EU ecommerce business from the july 2026 china parcel customs duty increase\",\"lang\":\"en\"}' --max-time 120)",
+      "Bash(curl -s -w '\\\\n%{http_code}' --ssl-no-revoke -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\":\"EU China trade war May 2026 what European importers need to know\",\"lang\":\"en\"}' --max-time 120)",
+      "Bash(curl -s -w '\\\\n%{http_code}' --ssl-no-revoke -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\":\"cło 3 euro na paczki z Chin lipiec 2026 przewodnik dla polskiego importera ecommerce\",\"lang\":\"pl\"}' --max-time 120)",
+      "Bash(curl -s -w '\\\\n%{http_code}' --ssl-no-revoke -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\":\"China Import Deutschland Juli 2026 neues 3-Euro-Zoll KI-Zollprüfung Compliance-Guide\",\"lang\":\"de\"}' --max-time 120)",
+      "Bash(curl -s -w '\\\\n%{http_code}' --ssl-no-revoke -X POST https://admin.cargooimport.eu/api/agent/trigger -H 'Content-Type: application/json' -H 'Authorization: Bearer cargoo-agent-2026-xK9mP2vQnR7wL4jT8dF5hN3bY6uE1sA0' -d '{\"keyword\":\"importer Chine France 2026 taxe forfaitaire 2 euros 3 euros douane guide ecommerce PME\",\"lang\":\"fr\"}' --max-time 120)"
     ]
   }
 }

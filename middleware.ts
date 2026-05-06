@@ -8,8 +8,8 @@ const defaultLocale = 'en'
 // Evaluated lazily inside the middleware function so a missing secret only
 // blocks admin routes, not public pages.
 const getSecret = () => {
-  const s = process.env.NEXTAUTH_SECRET;
-  if (!s) throw new Error("NEXTAUTH_SECRET env var is required but not set.");
+  const s = process.env.SESSION_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!s) throw new Error("SESSION_SECRET (or NEXTAUTH_SECRET) env var is required but not set.");
   return new TextEncoder().encode(s);
 };
 
