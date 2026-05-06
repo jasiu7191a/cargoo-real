@@ -95,17 +95,21 @@ model AdminAction {
 }
 
 model ColdOutreach {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  company   String?
-  subject   String
-  body      String   @db.Text
-  lang      String   @default("en")
-  status    String   @default("SENT") // SENT, FAILED
-  sentAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  email       String   // NOT @unique — multiple records per address are intentional
+                       // so follow-up touches (2, 3, ...) can be recorded. Cooldown
+                       // enforcement lives in app/api/admin/outreach/cold/route.ts.
+  name        String?
+  company     String?
+  subject     String
+  body        String   @db.Text
+  lang        String   @default("en")
+  status      String   @default("SENT") // SENT, FAILED, PENDING
+  touchNumber Int      @default(1)      // 1 = first cold, 2+ = follow-up
+  sentAt      DateTime @default(now())
 
   @@index([sentAt, status])
+  @@index([email, sentAt(sort: Desc)])
 }
 
 model Unsubscribe {

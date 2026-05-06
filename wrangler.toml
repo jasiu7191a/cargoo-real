@@ -23,4 +23,14 @@ FROM_EMAIL = "Cargoo Import <contact@cargooimport.eu>"
 #   RESEND_API_KEY     Resend API key for outbound email
 #   ADMIN_EMAIL        Hardcoded admin login email (lib/auth.ts)
 #   ADMIN_PASSWORD     Hardcoded admin login password (lib/auth.ts)
+#   AGENT_SECRET       Bearer token for the cold-outreach agent
+#                      (POST /api/admin/outreach/cold with
+#                      `Authorization: Bearer <AGENT_SECRET>`)
+#
+# Optional tuning (set in [vars] above or as a secret):
+#
+#   COLD_OUTREACH_DAILY_LIMIT      Default: 10. Raise gradually for follow-up
+#                                  batches; large jumps hurt deliverability.
+#   COLD_OUTREACH_COOLDOWN_HOURS   Default: 12. Minimum gap between two sends to
+#                                  the same address.
 # -----------------------------------------------------------------------------
