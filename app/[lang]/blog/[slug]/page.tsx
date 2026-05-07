@@ -45,6 +45,13 @@ export async function generateMetadata({ params }: { params: { slug: string; lan
 
   post = post || getFallbackBlogPost(params.lang, params.slug);
   if (!post) return {};
+  const localeMap: Record<string, string> = {
+    en: "en_US",
+    pl: "pl_PL",
+    de: "de_DE",
+    fr: "fr_FR",
+  };
+
   return {
     title: post.title + " | Cargoo Import",
     description: post.metaDescription || "",
@@ -54,7 +61,12 @@ export async function generateMetadata({ params }: { params: { slug: string; lan
       url: `${BASE_URL}/${params.lang}/blog/${params.slug}`,
       siteName: "Cargoo Import",
       type: "article",
+      locale: localeMap[params.lang] ?? "en_US",
       publishedTime: post.publishedAt?.toISOString(),
+      modifiedTime: post.updatedAt?.toISOString(),
+      authors: ["Cargoo Import"],
+      section: "EU–China Sourcing & Logistics",
+      tags: post.targetKeyword ? [post.targetKeyword] : undefined,
       images: [{ url: `${BASE_URL}/assets/images/logo-image.jpg`, width: 1200, height: 630 }],
     },
     twitter: {
@@ -65,6 +77,13 @@ export async function generateMetadata({ params }: { params: { slug: string; lan
     },
     alternates: {
       canonical: `${BASE_URL}/${params.lang}/blog/${params.slug}`,
+      languages: {
+        en: `${BASE_URL}/en/blog/${params.slug}`,
+        pl: `${BASE_URL}/pl/blog/${params.slug}`,
+        de: `${BASE_URL}/de/blog/${params.slug}`,
+        fr: `${BASE_URL}/fr/blog/${params.slug}`,
+        "x-default": `${BASE_URL}/en/blog/${params.slug}`,
+      },
     },
   };
 }

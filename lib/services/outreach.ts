@@ -23,7 +23,9 @@ export async function sendOutreachEmail(data: OutreachEmail) {
   try {
     const lang = data.lang ?? "en";
     const token = await createUnsubscribeToken(data.to);
-    const unsubUrl = `https://admin.cargooimport.eu/api/unsubscribe?token=${token}`;
+    const unsubBase =
+      process.env.UNSUBSCRIBE_BASE_URL || "https://admin.cargooimport.eu";
+    const unsubUrl = `${unsubBase.replace(/\/$/, "")}/api/unsubscribe?token=${token}`;
 
     // Convert plain-text body to HTML paragraphs, preserving line breaks
     const bodyHtml = data.personalizedSnippet
@@ -36,10 +38,15 @@ export async function sendOutreachEmail(data: OutreachEmail) {
       .replace(/\{\{UNSUB_URL\}\}/g, unsubUrl);
 
     const { data: resData, error } = await resend.emails.send({
-      from: 'Cargoo Sourcing <contact@cargooimport.eu>',
+      from: process.env.OUTREACH_FROM_EMAIL || 'Cargoo Sourcing <contact@cargooimport.eu>',
       to: [data.to],
       subject: data.subject,
       html,
+      replyTo: process.env.REPLY_TO_EMAIL || 'contact@cargooimport.eu',
+      tags: [
+        { name: 'category', value: 'lead_outreach' },
+        { name: 'lang', value: lang },
+      ],
     });
 
     if (error) {

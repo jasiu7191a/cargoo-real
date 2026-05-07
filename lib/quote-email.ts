@@ -78,5 +78,10 @@ Cargoo Import`;
     subject,
     text,
     html,
+    replyTo: process.env.REPLY_TO_EMAIL || "contact@cargooimport.eu",
+    tags: [
+      { name: "category", value: "quote_ready" },
+      { name: "quoteId", value: quoteId },
+    ],
   });
 }

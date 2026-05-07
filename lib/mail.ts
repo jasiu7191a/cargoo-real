@@ -31,18 +31,28 @@ interface MailOptions {
   to: string;
   subject: string;
   html: string;
+  replyTo?: string;
+  tags?: { name: string; value: string }[];
 }
 
+/** Default reply-to used when the caller doesn't override it. */
+const DEFAULT_REPLY_TO =
+  process.env.REPLY_TO_EMAIL || 'contact@cargooimport.eu';
+
 /**
- * Basic helper to send email via Resend
+ * Basic helper to send email via Resend. Always sets a reply-to so customer
+ * replies thread cleanly back to the support inbox, and tags every send so
+ * Resend dashboards / webhooks can be filtered by category.
  */
-export async function sendEmail({ to, subject, html }: MailOptions) {
+export async function sendEmail({ to, subject, html, replyTo, tags }: MailOptions) {
   try {
     const data = await resend.emails.send({
       from: process.env.FROM_EMAIL || 'Cargoo Import <contact@cargooimport.eu>',
       to,
       subject,
       html,
+      replyTo: replyTo ?? DEFAULT_REPLY_TO,
+      tags: tags ?? [{ name: 'category', value: 'transactional' }],
     });
     return { success: true, data };
   } catch (error: any) {
@@ -116,8 +126,8 @@ export async function sendClientConfirmation(email: string, productName: string)
 
 /** Generates a signed unsubscribe token for a given email using HMAC-SHA256. */
 export async function createUnsubscribeToken(email: string): Promise<string> {
-  const secret = process.env.SESSION_SECRET || process.env.NEXTAUTH_SECRET;
-  if (!secret) throw new Error("SESSION_SECRET (or NEXTAUTH_SECRET) not set");
+  const secret = process.env.UNSUBSCRIBE_SECRET || process.env.SESSION_SECRET || process.env.NEXTAUTH_SECRET;
+  if (!secret) throw new Error("UNSUBSCRIBE_SECRET / SESSION_SECRET / NEXTAUTH_SECRET not set");
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(secret),
@@ -135,6 +145,7 @@ export async function verifyUnsubscribeToken(token: string): Promise<string | nu
   try {
     const decoded = Buffer.from(token, "base64url").toString("utf-8");
     const colonIdx = decoded.lastIndexOf(":");
+    if (colonIdx < 0) return null;
     const email = decoded.slice(0, colonIdx);
     const expected = await createUnsubscribeToken(email);
     return expected === token ? email : null;
@@ -181,13 +192,23 @@ export function stripBodyPlaceholder(html: string): string | null {
 /** Sends a cold prospecting email using the branded language-specific template. */
 export async function sendColdEmail({ to, name, subject, bodyHtml, lang = "en" }: ColdEmailOptions) {
   const token = await createUnsubscribeToken(to);
-  const unsubUrl = `https://admin.cargooimport.eu/api/unsubscribe?token=${token}`;
+  const unsubBase =
+    process.env.UNSUBSCRIBE_BASE_URL || "https://admin.cargooimport.eu";
+  const unsubUrl = `${unsubBase.replace(/\/$/, "")}/api/unsubscribe?token=${token}`;
 
   const html = getEmailTemplate(lang)
     .replace(/\{\{BODY\}\}/g, bodyHtml)
     .replace(/\{\{UNSUB_URL\}\}/g, unsubUrl);
 
-  return sendEmail({ to, subject, html });
+  return sendEmail({
+    to,
+    subject,
+    html,
+    tags: [
+      { name: "category", value: "cold_outreach" },
+      { name: "lang", value: lang },
+    ],
+  });
 }
 
 /**

@@ -79,15 +79,18 @@ async function checkAndAlertIfNeeded() {
 }
 
 export async function POST(req: Request) {
-  // Skip signature check if secret not configured (log warning)
-  const secretConfigured = !!process.env.RESEND_WEBHOOK_SECRET;
-  if (secretConfigured) {
-    const valid = await verifyResendSignature(req);
-    if (!valid) {
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-    }
-  } else {
-    console.warn("RESEND_WEBHOOK_SECRET not set — webhook signature verification skipped");
+  // Hard-require signature verification. Without RESEND_WEBHOOK_SECRET set,
+  // anyone POSTing here could poison delivery metrics — refuse to accept.
+  if (!process.env.RESEND_WEBHOOK_SECRET) {
+    console.error("RESEND_WEBHOOK_SECRET not set — refusing webhook");
+    return NextResponse.json(
+      { error: "Webhook not configured on this deployment" },
+      { status: 503 }
+    );
+  }
+  const valid = await verifyResendSignature(req);
+  if (!valid) {
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
   const body = await req.json();

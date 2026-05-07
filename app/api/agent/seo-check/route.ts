@@ -10,37 +10,48 @@ function authOk(req: Request): boolean {
   return !!secret && token === secret;
 }
 
-// Check if a URL is indexed by searching for site:url in Google's search suggestions API
-// We use the Bing or Google search-based approach via a simple fetch
+// Check if a URL is indexed by searching for site:url in Google's Custom Search API.
+// Returns indexed=false (with no snippet) when the API isn't configured or fails.
 async function isIndexed(slug: string, lang: string): Promise<{ indexed: boolean; snippet?: string }> {
+  const apiKey = process.env.GOOGLE_SEARCH_API_KEY;
+  const cx = process.env.GOOGLE_SEARCH_CX;
+  if (!apiKey || !cx) {
+    // Caller already returned 503 above when configuration is bad, but defend anyway.
+    return { indexed: false };
+  }
+
   const domain = "cargooimport.eu";
-  const fullUrl = `https://${domain}/${lang}/blog/${slug}`;
   const query = encodeURIComponent(`site:${domain}/${lang}/blog/${slug}`);
+  const url =
+    `https://www.googleapis.com/customsearch/v1` +
+    `?key=${encodeURIComponent(apiKey)}` +
+    `&cx=${encodeURIComponent(cx)}` +
+    `&q=${query}&num=1`;
 
   try {
-    const res = await fetch(
-      `https://www.googleapis.com/customsearch/v1?key=${process.env.GOOGLE_SEARCH_API_KEY}&cx=${process.env.GOOGLE_SEARCH_CX}&q=${query}&num=1`,
-      { signal: AbortSignal.timeout(8000) }
-    );
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
     if (!res.ok) return { indexed: false };
-    const data = await res.json() as { searchInformation?: { totalResults?: string }; items?: Array<{ snippet?: string }> };
+    const data = (await res.json()) as {
+      searchInformation?: { totalResults?: string };
+      items?: Array<{ snippet?: string }>;
+    };
     const total = parseInt(data?.searchInformation?.totalResults ?? "0", 10);
     const snippet = data?.items?.[0]?.snippet;
     return { indexed: total > 0, snippet };
   } catch {
-    // Fallback: try a simple HEAD request to see if page exists (not the same as indexed, but validates the URL works)
-    try {
-      const r = await fetch(fullUrl, { method: "HEAD", signal: AbortSignal.timeout(5000) });
-      return { indexed: false }; // Can't confirm indexed without search API
-    } catch {
-      return { indexed: false };
-    }
+    return { indexed: false };
   }
 }
 
 export async function POST(req: Request) {
   if (!authOk(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  if (!process.env.GOOGLE_SEARCH_API_KEY || !process.env.GOOGLE_SEARCH_CX) {
+    return NextResponse.json(
+      { error: "GOOGLE_SEARCH_API_KEY and GOOGLE_SEARCH_CX must be set" },
+      { status: 503 }
+    );
   }
 
   try {
