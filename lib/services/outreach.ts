@@ -42,7 +42,7 @@ export async function sendOutreachEmail(data: OutreachEmail) {
       to: [data.to],
       subject: data.subject,
       html,
-      replyTo: process.env.REPLY_TO_EMAIL || 'contact@cargooimport.eu',
+      reply_to: process.env.REPLY_TO_EMAIL || 'contact@cargooimport.eu',
       tags: [
         { name: 'category', value: 'lead_outreach' },
         { name: 'lang', value: lang },

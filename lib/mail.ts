@@ -51,7 +51,7 @@ export async function sendEmail({ to, subject, html, replyTo, tags }: MailOption
       to,
       subject,
       html,
-      replyTo: replyTo ?? DEFAULT_REPLY_TO,
+      reply_to: replyTo ?? DEFAULT_REPLY_TO,
       tags: tags ?? [{ name: 'category', value: 'transactional' }],
     });
     return { success: true, data };
