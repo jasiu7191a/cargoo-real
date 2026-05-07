@@ -33,4 +33,8 @@ FROM_EMAIL = "Cargoo Import <contact@cargooimport.eu>"
 #                                  batches; large jumps hurt deliverability.
 #   COLD_OUTREACH_COOLDOWN_HOURS   Default: 12. Minimum gap between two sends to
 #                                  the same address.
+#   ENABLE_FIRST_ADMIN_SETUP       Default: unset. Set to "true" only while
+#                                  bootstrapping the first admin via
+#                                  GET /api/auth/setup-first-admin, then DELETE
+#                                  the var to permanently disable the endpoint.
 # -----------------------------------------------------------------------------

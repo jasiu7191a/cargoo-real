@@ -7,6 +7,16 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
+    // Hard gate: this endpoint must be explicitly enabled via env var. Operator
+    // sets ENABLE_FIRST_ADMIN_SETUP=true in Cloudflare Pages, runs the bootstrap
+    // once, then deletes the env var so the endpoint becomes 403 forever.
+    if (process.env.ENABLE_FIRST_ADMIN_SETUP !== "true") {
+      return NextResponse.json(
+        { error: "Setup endpoint disabled. Set ENABLE_FIRST_ADMIN_SETUP=true to enable." },
+        { status: 403 }
+      );
+    }
+
     const existing = await queryOne<{ count: string }>("SELECT COUNT(*)::text AS count FROM users", []);
     if (Number(existing?.count ?? 0) > 0) {
       return NextResponse.json({ error: "System already initialized." }, { status: 403 });
