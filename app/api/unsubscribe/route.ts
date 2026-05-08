@@ -63,3 +63,8 @@ function unsubscribePage(message: string, success: boolean): string {
 </body>
 </html>`;
 }
+
+// OPTIONS preflight — returns 204 so the static customer dashboard at
+// www.cargooimport.eu can preflight POST/PATCH/DELETE calls. CORS headers
+// are added by next.config.js headers() for /api/:path*.
+export const OPTIONS = () => new Response(null, { status: 204 });

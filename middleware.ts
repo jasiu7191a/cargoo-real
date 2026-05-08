@@ -6,39 +6,11 @@ import { jwtVerify } from "jose"
 const locales = ['en', 'pl', 'de', 'fr']
 const defaultLocale = 'en'
 
-// Origins allowed to call /api/* with credentials. The static marketing
-// site (www) and the apex sit on a different Pages project from the
-// Next.js app (admin), so the customer dashboard is technically a
-// cross-origin caller and needs explicit CORS — wildcard `*` is rejected
-// when credentials: 'include' is in use.
-const ALLOWED_API_ORIGINS = new Set([
-  'https://www.cargooimport.eu',
-  'https://cargooimport.eu',
-  'https://admin.cargooimport.eu',
-  'https://blog.cargooimport.eu',
-]);
-
-function buildCorsHeaders(origin: string | null): Record<string, string> {
-  const h: Record<string, string> = {
-    'Access-Control-Allow-Methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, x-csrf-token, Authorization',
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Max-Age': '86400',
-    'Vary': 'Origin',
-  };
-  if (origin && ALLOWED_API_ORIGINS.has(origin)) {
-    h['Access-Control-Allow-Origin'] = origin;
-  }
-  return h;
-}
-
-function withCors(res: NextResponse, origin: string | null): NextResponse {
-  const headers = buildCorsHeaders(origin);
-  for (const [k, v] of Object.entries(headers)) {
-    res.headers.set(k, v);
-  }
-  return res;
-}
+// Note: CORS for /api/* is handled by next.config.js `headers()` (static)
+// and per-route OPTIONS handlers (returning 204). Don't set CORS headers
+// from middleware — doing so concatenates with the static config and the
+// browser rejects the resulting comma-joined `Access-Control-Allow-*`
+// values as malformed.
 // Evaluated lazily inside the middleware function so a missing secret only
 // blocks admin routes, not public pages.
 const getSecret = () => {
@@ -84,18 +56,6 @@ function nextWithLocale(request: NextRequest, locale: string) {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const host = request.headers.get('host') || ''
-  const origin = request.headers.get('origin')
-
-  // 0. CORS for /api/*: respond to the preflight here, attach headers to
-  //    the eventual route response below.
-  if (pathname.startsWith('/api/')) {
-    if (request.method === 'OPTIONS') {
-      const preflight = new NextResponse(null, { status: 204 });
-      return withCors(preflight, origin);
-    }
-    // Non-preflight: let the route handle it, but tag the response with CORS.
-    return withCors(NextResponse.next(), origin);
-  }
 
   // 1. CANONICAL REDIRECT: cargooimport.eu → www.cargooimport.eu only.
   //    Subdomains (blog., admin.) and preview URLs (*.pages.dev) are left alone.
@@ -187,9 +147,8 @@ export const config = {
     // Direct match for admin
     '/admin',
     '/admin/:path*',
-    // API routes — needed for CORS handling (block 0 above).
-    '/api/:path*',
-    // Public pages matcher
+    // Public pages matcher (api routes are excluded; CORS for /api is
+    // handled by next.config.js headers() + per-route OPTIONS handlers).
     '/((?!api|sitemap|_next/static|_next/image|favicon.ico|assets|css|img|js|admin-assets|google[^/]*).*)',
   ],
 }

@@ -71,3 +71,8 @@ export async function GET() {
     { status: 405, headers: { Allow: "OPTIONS, POST" } }
   );
 }
+
+// OPTIONS preflight — returns 204 so the static customer dashboard at
+// www.cargooimport.eu can preflight POST/PATCH/DELETE calls. CORS headers
+// are added by next.config.js headers() for /api/:path*.
+export const OPTIONS = () => new Response(null, { status: 204 });
