@@ -18,11 +18,21 @@ type AccountUser = {
   role: "customer" | "admin";
 };
 
+const ALLOWED_LANGS = ["en", "pl", "de", "fr"] as const;
+type Lang = (typeof ALLOWED_LANGS)[number];
+
+function normalizeLang(raw: unknown): Lang {
+  if (typeof raw !== "string") return "en";
+  const v = raw.trim().slice(0, 2).toLowerCase();
+  return (ALLOWED_LANGS as readonly string[]).includes(v) ? (v as Lang) : "en";
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await readJsonBody(req);
     const email = normalizeEmail(body?.email);
     const password = typeof body?.password === "string" ? body.password : "";
+    const lang = normalizeLang(body?.lang);
 
     if (!isValidEmail(email)) {
       apiError(400, "Invalid email address", "INVALID_EMAIL");
@@ -41,10 +51,10 @@ export async function POST(req: NextRequest) {
 
     const passwordHash = await hashPassword(password);
     const [user] = await query<AccountUser>(
-      `INSERT INTO users (email, password_hash, role)
-       VALUES ($1, $2, 'customer')
+      `INSERT INTO users (email, password_hash, role, lang)
+       VALUES ($1, $2, 'customer', $3)
        RETURNING id, email, role`,
-      [email, passwordHash]
+      [email, passwordHash, lang]
     );
 
     const res = NextResponse.json({ user: publicUser(user) }, { status: 201 });

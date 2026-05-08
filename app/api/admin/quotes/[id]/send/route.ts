@@ -3,6 +3,7 @@ import { requireAdmin, requireCsrf } from "@/lib/account-auth";
 import { apiError, handleApiError } from "@/lib/account-api";
 import { query, queryOne, transaction } from "@/lib/account-db";
 import { sendQuoteReadyEmail } from "@/lib/quote-email";
+import { tryCreateNotification } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -107,6 +108,18 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [quote.user_id, quote.id, quote.customer_email, subject, resendMessageId, emailStatus, emailError]
     );
+
+    // In-app notification (best-effort; never blocks the quote send).
+    await tryCreateNotification({
+      userId: quote.user_id,
+      type: "quote_ready",
+      meta: {
+        amount: quote.total_price,
+        currency: quote.currency,
+        quoteId: quote.id,
+      },
+      link: `/account.html?quote=${encodeURIComponent(quote.id)}`,
+    });
 
     if (emailStatus === "failed") {
       return NextResponse.json({
