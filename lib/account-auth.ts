@@ -36,6 +36,22 @@ function cookieSecure() {
   return process.env.NODE_ENV === "production";
 }
 
+/**
+ * Domain used for the session + CSRF cookies. Set via the COOKIE_DOMAIN
+ * env var to e.g. `.cargooimport.eu` — that makes the cookie shared across
+ * `admin.`, `www.`, `blog.` and the apex, so navigating between the static
+ * marketing site (www) and the Next.js app (admin) doesn't appear to log
+ * the user out.
+ *
+ * Returns undefined when the env var is unset, so localhost / preview
+ * (*.pages.dev) deploys keep working without a wildcard domain that the
+ * browser would reject.
+ */
+function cookieDomain(): string | undefined {
+  const v = process.env.COOKIE_DOMAIN;
+  return v && v.length > 0 ? v : undefined;
+}
+
 export function normalizeEmail(email: unknown) {
   return typeof email === "string" ? email.trim().toLowerCase() : "";
 }
@@ -77,6 +93,7 @@ function csrfToken() {
 export async function setAuthCookies(res: NextResponse, user: AccountUser) {
   const token = await signSession(user);
   const csrf = csrfToken();
+  const domain = cookieDomain();
 
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
@@ -84,6 +101,7 @@ export async function setAuthCookies(res: NextResponse, user: AccountUser) {
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_MAX_AGE,
+    ...(domain ? { domain } : {}),
   });
 
   res.cookies.set(CSRF_COOKIE, csrf, {
@@ -92,10 +110,12 @@ export async function setAuthCookies(res: NextResponse, user: AccountUser) {
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_MAX_AGE,
+    ...(domain ? { domain } : {}),
   });
 }
 
 export function clearAuthCookies(res: NextResponse) {
+  const domain = cookieDomain();
   for (const name of [SESSION_COOKIE, CSRF_COOKIE, "admin_token"]) {
     res.cookies.set(name, "", {
       httpOnly: name !== CSRF_COOKIE,
@@ -103,6 +123,7 @@ export function clearAuthCookies(res: NextResponse) {
       sameSite: "lax",
       path: "/",
       maxAge: 0,
+      ...(domain ? { domain } : {}),
     });
   }
 }
