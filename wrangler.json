@@ -5,6 +5,7 @@
   "pages_build_output_dir": ".open-next",
   "vars": {
     "PUBLIC_SITE_URL": "https://www.cargooimport.eu",
-    "FROM_EMAIL": "Cargoo Import <contact@cargooimport.eu>"
+    "FROM_EMAIL": "Cargoo Import <contact@cargooimport.eu>",
+    "COOKIE_DOMAIN": ".cargooimport.eu"
   }
 }

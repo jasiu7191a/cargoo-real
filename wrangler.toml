@@ -10,6 +10,10 @@ pages_build_output_dir = ".open-next"
 [vars]
 PUBLIC_SITE_URL = "https://www.cargooimport.eu"
 FROM_EMAIL = "Cargoo Import <contact@cargooimport.eu>"
+# Leading dot is intentional — makes the session/CSRF cookies valid across
+# admin., www., blog., and the apex so navigating between subdomains keeps
+# the user logged in.
+COOKIE_DOMAIN = ".cargooimport.eu"
 
 # -----------------------------------------------------------------------------
 # Secrets (NOT declared here — managed via Cloudflare Pages dashboard or
