@@ -109,13 +109,16 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
-    const token = request.cookies.get("admin_token")?.value;
+    const token = request.cookies.get("cargoo_session")?.value;
     if (!token) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
 
     try {
-      await jwtVerify(token, getSecret());
+      const { payload } = await jwtVerify(token, getSecret());
+      if (payload.role !== "admin") {
+        return NextResponse.redirect(new URL("/admin/login", request.url));
+      }
       return NextResponse.next();
     } catch (err) {
       return NextResponse.redirect(new URL("/admin/login", request.url));
