@@ -358,7 +358,7 @@ export function QuoteRequestsPanel() {
             <button
               key={request.id}
               onClick={() => openRequest(request)}
-              className={`w-full text-left p-5 transition-colors ${selected?.id === request.id ? "bg-[#ff5500]/10" : "hover:bg-white/[0.03]"}`}
+              className={`w-full text-left p-5 transition-colors bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5500] ${selected?.id === request.id ? "bg-[#ff5500]/10" : "hover:bg-white/[0.03]"}`}
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="font-bold text-white truncate">{request.customer_email}</div>
