@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, FileText, ArrowRight } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { ContentGenerator } from "../../view-components/content-generator";
 import { SeoArtifactList } from "../../view-components/seo-artifact-list";
 
@@ -22,24 +22,6 @@ export default function AdminContentPage() {
                 <Sparkles size={20} className="text-[#ff5500]" /> New Article
               </h3>
               <ContentGenerator />
-           </div>
-
-           <div className="glass-panel p-8 bg-[#ff5500]/5 border-[#ff5500]/20">
-              <h4 className="text-sm font-black uppercase mb-4 text-[#ff5500]">Trending Keywords</h4>
-              <ul className="space-y-3">
-                 <li className="text-xs font-bold text-white/70 flex justify-between">
-                    <span>Cheap Sneakers China</span>
-                    <span className="text-[#00c853]">High Intent</span>
-                 </li>
-                 <li className="text-xs font-bold text-white/70 flex justify-between">
-                    <span>Aliexpress vs Sourcing Agent</span>
-                    <span className="text-[#00c853]">V. High Intent</span>
-                 </li>
-                 <li className="text-xs font-bold text-white/70 flex justify-between">
-                    <span>How to import electronics</span>
-                    <span className="text-[#2962ff]">Medium Intent</span>
-                 </li>
-              </ul>
            </div>
         </div>
 

@@ -1,6 +1,6 @@
 import { getAdminSession } from "@/lib/session";
 import { redirect } from "next/navigation";
-import { LayoutDashboard, Users, FileText, Send, Settings, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Users, FileText, Send, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { LogoutButton } from "../view-components/logout-button";
@@ -38,7 +38,6 @@ export default async function ProtectedAdminLayout({
         </nav>
 
         <div className="pb-10 space-y-2 border-t border-white/10 pt-6">
-          <AdminNavLink href="/admin/settings" icon={<Settings size={18} />} label="Settings" />
           <LogoutButton />
         </div>
       </aside>
