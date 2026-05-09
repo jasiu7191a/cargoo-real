@@ -430,7 +430,7 @@ export function QuoteRequestsPanel() {
                 <Field label="Expiry date" type="date" value={quote.expires_at} onChange={(value) => setQuoteField("expires_at", value)} />
                 <label className="space-y-2">
                   <span className="text-[10px] uppercase font-black tracking-widest text-[#94a3b8]">Status</span>
-                  <select value={quote.status} onChange={(e) => setQuoteField("status", e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-bold outline-none focus:border-[#ff5500]">
+                  <select value={quote.status} onChange={(e) => setQuoteField("status", e.target.value)} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#ff5500]">
                     {["draft", "sent", "accepted", "rejected", "expired", "paid", "cancelled"].map((status) => <option key={status} value={status}>{status}</option>)}
                   </select>
                 </label>
@@ -463,7 +463,7 @@ export function QuoteRequestsPanel() {
                 <Field label="Carrier" value={shipment.carrier} onChange={(value) => setShipment((prev) => ({ ...prev, carrier: value }))} />
                 <label className="space-y-2">
                   <span className="text-[10px] uppercase font-black tracking-widest text-[#94a3b8]">Shipment status</span>
-                  <select value={shipment.status} onChange={(e) => setShipment((prev) => ({ ...prev, status: e.target.value }))} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-bold outline-none focus:border-[#ff5500]">
+                  <select value={shipment.status} onChange={(e) => setShipment((prev) => ({ ...prev, status: e.target.value }))} className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#ff5500]">
                     {shipmentStatuses.map((status) => <option key={status} value={status}>{status}</option>)}
                   </select>
                 </label>
@@ -494,7 +494,7 @@ function Field({ label, value, onChange, type = "text" }: { label: string; value
         value={value}
         step={type === "number" ? "0.01" : undefined}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-bold outline-none focus:border-[#ff5500]"
+        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#ff5500]"
       />
     </label>
   );
@@ -508,7 +508,7 @@ function Textarea({ label, value, onChange }: { label: string; value: string; on
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={4}
-        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-bold outline-none focus:border-[#ff5500]"
+        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#ff5500]"
       />
     </label>
   );
