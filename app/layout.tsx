@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Plus_Jakarta_Sans } from "next/font/google";
-import { Providers } from "@/components/Providers";
 import { headers } from "next/headers";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -55,9 +54,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="/css/search.css" />
       </head>
       <body className={jakarta.className}>
-        <Providers>
-          {children}
-        </Providers>
+        {children}
       </body>
     </html>
   );
