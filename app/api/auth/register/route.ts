@@ -8,6 +8,7 @@ import {
 } from "@/lib/account-auth";
 import { apiError, handleApiError, readJsonBody } from "@/lib/account-api";
 import { query, queryOne } from "@/lib/account-db";
+import { withCors, corsOk } from "@/lib/cors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,20 +60,17 @@ export async function POST(req: NextRequest) {
 
     const res = NextResponse.json({ user: publicUser(user) }, { status: 201 });
     await setAuthCookies(res, user);
-    return res;
+    return withCors(req, res);
   } catch (error) {
-    return handleApiError(error, "Register API error");
+    return handleApiError(error, "Register API error", req);
   }
 }
 
-export async function GET() {
-  return NextResponse.json(
+export async function GET(req: NextRequest) {
+  return withCors(req, NextResponse.json(
     { error: "Use POST to register", code: "METHOD_NOT_ALLOWED" },
     { status: 405, headers: { Allow: "OPTIONS, POST" } }
-  );
+  ));
 }
 
-// OPTIONS preflight — returns 204 so the static customer dashboard at
-// www.cargooimport.eu can preflight POST/PATCH/DELETE calls. CORS headers
-// are added by next.config.js headers() for /api/:path*.
-export const OPTIONS = () => new Response(null, { status: 204 });
+export const OPTIONS = (req: Request) => corsOk(req);

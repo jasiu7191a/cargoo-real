@@ -23,25 +23,11 @@ const nextConfig = {
           { key: 'Content-Security-Policy', value: "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests" },
         ],
       },
-      // CORS for /api/* — needed because the static customer dashboard at
-      // www.cargooimport.eu is on a different Cloudflare Pages project from
-      // the Next.js API and calls admin.cargooimport.eu/api/* with
-      // credentials. Static config rather than middleware because
-      // middleware-set response headers don't reliably propagate on
-      // OpenNext/Cloudflare. We hardcode www as the allowed origin since
-      // it's the only cross-origin caller; same-origin requests from
-      // admin.cargooimport.eu skip the CORS check entirely.
-      {
-        source: '/api/:path*',
-        headers: [
-          { key: 'Access-Control-Allow-Origin', value: 'https://www.cargooimport.eu' },
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, PATCH, PUT, DELETE, OPTIONS' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, x-csrf-token, Authorization' },
-          { key: 'Access-Control-Max-Age', value: '86400' },
-          { key: 'Vary', value: 'Origin' },
-        ],
-      },
+      // NOTE: CORS for /api/* is set inside each route handler via
+      // lib/cors.ts (withCors / corsOk / corsHeaders). next.config.js
+      // headers() and middleware-set headers proved unreliable on
+      // OpenNext/Cloudflare — they were silently dropped on error
+      // responses and inconsistently applied across the worker.
     ];
   },
   webpack: (config, { isServer }) => {

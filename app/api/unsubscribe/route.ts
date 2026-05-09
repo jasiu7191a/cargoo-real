@@ -64,7 +64,6 @@ function unsubscribePage(message: string, success: boolean): string {
 </html>`;
 }
 
-// OPTIONS preflight — returns 204 so the static customer dashboard at
-// www.cargooimport.eu can preflight POST/PATCH/DELETE calls. CORS headers
-// are added by next.config.js headers() for /api/:path*.
+// Unsubscribe is hit directly from email links (top-level GET, no CORS).
+// Cross-origin POST isn't part of this flow, so a plain 204 OPTIONS is fine.
 export const OPTIONS = () => new Response(null, { status: 204 });

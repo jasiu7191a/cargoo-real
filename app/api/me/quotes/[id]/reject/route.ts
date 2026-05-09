@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCsrf, requireUser } from "@/lib/account-auth";
 import { apiError, handleApiError } from "@/lib/account-api";
 import { transaction } from "@/lib/account-db";
+import { withCors, corsOk } from "@/lib/cors";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,13 +47,10 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       return updated;
     });
 
-    return NextResponse.json({ success: true, quote: result });
+    return withCors(req, NextResponse.json({ success: true, quote: result }));
   } catch (error) {
-    return handleApiError(error, "Reject quote API error");
+    return handleApiError(error, "Reject quote API error", req);
   }
 }
 
-// OPTIONS preflight — returns 204 so the static customer dashboard at
-// www.cargooimport.eu can preflight POST/PATCH/DELETE calls. CORS headers
-// are added by next.config.js headers() for /api/:path*.
-export const OPTIONS = () => new Response(null, { status: 204 });
+export const OPTIONS = (req: Request) => corsOk(req);

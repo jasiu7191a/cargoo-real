@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { withCors } from "@/lib/cors";
 
 export class ApiError extends Error {
   status: number;
@@ -15,16 +16,22 @@ export function apiError(status: number, message: string, code?: string): never 
   throw new ApiError(status, message, code);
 }
 
-export function handleApiError(error: unknown, context: string) {
-  if (error instanceof ApiError) {
-    return NextResponse.json(
-      { error: error.message, code: error.code },
-      { status: error.status }
-    );
-  }
-
-  console.error(`${context}:`, error);
-  return NextResponse.json({ error: "Server error" }, { status: 500 });
+/**
+ * Build a JSON error response. Pass `req` so cross-origin callers
+ * (the static customer dashboard at www) get CORS headers on errors —
+ * without them the browser reports the 500/401/etc as a CORS failure
+ * and you can't see the real error.
+ */
+export function handleApiError(
+  error: unknown,
+  context: string,
+  req?: Request | { headers: Headers }
+) {
+  const res = error instanceof ApiError
+    ? NextResponse.json({ error: error.message, code: error.code }, { status: error.status })
+    : (console.error(`${context}:`, error),
+       NextResponse.json({ error: "Server error" }, { status: 500 }));
+  return req ? withCors(req, res) : res;
 }
 
 export async function readJsonBody(req: Request) {

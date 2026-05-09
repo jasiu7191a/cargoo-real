@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser, requireCsrf } from "@/lib/account-auth";
 import { handleApiError } from "@/lib/account-api";
+import { withCors, corsOk } from "@/lib/cors";
 import { listForUser, markAllRead, unreadCount } from "@/lib/notifications";
 
 export const runtime = "nodejs";
@@ -21,9 +22,9 @@ export async function GET(req: NextRequest) {
       unreadCount(user.id),
     ]);
 
-    return NextResponse.json({ items, unread });
+    return withCors(req, NextResponse.json({ items, unread }));
   } catch (error) {
-    return handleApiError(error, "GET /api/me/notifications");
+    return handleApiError(error, "GET /api/me/notifications", req);
   }
 }
 
@@ -33,13 +34,10 @@ export async function POST(req: NextRequest) {
     const user = await requireUser();
     requireCsrf(req);
     const updated = await markAllRead(user.id);
-    return NextResponse.json({ updated });
+    return withCors(req, NextResponse.json({ updated }));
   } catch (error) {
-    return handleApiError(error, "POST /api/me/notifications");
+    return handleApiError(error, "POST /api/me/notifications", req);
   }
 }
 
-// OPTIONS preflight — returns 204 so the static customer dashboard at
-// www.cargooimport.eu can preflight POST/PATCH/DELETE calls. CORS headers
-// are added by next.config.js headers() for /api/:path*.
-export const OPTIONS = () => new Response(null, { status: 204 });
+export const OPTIONS = (req: Request) => corsOk(req);
