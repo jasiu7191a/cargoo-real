@@ -6,8 +6,8 @@ import {
   publicUser,
   setAuthCookies,
 } from "@/lib/account-auth";
-import { apiError, handleApiError, readJsonBody } from "@/lib/account-api";
-import { query, queryOne } from "@/lib/account-db";
+import { apiError, cleanString, handleApiError, readJsonBody } from "@/lib/account-api";
+import { query, queryOne, transaction } from "@/lib/account-db";
 import { withCors, corsOk } from "@/lib/cors";
 
 export const runtime = "nodejs";
@@ -42,6 +42,23 @@ export async function POST(req: NextRequest) {
       apiError(400, "Password must be at least 8 characters", "WEAK_PASSWORD");
     }
 
+    // Optional profile fields. Each can be null/undefined; we only validate
+    // length and trim. If the client provides a full address, it becomes
+    // the user's default address in the same transaction.
+    const firstName = cleanString(body?.first_name ?? body?.firstName, 80);
+    const lastName  = cleanString(body?.last_name  ?? body?.lastName,  80);
+    const phone     = cleanString(body?.phone, 40);
+
+    const street   = cleanString(body?.address?.street ?? body?.street, 200);
+    const city     = cleanString(body?.address?.city ?? body?.city, 120);
+    const zipCode  = cleanString(body?.address?.zip_code ?? body?.address?.zipCode ?? body?.zip_code ?? body?.zipCode, 20);
+    const country  = cleanString(body?.address?.country ?? body?.country, 80);
+    const hasAnyAddrField = Boolean(street || city || zipCode || country);
+    const hasFullAddress  = Boolean(street && city && zipCode && country);
+    if (hasAnyAddrField && !hasFullAddress) {
+      apiError(400, "Full address requires street, city, zip_code, and country", "VALIDATION_ERROR");
+    }
+
     const existing = await queryOne<{ id: string }>(
       "SELECT id FROM users WHERE email = $1 LIMIT 1",
       [email]
@@ -51,12 +68,24 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
-    const [user] = await query<AccountUser>(
-      `INSERT INTO users (email, password_hash, role, lang)
-       VALUES ($1, $2, 'customer', $3)
-       RETURNING id, email, role`,
-      [email, passwordHash, lang]
-    );
+
+    const user = await transaction(async (tx) => {
+      const rows = await tx.query<AccountUser>(
+        `INSERT INTO users (email, password_hash, role, lang, first_name, last_name, phone)
+         VALUES ($1, $2, 'customer', $3, $4, $5, $6)
+         RETURNING id, email, role`,
+        [email, passwordHash, lang, firstName, lastName, phone]
+      );
+      const created = rows[0];
+      if (hasFullAddress) {
+        await tx.query(
+          `INSERT INTO addresses (user_id, street, city, zip_code, country, is_default)
+           VALUES ($1, $2, $3, $4, $5, TRUE)`,
+          [created.id, street, city, zipCode, country]
+        );
+      }
+      return created;
+    });
 
     const res = NextResponse.json({ user: publicUser(user) }, { status: 201 });
     await setAuthCookies(res, user);

@@ -4,6 +4,7 @@ import { apiError, handleApiError } from "@/lib/account-api";
 import { query, queryOne, transaction } from "@/lib/account-db";
 import { sendQuoteReadyEmail } from "@/lib/quote-email";
 import { tryCreateNotification } from "@/lib/notifications";
+import { createCheckoutSession, isStripeEnabled } from "@/lib/stripe";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -85,6 +86,37 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     let emailStatus = "sent";
     let emailError: string | null = null;
 
+    // Best-effort Stripe Checkout session. If Stripe isn't configured, we
+    // fall back to email-only and the customer can still accept manually.
+    let paymentUrl: string | null = null;
+    let stripeSessionId: string | null = null;
+    if (isStripeEnabled() && quote.total_price && quote.currency) {
+      const publicSiteUrl = (process.env.PUBLIC_SITE_URL || "https://www.cargooimport.eu").replace(/\/$/, "");
+      try {
+        const session = await createCheckoutSession({
+          amount: Number(quote.total_price),
+          currency: quote.currency,
+          productName: quote.product_name || "Cargoo quote",
+          productDescription: quote.notes || quote.product_link || undefined,
+          customerEmail: quote.customer_email,
+          quoteId: quote.id,
+          successUrl: `${publicSiteUrl}/account.html?quote=${encodeURIComponent(quote.id)}&paid=1`,
+          cancelUrl: `${publicSiteUrl}/account.html?quote=${encodeURIComponent(quote.id)}`,
+        });
+        paymentUrl = session.url;
+        stripeSessionId = session.id;
+        await query(
+          `UPDATE quotes
+           SET stripe_payment_link = $2, stripe_session_id = $3
+           WHERE id = $1`,
+          [quote.id, paymentUrl, stripeSessionId]
+        );
+      } catch (err) {
+        console.error("Stripe checkout session creation failed:", err);
+        // continue without payment link — email still goes out
+      }
+    }
+
     try {
       const emailResult = await sendQuoteReadyEmail({
         to: quote.customer_email,
@@ -93,6 +125,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         currency: quote.currency,
         estimatedDelivery: quote.estimated_delivery,
         quoteId: quote.id,
+        paymentUrl,
       });
       const maybeError = (emailResult as any).error;
       if (maybeError) throw new Error(maybeError.message || "Resend failed");
@@ -131,7 +164,10 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({
       success: true,
-      message: "Quote sent to customer account and email.",
+      message: paymentUrl
+        ? "Quote sent to customer account, email, and Stripe payment link issued."
+        : "Quote sent to customer account and email.",
+      paymentUrl,
       quote: savedQuote,
     });
   } catch (error) {

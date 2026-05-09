@@ -16,6 +16,8 @@ type QuoteEmail = {
   currency: string;
   estimatedDelivery: string;
   quoteId: string;
+  /** Optional Stripe Checkout URL. When provided, the email shows a "Pay now" button. */
+  paymentUrl?: string | null;
 };
 
 export async function sendQuoteReadyEmail({
@@ -25,6 +27,7 @@ export async function sendQuoteReadyEmail({
   currency,
   estimatedDelivery,
   quoteId,
+  paymentUrl,
 }: QuoteEmail) {
   const publicSiteUrl = process.env.PUBLIC_SITE_URL || "https://www.cargooimport.eu";
   const fromEmail = process.env.FROM_EMAIL || "Cargoo Import <contact@cargooimport.eu>";
@@ -45,7 +48,7 @@ ${estimatedDelivery}
 
 You can view, accept, or reject this quote inside your Cargoo account:
 ${accountQuoteLink}
-
+${paymentUrl ? `\nPay securely (card, BLIK, Przelewy24, SEPA):\n${paymentUrl}\n` : ""}
 If you have questions, contact us on WhatsApp or reply to this email.
 
 Cargoo Import`;
@@ -65,7 +68,13 @@ Cargoo Import`;
           <a href="${esc(accountQuoteLink)}" style="display:inline-block;background:#ff5500;color:#000;text-decoration:none;font-weight:800;padding:13px 18px;border-radius:999px;">
             View quote
           </a>
+          ${paymentUrl
+            ? `<a href="${esc(paymentUrl)}" style="display:inline-block;margin-left:10px;background:#161616;color:#fff;text-decoration:none;font-weight:800;padding:13px 18px;border-radius:999px;">Pay now</a>`
+            : ""}
         </p>
+        ${paymentUrl
+          ? `<p style="font-size:12px;color:#666;margin-top:8px;">Pay securely with card, BLIK, Przelewy24, or SEPA. The link is unique to this quote.</p>`
+          : ""}
         <p>If you have questions, contact us on WhatsApp or reply to this email.</p>
         <p>Cargoo Import</p>
       </div>

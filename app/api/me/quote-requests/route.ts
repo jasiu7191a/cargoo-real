@@ -11,9 +11,12 @@ export async function GET(req: NextRequest) {
   try {
     const user = await requireUser();
     const quoteRequests = await query(
-      `SELECT qr.id, qr.product_link, qr.product_description, qr.selected_items, qr.status,
-              qr.quote_id, qr.admin_notes, qr.last_admin_update, qr.created_at, qr.updated_at,
-              q.status AS quote_status
+      `SELECT qr.id, qr.product_link, qr.product_description, qr.selected_items,
+              qr.quantity, qr.category, qr.contact_phone, qr.delivery_address_id,
+              qr.status, qr.quote_id, qr.admin_notes, qr.last_admin_update,
+              qr.created_at, qr.updated_at,
+              q.status AS quote_status, q.total_price, q.currency,
+              q.stripe_payment_link, q.paid_at
        FROM quote_requests qr
        LEFT JOIN quotes q ON q.id = qr.quote_id
        WHERE qr.user_id = $1

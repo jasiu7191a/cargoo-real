@@ -16,13 +16,20 @@ export async function GET() {
   try {
     await requireAdmin();
     const quoteRequests = await query(
-      `SELECT qr.id, qr.user_id, u.email AS customer_email, qr.product_link,
-              qr.product_description, qr.selected_items, qr.status, qr.quote_id,
+      `SELECT qr.id, qr.user_id, u.email AS customer_email,
+              u.first_name AS customer_first_name, u.last_name AS customer_last_name,
+              u.phone AS customer_phone,
+              qr.product_link, qr.product_description, qr.selected_items,
+              qr.quantity, qr.category, qr.contact_phone, qr.delivery_address_id,
+              qr.status, qr.quote_id,
               qr.admin_notes, qr.last_admin_update, qr.created_at, qr.updated_at,
+              a.street, a.city, a.zip_code, a.country,
               q.status AS quote_status, q.total_price, q.currency,
+              q.stripe_payment_link, q.paid_at,
               s.status AS shipment_status, s.order_number
        FROM quote_requests qr
        JOIN users u ON u.id = qr.user_id
+       LEFT JOIN addresses a ON a.id = qr.delivery_address_id
        LEFT JOIN quotes q ON q.id = qr.quote_id
        LEFT JOIN LATERAL (
          SELECT status, order_number

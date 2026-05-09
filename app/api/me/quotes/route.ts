@@ -14,7 +14,8 @@ export async function GET(req: NextRequest) {
       `SELECT id, quote_request_id, product_name, product_link, product_image_url,
               product_cost, shipping_cost, customs_cost, service_fee, total_price, currency,
               estimated_delivery, notes, payment_instructions, status, expires_at,
-              sent_at, accepted_at, rejected_at, created_at, updated_at
+              sent_at, accepted_at, rejected_at, paid_at,
+              stripe_payment_link, created_at, updated_at
        FROM quotes
        WHERE user_id = $1
        ORDER BY created_at DESC`,
