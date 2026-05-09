@@ -1,26 +1,47 @@
-import { Pool } from "@neondatabase/serverless";
+import { neon, Pool } from "@neondatabase/serverless";
 
-let pool: Pool | null = null;
+/**
+ * Two clients on purpose:
+ *
+ *   neon()  — HTTP client. Used by query() / queryOne(). Stateless, no
+ *             WebSockets, safe for concurrent calls (Promise.all) and
+ *             cold-starts on Cloudflare Workers. This is what Neon
+ *             recommends for serverless/edge runtimes.
+ *
+ *   Pool    — WebSocket client. Used by transaction() because we need a
+ *             pinned connection across BEGIN/COMMIT. Allocated lazily
+ *             so routes that don't open a transaction never pay the
+ *             WebSocket cost.
+ */
 
-function getPool() {
-  if (!pool) {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) {
-      throw new Error("DATABASE_URL env var is required but not set.");
-    }
-    pool = new Pool({ connectionString });
+function getConnectionString() {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL env var is required but not set.");
   }
-  return pool;
+  return connectionString;
+}
+
+let httpSql: ReturnType<typeof neon> | null = null;
+function getHttp() {
+  if (!httpSql) httpSql = neon(getConnectionString());
+  return httpSql;
 }
 
 export async function query<T = any>(text: string, params: unknown[] = []): Promise<T[]> {
-  const result = await getPool().query(text, params as any[]);
-  return result.rows as T[];
+  const rows = await getHttp()(text, params as any[]);
+  return rows as T[];
 }
 
 export async function queryOne<T = any>(text: string, params: unknown[] = []): Promise<T | null> {
   const rows = await query<T>(text, params);
   return rows[0] ?? null;
+}
+
+let pool: Pool | null = null;
+function getPool() {
+  if (!pool) pool = new Pool({ connectionString: getConnectionString() });
+  return pool;
 }
 
 type TxClient = {
