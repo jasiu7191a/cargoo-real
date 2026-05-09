@@ -7,14 +7,38 @@ type QuoteRequest = {
   id: string;
   user_id: string;
   customer_email: string;
+  customer_first_name?: string | null;
+  customer_last_name?: string | null;
+  customer_phone?: string | null;
   product_link: string | null;
   product_description: string | null;
   selected_items: any[];
+  quantity?: number | null;
+  category?: string | null;
+  contact_phone?: string | null;
+  delivery_address_id?: string | null;
+  street?: string | null;
+  city?: string | null;
+  zip_code?: string | null;
+  country?: string | null;
   status: string;
   quote_id: string | null;
   quote_status: string | null;
+  total_price?: string | null;
+  currency?: string | null;
+  stripe_payment_link?: string | null;
+  paid_at?: string | null;
   shipment_status: string | null;
   order_number: string | null;
+  created_at: string;
+};
+
+type Message = {
+  id: string;
+  quote_request_id: string;
+  from_admin: boolean;
+  content: string;
+  read_at: string | null;
   created_at: string;
 };
 
@@ -395,11 +419,23 @@ export function QuoteRequestsPanel() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
+                <Info label="Customer" value={[selected.customer_first_name, selected.customer_last_name].filter(Boolean).join(" ") || "—"} />
+                <Info label="Phone" value={selected.contact_phone || selected.customer_phone || "—"} />
+                <Info label="Quantity" value={selected.quantity ? String(selected.quantity) : "—"} />
+                <Info label="Category" value={selected.category || "—"} />
                 <Info label="Product link" value={selected.product_link || "None"} />
                 <Info label="Selected items" value={selectedSummary} />
                 <Info label="Description" value={selected.product_description || "None"} wide />
+                <Info label="Delivery address" value={[selected.street, selected.zip_code, selected.city, selected.country].filter(Boolean).join(", ") || "—"} wide />
+                {selected.paid_at ? (
+                  <Info label="Payment" value={`PAID • ${new Date(selected.paid_at).toLocaleString()}`} wide />
+                ) : selected.stripe_payment_link ? (
+                  <Info label="Payment" value={`Awaiting payment — ${selected.stripe_payment_link.slice(0, 60)}…`} wide />
+                ) : null}
               </div>
             </section>
+
+            <MessagesPanel requestId={selected.id} />
 
             <section className="glass-panel border-white/10 p-6 space-y-5">
               <div className="flex items-center justify-between">
@@ -520,5 +556,107 @@ function Info({ label, value, wide = false }: { label: string; value: string; wi
       <div className="text-[10px] uppercase tracking-widest text-[#ff5500] font-black">{label}</div>
       <div className="mt-1 break-words text-white/80">{value}</div>
     </div>
+  );
+}
+
+function MessagesPanel({ requestId }: { requestId: string }) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [draft, setDraft] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    apiJson<{ messages: Message[] }>(`/api/admin/quote-requests/${encodeURIComponent(requestId)}/messages`)
+      .then((data) => {
+        if (!cancelled) setMessages(data.messages || []);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e?.message || "Failed to load messages");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [requestId]);
+
+  async function send() {
+    const content = draft.trim();
+    if (!content || sending) return;
+    setSending(true);
+    setError("");
+    try {
+      await apiJson(`/api/admin/quote-requests/${encodeURIComponent(requestId)}/messages`, {
+        method: "POST",
+        body: JSON.stringify({ content }),
+      });
+      const data = await apiJson<{ messages: Message[] }>(
+        `/api/admin/quote-requests/${encodeURIComponent(requestId)}/messages`
+      );
+      setMessages(data.messages || []);
+      setDraft("");
+    } catch (e: any) {
+      setError(e?.message || "Send failed");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <section className="glass-panel border-white/10 p-6 space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-black uppercase italic">Messages</h2>
+          <p className="text-sm text-[#94a3b8]">Two-way thread with the customer. They get a notification on send.</p>
+        </div>
+      </div>
+
+      {error && <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs font-bold text-red-300">{error}</div>}
+
+      <div className="max-h-[360px] overflow-y-auto space-y-3 pr-1">
+        {loading ? (
+          <div className="text-sm text-[#94a3b8]">Loading…</div>
+        ) : messages.length === 0 ? (
+          <div className="text-sm text-[#94a3b8] italic">No messages yet.</div>
+        ) : (
+          messages.map((m) => (
+            <div
+              key={m.id}
+              className={`rounded-2xl px-4 py-3 max-w-[85%] ${
+                m.from_admin ? "ml-auto bg-[#ff5500]/15 border border-[#ff5500]/20" : "bg-white/[0.04] border border-white/10"
+              }`}
+            >
+              <div className="text-[10px] font-black uppercase tracking-widest mb-1 text-[#94a3b8]">
+                {m.from_admin ? "Admin" : "Customer"} • {new Date(m.created_at).toLocaleString()}
+              </div>
+              <div className="text-sm text-white whitespace-pre-wrap break-words">{m.content}</div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          rows={3}
+          placeholder="Reply to the customer…"
+          className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#ff5500]"
+        />
+        <div className="flex justify-end">
+          <button
+            onClick={send}
+            disabled={sending || !draft.trim()}
+            className="inline-flex items-center gap-2 rounded-2xl bg-[#ff5500] px-5 py-3 text-xs font-black uppercase text-black hover:scale-[1.01] disabled:opacity-50"
+          >
+            <Send size={16} /> {sending ? "Sending…" : "Send message"}
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
