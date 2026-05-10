@@ -154,11 +154,25 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
       link: `/account.html?quote=${encodeURIComponent(quote.id)}`,
     });
 
+    // Re-read the quote so the response reflects the Stripe link UPDATE that
+    // ran *after* the savedQuote transaction. Without this, callers see
+    // stripe_payment_link=null in the response body even when the link was
+    // generated and persisted, which is confusing on the admin UI.
+    const fresh = await queryOne<QuoteSendRow & { stripe_payment_link: string | null }>(
+      `SELECT q.*, u.email AS customer_email
+       FROM quotes q
+       JOIN users u ON u.id = q.user_id
+       WHERE q.id = $1`,
+      [quote.id]
+    );
+    const finalQuote = fresh ?? savedQuote;
+
     if (emailStatus === "failed") {
       return NextResponse.json({
         success: true,
         warning: "Quote saved to account, but email failed to send.",
-        quote: savedQuote,
+        paymentUrl,
+        quote: finalQuote,
       });
     }
 
@@ -168,7 +182,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
         ? "Quote sent to customer account, email, and Stripe payment link issued."
         : "Quote sent to customer account and email.",
       paymentUrl,
-      quote: savedQuote,
+      quote: finalQuote,
     });
   } catch (error) {
     return handleApiError(error, "Admin send quote API error");
