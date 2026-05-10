@@ -46,10 +46,14 @@ export async function POST(req: NextRequest) {
     let quoteRequest: QuoteRequestRow | null = null;
     let allRequests: QuoteRequestRow[] = [];
     if (requestIds.length > 0) {
+      // Build "id IN ($1, $2, ...)" — safer than ANY($1::uuid[]) because the
+      // Neon HTTP client doesn't always bind a JS array correctly for the
+      // ::uuid[] cast and the route silently 500s.
+      const placeholders = requestIds.map((_, i) => `$${i + 1}`).join(",");
       allRequests = await query<QuoteRequestRow>(
         `SELECT id, user_id, product_link, product_description, selected_items
-         FROM quote_requests WHERE id = ANY($1::uuid[])`,
-        [requestIds]
+         FROM quote_requests WHERE id IN (${placeholders})`,
+        requestIds
       );
       if (allRequests.length !== requestIds.length) {
         apiError(404, "One or more quote requests not found", "NOT_FOUND");
@@ -110,13 +114,14 @@ export async function POST(req: NextRequest) {
       if (requestIds.length > 0) {
         // Link every selected request to this quote so the customer sees
         // a single Pay-now button covering the whole bundle.
+        const placeholders = requestIds.map((_, i) => `$${i + 2}`).join(",");
         await tx.query(
           `UPDATE quote_requests
            SET quote_id = $1,
                status = CASE WHEN status = 'new' THEN 'preparing_quote' ELSE status END,
                last_admin_update = now()
-           WHERE id = ANY($2::uuid[])`,
-          [(created as any).id, requestIds]
+           WHERE id IN (${placeholders})`,
+          [(created as any).id, ...requestIds]
         );
       }
 
