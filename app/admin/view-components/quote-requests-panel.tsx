@@ -584,6 +584,8 @@ export function QuoteRequestsPanel() {
               </div>
             </section>
 
+            <QuotePreview quote={quote} customerEmail={selected.customer_email} />
+
             <section className="glass-panel border-white/10 p-6 space-y-5">
               <div className="flex items-center gap-3">
                 <Truck className="text-[#ff5500]" />
@@ -892,3 +894,111 @@ function ImageUploadField({
   );
 }
 
+
+function QuotePreview({ quote, customerEmail }: { quote: Quote; customerEmail: string }) {
+  const fmt = (v: string) => {
+    if (v === "" || v === null || v === undefined) return "—";
+    const n = Number(v);
+    if (!Number.isFinite(n)) return v;
+    return `${n.toFixed(2)} ${quote.currency || "EUR"}`;
+  };
+  const total = fmt(quote.total_price);
+  const hasAny = quote.product_name || quote.total_price || quote.product_image_url || quote.notes;
+
+  return (
+    <section className="glass-panel border-[#ff5500]/30 p-6 space-y-4 bg-[#ff5500]/[0.02]">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-[10px] font-black uppercase tracking-widest text-[#ff5500]">Live preview</div>
+          <h2 className="text-xl font-black uppercase italic">What the customer will see</h2>
+          <p className="text-xs text-[#94a3b8] mt-1">Sent to {customerEmail} when you click Send.</p>
+        </div>
+      </div>
+
+      {!hasAny ? (
+        <div className="rounded-2xl border border-white/10 bg-black/40 p-6 text-sm text-[#94a3b8] italic">
+          Fill in the form above — preview will appear here.
+        </div>
+      ) : (
+        <article className="rounded-2xl border border-white/10 bg-[#0a0a0a] overflow-hidden grid grid-cols-[120px_1fr] gap-4 p-4">
+          <div className="w-[120px] h-[120px] rounded-xl overflow-hidden bg-white/5 border border-white/10 flex items-center justify-center">
+            {quote.product_image_url ? (
+              <img
+                src={quote.product_image_url}
+                alt={quote.product_name || "Product"}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <i className="fa-solid fa-box-open text-3xl text-white/30" />
+            )}
+          </div>
+          <div className="min-w-0 space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <span className="inline-block text-[10px] font-black uppercase tracking-widest text-[#ff5500] bg-[#ff5500]/10 px-2 py-0.5 rounded-full">
+                  {quote.status || "draft"}
+                </span>
+                <h3 className="font-black text-lg mt-1 break-words">{quote.product_name || "Product"}</h3>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-[10px] uppercase tracking-widest text-[#94a3b8]">Total</div>
+                <div className="font-black text-xl text-white">{total}</div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 text-xs pt-2 border-t border-white/5">
+              <PreviewCell label="Product" value={fmt(quote.product_cost)} />
+              <PreviewCell label="Shipping" value={fmt(quote.shipping_cost)} />
+              <PreviewCell label="Customs/VAT" value={fmt(quote.customs_cost)} />
+              <PreviewCell label="Service fee" value={fmt(quote.service_fee)} />
+              <PreviewCell label="Total" value={total} highlight />
+              <PreviewCell label="Delivery" value={quote.estimated_delivery || "—"} />
+            </div>
+
+            {quote.expires_at && (
+              <p className="text-xs text-[#94a3b8]">Expires on {quote.expires_at.slice(0, 10)}</p>
+            )}
+            {quote.notes && (
+              <p className="text-xs text-white/70 whitespace-pre-wrap">
+                <strong className="text-[#ff5500]">Notes:</strong> {quote.notes}
+              </p>
+            )}
+            {quote.payment_instructions && (
+              <p className="text-xs text-white/70 whitespace-pre-wrap">
+                <strong className="text-[#ff5500]">Payment:</strong> {quote.payment_instructions}
+              </p>
+            )}
+            {quote.product_link && (
+              <p className="text-xs">
+                <a href={quote.product_link} target="_blank" rel="noopener" className="text-[#ff5500] underline break-all">
+                  {quote.product_link}
+                </a>
+              </p>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              <span className="inline-flex items-center gap-1 rounded-xl bg-[#ff5500] text-black px-3 py-1.5 text-[10px] font-black uppercase">
+                <i className="fa-solid fa-credit-card" /> Pay now
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-xl bg-white/10 text-white px-3 py-1.5 text-[10px] font-black uppercase">
+                Accept
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-xl bg-white/5 text-white/70 px-3 py-1.5 text-[10px] font-black uppercase">
+                Reject
+              </span>
+            </div>
+          </div>
+        </article>
+      )}
+    </section>
+  );
+}
+
+function PreviewCell({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className={`rounded-lg px-2 py-1.5 ${highlight ? "bg-[#ff5500]/15 border border-[#ff5500]/30" : "bg-white/[0.03] border border-white/5"}`}>
+      <div className="text-[9px] font-black uppercase tracking-widest text-[#94a3b8]">{label}</div>
+      <div className={`text-xs font-bold ${highlight ? "text-[#ff5500]" : "text-white/90"} truncate`}>{value}</div>
+    </div>
+  );
+}
