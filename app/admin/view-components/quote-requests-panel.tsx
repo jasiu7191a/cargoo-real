@@ -808,30 +808,37 @@ function ImageUploadField({
 
   // Window-level paste listener — fires regardless of which element has focus
   // (paste events on a <div> only fire when the div is focused, which is
-  // brittle for a drop-zone the admin has just clicked through). Skipped if
-  // the active element is a different text input/textarea so plain-URL pastes
-  // into the URL field still go to the field.
+  // brittle for a drop-zone the admin has just clicked through).
+  //
+  // Diagnostic note: every paste logs "[paste]" to the console so the admin
+  // can confirm in DevTools whether the handler is firing at all. If you see
+  // no "[paste]" line, the deployment hasn't picked up this version yet.
   useEffect(() => {
     function onWindowPaste(ev: ClipboardEvent) {
-      const active = document.activeElement;
-      const tag = (active?.tagName || "").toLowerCase();
-      const isTextField =
-        (tag === "input" && (active as HTMLInputElement).type !== "file") ||
-        tag === "textarea" ||
-        (active as HTMLElement)?.isContentEditable;
-      // If the user is pasting into a text input, only intercept when the
-      // clipboard actually contains an image — text pastes still go through.
       const items = Array.from(ev.clipboardData?.items || []);
+      const types = items.map((i) => `${i.kind}:${i.type}`);
+      console.debug("[paste] handler fired, clipboard items:", types);
+
       const imageItem = items.find((i) => i.kind === "file" && i.type.startsWith("image/"));
-      if (!imageItem) return;
-      // Allow paste into the URL field (string paste) — don't intercept text.
-      // But if we have a real image in clipboard, take it regardless of focus.
+      if (!imageItem) {
+        console.debug("[paste] no image in clipboard, ignoring");
+        return;
+      }
       ev.preventDefault();
       const blob = imageItem.getAsFile();
-      if (blob) uploadBlob(blob);
+      if (blob) {
+        console.debug("[paste] uploading blob", { size: blob.size, type: blob.type });
+        uploadBlob(blob);
+      } else {
+        console.warn("[paste] image item but getAsFile() returned null");
+      }
     }
     window.addEventListener("paste", onWindowPaste);
-    return () => window.removeEventListener("paste", onWindowPaste);
+    console.debug("[paste] window paste listener registered");
+    return () => {
+      window.removeEventListener("paste", onWindowPaste);
+      console.debug("[paste] window paste listener removed");
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

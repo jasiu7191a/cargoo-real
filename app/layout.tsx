@@ -50,8 +50,10 @@ export default function RootLayout({
     <html lang={locale}>
       <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-        <link rel="stylesheet" href="/css/style.css" />
-        <link rel="stylesheet" href="/css/search.css" />
+        {/* /css/style.css and /css/search.css live on the static www site
+            (cargoo Pages project), not on this Next.js deployment, so loading
+            them from here used to 500. They were never actually needed for
+            the admin or blog routes. */}
       </head>
       <body className={jakarta.className}>
         {children}
