@@ -806,15 +806,34 @@ function ImageUploadField({
     }
   }
 
-  async function onPaste(ev: React.ClipboardEvent<HTMLDivElement>) {
-    const item = Array.from(ev.clipboardData.items || []).find((i) =>
-      i.kind === "file" && i.type.startsWith("image/")
-    );
-    if (!item) return;
-    ev.preventDefault();
-    const blob = item.getAsFile();
-    if (blob) await uploadBlob(blob);
-  }
+  // Window-level paste listener — fires regardless of which element has focus
+  // (paste events on a <div> only fire when the div is focused, which is
+  // brittle for a drop-zone the admin has just clicked through). Skipped if
+  // the active element is a different text input/textarea so plain-URL pastes
+  // into the URL field still go to the field.
+  useEffect(() => {
+    function onWindowPaste(ev: ClipboardEvent) {
+      const active = document.activeElement;
+      const tag = (active?.tagName || "").toLowerCase();
+      const isTextField =
+        (tag === "input" && (active as HTMLInputElement).type !== "file") ||
+        tag === "textarea" ||
+        (active as HTMLElement)?.isContentEditable;
+      // If the user is pasting into a text input, only intercept when the
+      // clipboard actually contains an image — text pastes still go through.
+      const items = Array.from(ev.clipboardData?.items || []);
+      const imageItem = items.find((i) => i.kind === "file" && i.type.startsWith("image/"));
+      if (!imageItem) return;
+      // Allow paste into the URL field (string paste) — don't intercept text.
+      // But if we have a real image in clipboard, take it regardless of focus.
+      ev.preventDefault();
+      const blob = imageItem.getAsFile();
+      if (blob) uploadBlob(blob);
+    }
+    window.addEventListener("paste", onWindowPaste);
+    return () => window.removeEventListener("paste", onWindowPaste);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function onDrop(ev: React.DragEvent<HTMLDivElement>) {
     ev.preventDefault();
@@ -835,15 +854,12 @@ function ImageUploadField({
         Product image (paste, drop or pick a file)
       </span>
       <div
-        tabIndex={0}
-        onPaste={onPaste}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
-        className={`rounded-xl border-2 border-dashed px-4 py-5 transition-colors cursor-pointer outline-none focus-visible:border-[#ff5500] ${
-          dragOver ? "border-[#ff5500] bg-[#ff5500]/5" : "border-white/15 bg-black/20 hover:border-white/30"
+        className={`rounded-xl border-2 border-dashed px-4 py-5 transition-colors ${
+          dragOver ? "border-[#ff5500] bg-[#ff5500]/5" : "border-white/15 bg-black/20"
         }`}
-        onClick={() => fileInput.current?.click()}
       >
         {busy ? (
           <div className="text-sm text-[#94a3b8]">Uploading…</div>
@@ -856,22 +872,37 @@ function ImageUploadField({
             />
             <div className="flex-1 space-y-1 min-w-0">
               <div className="text-xs text-white/60 break-all">{value}</div>
-              <div className="flex gap-2">
+              <div className="flex gap-3 mt-2">
                 <button
                   type="button"
-                  onClick={(e) => { e.stopPropagation(); onChange(""); }}
+                  onClick={() => fileInput.current?.click()}
+                  className="text-xs font-bold uppercase text-[#ff5500] hover:text-[#ff7700]"
+                >
+                  Replace
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onChange("")}
                   className="text-xs font-bold uppercase text-red-400 hover:text-red-300"
                 >
                   Remove
                 </button>
-                <span className="text-xs text-white/40">• click area to replace</span>
               </div>
             </div>
           </div>
         ) : (
-          <div className="text-sm text-[#94a3b8] space-y-1">
-            <div className="font-bold text-white">Paste an image here (Ctrl+V), drop a file, or click to pick.</div>
-            <div className="text-xs">JPEG, PNG, WebP, GIF, AVIF — up to 10 MB. Stored on Cargoo R2.</div>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="text-sm text-[#94a3b8] space-y-1 flex-1 min-w-[220px]">
+              <div className="font-bold text-white">Paste an image (Ctrl+V) anywhere on the page, or drop a file here.</div>
+              <div className="text-xs">JPEG, PNG, WebP, GIF, AVIF — up to 10 MB. Stored on Cargoo R2.</div>
+            </div>
+            <button
+              type="button"
+              onClick={() => fileInput.current?.click()}
+              className="rounded-xl bg-white/10 hover:bg-white/15 px-4 py-2 text-xs font-black uppercase whitespace-nowrap"
+            >
+              Pick a file
+            </button>
           </div>
         )}
         <input
