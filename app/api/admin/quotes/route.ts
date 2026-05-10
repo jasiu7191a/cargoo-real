@@ -30,14 +30,36 @@ export async function POST(req: NextRequest) {
     requireCsrf(req);
     const body = await readJsonBody(req);
 
-    const quoteRequestId = cleanString(body?.quote_request_id, 80);
-    const quoteRequest = quoteRequestId
-      ? await queryOne<QuoteRequestRow>(
-          "SELECT id, user_id, product_link, product_description, selected_items FROM quote_requests WHERE id = $1",
-          [quoteRequestId]
-        )
-      : null;
-    if (quoteRequestId && !quoteRequest) apiError(404, "Quote request not found", "NOT_FOUND");
+    // Two modes:
+    //   A) Single request:  body.quote_request_id  (string)         — legacy / 1:1
+    //   B) Combined quote:  body.quote_request_ids (string[])       — N:1, all from same customer
+    // Both update *every* listed request to point at the new quote, so the
+    // customer sees one Pay-now button for the whole bundle.
+    const requestIdsRaw = Array.isArray(body?.quote_request_ids)
+      ? (body.quote_request_ids as unknown[]).map(String).filter(Boolean)
+      : [];
+    const singleRequestId = cleanString(body?.quote_request_id, 80);
+    const requestIds = Array.from(new Set(
+      [...(singleRequestId ? [singleRequestId] : []), ...requestIdsRaw]
+    ));
+
+    let quoteRequest: QuoteRequestRow | null = null;
+    let allRequests: QuoteRequestRow[] = [];
+    if (requestIds.length > 0) {
+      allRequests = await query<QuoteRequestRow>(
+        `SELECT id, user_id, product_link, product_description, selected_items
+         FROM quote_requests WHERE id = ANY($1::uuid[])`,
+        [requestIds]
+      );
+      if (allRequests.length !== requestIds.length) {
+        apiError(404, "One or more quote requests not found", "NOT_FOUND");
+      }
+      const owners = Array.from(new Set(allRequests.map(r => r.user_id)));
+      if (owners.length > 1) {
+        apiError(400, "All combined quote requests must belong to the same customer", "QUOTE_REQUEST_MISMATCH");
+      }
+      quoteRequest = allRequests[0];
+    }
 
     const userId = quoteRequest?.user_id || cleanString(body?.user_id, 80);
     if (!userId) apiError(400, "Customer is required", "VALIDATION_ERROR");
@@ -55,6 +77,7 @@ export async function POST(req: NextRequest) {
     );
 
     const quote = await transaction(async (tx) => {
+      const primaryRequestId = requestIds[0] || null;
       const created = await tx.queryOne(
         `INSERT INTO quotes (
           quote_request_id, user_id, admin_id, product_name, product_link, product_image_url,
@@ -64,7 +87,7 @@ export async function POST(req: NextRequest) {
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
         RETURNING *`,
         [
-          quoteRequestId,
+          primaryRequestId,
           userId,
           admin.id,
           cleanString(body?.product_name, 500),
@@ -84,14 +107,16 @@ export async function POST(req: NextRequest) {
         ]
       );
 
-      if (quoteRequestId) {
+      if (requestIds.length > 0) {
+        // Link every selected request to this quote so the customer sees
+        // a single Pay-now button covering the whole bundle.
         await tx.query(
           `UPDATE quote_requests
            SET quote_id = $1,
                status = CASE WHEN status = 'new' THEN 'preparing_quote' ELSE status END,
                last_admin_update = now()
-           WHERE id = $2`,
-          [(created as any).id, quoteRequestId]
+           WHERE id = ANY($2::uuid[])`,
+          [(created as any).id, requestIds]
         );
       }
 

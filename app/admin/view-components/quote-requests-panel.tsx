@@ -136,6 +136,11 @@ function numberValue(value: string) {
 export function QuoteRequestsPanel() {
   const [requests, setRequests] = useState<QuoteRequest[]>([]);
   const [selected, setSelected] = useState<QuoteRequest | null>(null);
+  /** IDs of *additional* requests bundled with `selected` into one combined
+   *  quote. All must share `selected.user_id`. The primary `selected` request
+   *  is NOT in this array — it's tracked separately so toggling other items
+   *  doesn't lose the open form. */
+  const [combinedIds, setCombinedIds] = useState<string[]>([]);
   const [quote, setQuote] = useState<Quote>(emptyQuote);
   const [shipment, setShipment] = useState<Shipment>({
     quote_id: "",
@@ -172,6 +177,7 @@ export function QuoteRequestsPanel() {
 
   async function openRequest(request: QuoteRequest, allRequests = requests) {
     setSelected(request);
+    setCombinedIds([]); // changing primary always clears the bundle
     setError("");
     setNotice("");
     const firstItem = Array.isArray(request.selected_items) ? request.selected_items[0] : null;
@@ -238,6 +244,31 @@ export function QuoteRequestsPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /** Build a multi-line product name + notes summary covering the primary
+   *  request and every bundled request. Called from the "Prefill description"
+   *  button on the combined-quote banner. */
+  function prefillCombinedQuote() {
+    if (!selected || combinedIds.length === 0) return;
+    const all = [selected, ...requests.filter((r) => combinedIds.includes(r.id))];
+
+    const lines = all.map((r) => {
+      const qty = r.quantity ? `${r.quantity}× ` : "";
+      const label = r.product_description || r.product_link || "Item";
+      return `${qty}${label}`;
+    });
+    const links = all
+      .map((r) => r.product_link)
+      .filter((l): l is string => Boolean(l));
+
+    setQuote((prev) => ({
+      ...prev,
+      product_name: `${all.length} items: ${all.map((r) => (r.product_description || r.product_link || "item").slice(0, 40)).join(" + ")}`.slice(0, 500),
+      product_link: links[0] || prev.product_link,
+      notes: lines.join("\n") + (links.length > 1 ? `\n\nAll links:\n${links.join("\n")}` : ""),
+    }));
+    setNotice(`Prefilled with ${all.length} items.`);
+  }
+
   function setQuoteField(field: keyof Quote, value: string) {
     setQuote((prev) => {
       const next = { ...prev, [field]: value };
@@ -259,9 +290,13 @@ export function QuoteRequestsPanel() {
     setError("");
     setNotice("");
     try {
-      const payload = {
+      const allRequestIds = [selected.id, ...combinedIds];
+      const payload: any = {
         ...quote,
         quote_request_id: selected.id,
+        // When combining, every listed request gets linked to the new quote
+        // so the customer sees a single Pay-now button covering the bundle.
+        quote_request_ids: allRequestIds,
         user_id: selected.user_id,
         product_cost: numberValue(quote.product_cost),
         shipping_cost: numberValue(quote.shipping_cost),
@@ -378,13 +413,45 @@ export function QuoteRequestsPanel() {
           </button>
         </div>
         <div className="max-h-[calc(100vh-250px)] overflow-y-auto divide-y divide-white/5">
-          {requests.map((request) => (
-            <button
+          {requests.map((request) => {
+            const isPrimary = selected?.id === request.id;
+            const isCombined = combinedIds.includes(request.id);
+            const sameCustomer = !!selected && selected.user_id === request.user_id;
+            const canBundle = !!selected && !isPrimary && sameCustomer;
+            return (
+            <div
               key={request.id}
-              onClick={() => openRequest(request)}
-              className={`w-full text-left p-5 transition-colors bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5500] ${selected?.id === request.id ? "bg-[#ff5500]/10" : "hover:bg-white/[0.03]"}`}
+              className={`relative transition-colors ${isPrimary ? "bg-[#ff5500]/10" : isCombined ? "bg-[#ff5500]/5 ring-1 ring-inset ring-[#ff5500]/30" : "hover:bg-white/[0.03]"}`}
             >
-              <div className="flex items-center justify-between gap-3">
+              {/* Bundle checkbox — only enabled when a primary is open and the
+                  row belongs to the same customer. Clicking the checkbox does
+                  NOT open the row as primary. */}
+              {canBundle && (
+                <button
+                  type="button"
+                  title={isCombined ? "Remove from bundle" : "Add to combined quote"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCombinedIds((prev) =>
+                      prev.includes(request.id)
+                        ? prev.filter((id) => id !== request.id)
+                        : [...prev, request.id]
+                    );
+                  }}
+                  className={`absolute top-3 right-3 z-10 flex items-center justify-center w-6 h-6 rounded-md border transition-all ${
+                    isCombined
+                      ? "bg-[#ff5500] border-[#ff5500] text-black"
+                      : "bg-black/40 border-white/20 text-white/40 hover:border-[#ff5500] hover:text-[#ff5500]"
+                  }`}
+                >
+                  {isCombined ? <i className="text-xs">✓</i> : <i className="text-xs">+</i>}
+                </button>
+              )}
+            <button
+              onClick={() => openRequest(request)}
+              className="w-full text-left p-5 bg-transparent focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ff5500]"
+            >
+              <div className="flex items-center justify-between gap-3 pr-8">
                 <div className="font-bold text-white truncate">{request.customer_email}</div>
                 <span className="text-[10px] uppercase font-black text-[#ff5500]">{request.status}</span>
               </div>
@@ -397,7 +464,9 @@ export function QuoteRequestsPanel() {
                 {request.shipment_status && <span>Ship: {request.shipment_status}</span>}
               </div>
             </button>
-          ))}
+            </div>
+            );
+          })}
         </div>
       </div>
 
@@ -407,6 +476,32 @@ export function QuoteRequestsPanel() {
 
         {selected ? (
           <>
+            {combinedIds.length > 0 && (
+              <section className="rounded-2xl border border-[#ff5500]/30 bg-[#ff5500]/10 px-5 py-4 flex items-center justify-between gap-4">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-[#ff5500]">Combined quote</div>
+                  <div className="text-sm text-white">
+                    {combinedIds.length + 1} requests bundled — one quote, one Pay-now link for {selected.customer_email}.
+                  </div>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => prefillCombinedQuote()}
+                    className="rounded-xl bg-white/10 hover:bg-white/15 px-4 py-2 text-xs font-black uppercase"
+                  >
+                    Prefill description
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCombinedIds([])}
+                    className="rounded-xl bg-white/5 hover:bg-white/10 px-4 py-2 text-xs font-black uppercase text-white/70"
+                  >
+                    Clear bundle
+                  </button>
+                </div>
+              </section>
+            )}
             <section className="glass-panel border-white/10 p-6 space-y-4">
               <div className="flex justify-between gap-4">
                 <div>
