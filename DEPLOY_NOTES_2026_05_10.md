@@ -120,6 +120,43 @@ only the admin panel will reflect the changes.
     - `GET /api/me/quote-requests`, `GET /api/me/quotes`,
       `GET /api/admin/quote-requests` — return the new fields
 
+## 4. R2 image uploads (REQUIRED for paste-image in admin form)
+
+The admin "Create quote" form replaces the plain "Product image URL" input
+with a paste/drop/file-pick zone that uploads to Cloudflare R2. Without
+the binding the upload returns 503 with a clear error and the URL field
+still works as a manual fallback.
+
+One-time setup in Cloudflare dashboard:
+
+1. **R2 → Create bucket** → name e.g. `cargoo-images`. Default region.
+2. Click into the bucket → **Settings → Public access** → either:
+   - **r2.dev development URL** → toggle on (gives a `pub-<hash>.r2.dev`
+     URL — fine for early use), OR
+   - **Custom domain** → connect `images.cargooimport.eu` (cleaner; needs
+     DNS access).
+   Whichever you pick, copy the resulting public origin (e.g.
+   `https://pub-abc123.r2.dev` or `https://images.cargooimport.eu`).
+3. **Workers & Pages → cargoo-real → Settings → Functions → R2 bucket
+   bindings → Add binding**:
+       Variable name: IMAGES_BUCKET   (must be exactly this)
+       R2 bucket:     cargoo-images
+4. **Settings → Environment variables (Production) → Add variable**:
+       R2_PUBLIC_URL = https://pub-abc123.r2.dev    (or your custom domain)
+   Type: plaintext (no need to encrypt — it's a public URL anyway).
+5. Retry the latest deployment so both the binding and the env var are
+   picked up.
+
+Smoke test: open `/admin/quote-requests`, select a request, paste any
+image into the upload zone (Ctrl+V from a screenshot tool, or drag a JPG
+in). It should upload and immediately show a thumbnail. The "Pay now"
+email and the customer dashboard quote card will both render that image.
+
+If the upload returns 503 with `R2_NOT_CONFIGURED`, check that:
+- the binding variable name is exactly `IMAGES_BUCKET`
+- `R2_PUBLIC_URL` is set without a trailing slash
+- the deployment was redeployed AFTER both were saved
+
 ## Rollback
 
 Each phase is its own commit on `main`:

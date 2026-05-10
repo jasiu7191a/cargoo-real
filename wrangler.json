@@ -7,5 +7,12 @@
     "PUBLIC_SITE_URL": "https://www.cargooimport.eu",
     "FROM_EMAIL": "Cargoo Import <contact@cargooimport.eu>",
     "COOKIE_DOMAIN": ".cargooimport.eu"
-  }
+  },
+  "//r2_buckets-note": "Pages git deploys ignore wrangler-defined R2 bindings. Add the IMAGES_BUCKET binding in the Cloudflare dashboard (Pages → Settings → Functions → R2 bucket bindings) and set R2_PUBLIC_URL in the same Settings page. See DEPLOY_NOTES_2026_05_10.md.",
+  "r2_buckets": [
+    {
+      "binding": "IMAGES_BUCKET",
+      "bucket_name": "cargoo-images"
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Bot, MailCheck, PackageCheck, RefreshCw, Save, Send, Truck } from "lucide-react";
 
 type QuoteRequest = {
@@ -550,7 +550,11 @@ export function QuoteRequestsPanel() {
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Product name" value={quote.product_name} onChange={(value) => setQuoteField("product_name", value)} />
                 <Field label="Product link" value={quote.product_link} onChange={(value) => setQuoteField("product_link", value)} />
-                <Field label="Product image URL" value={quote.product_image_url} onChange={(value) => setQuoteField("product_image_url", value)} />
+                <ImageUploadField
+                  value={quote.product_image_url}
+                  onChange={(value) => setQuoteField("product_image_url", value)}
+                  onError={setError}
+                />
                 <Field label="Currency" value={quote.currency} onChange={(value) => setQuoteField("currency", value.toUpperCase())} />
                 <Field label="Product cost" type="number" value={quote.product_cost} onChange={(value) => setQuoteField("product_cost", value)} />
                 <Field label="Shipping cost" type="number" value={quote.shipping_cost} onChange={(value) => setQuoteField("shipping_cost", value)} />
@@ -755,3 +759,136 @@ function MessagesPanel({ requestId }: { requestId: string }) {
     </section>
   );
 }
+
+function ImageUploadField({
+  value,
+  onChange,
+  onError,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInput = useRef<HTMLInputElement | null>(null);
+
+  async function uploadBlob(blob: Blob) {
+    if (!blob.type.startsWith("image/")) {
+      onError("Only images can be uploaded.");
+      return;
+    }
+    if (blob.size > 10 * 1024 * 1024) {
+      onError("Image is larger than 10 MB.");
+      return;
+    }
+    setBusy(true);
+    onError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", blob, (blob as any).name || "pasted-image");
+      const res = await fetch("/api/admin/upload/quote-image", {
+        method: "POST",
+        body: fd,
+        headers: {
+          "x-csrf-token": getCsrfToken(),
+        },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`);
+      onChange(data.url);
+    } catch (e: any) {
+      onError(e?.message || "Upload failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onPaste(ev: React.ClipboardEvent<HTMLDivElement>) {
+    const item = Array.from(ev.clipboardData.items || []).find((i) =>
+      i.kind === "file" && i.type.startsWith("image/")
+    );
+    if (!item) return;
+    ev.preventDefault();
+    const blob = item.getAsFile();
+    if (blob) await uploadBlob(blob);
+  }
+
+  async function onDrop(ev: React.DragEvent<HTMLDivElement>) {
+    ev.preventDefault();
+    setDragOver(false);
+    const file = ev.dataTransfer.files?.[0];
+    if (file) await uploadBlob(file);
+  }
+
+  async function onFileChange(ev: React.ChangeEvent<HTMLInputElement>) {
+    const file = ev.target.files?.[0];
+    if (file) await uploadBlob(file);
+    ev.target.value = "";
+  }
+
+  return (
+    <label className="space-y-2 col-span-2">
+      <span className="text-[10px] uppercase font-black tracking-widest text-[#94a3b8]">
+        Product image (paste, drop or pick a file)
+      </span>
+      <div
+        tabIndex={0}
+        onPaste={onPaste}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={onDrop}
+        className={`rounded-xl border-2 border-dashed px-4 py-5 transition-colors cursor-pointer outline-none focus-visible:border-[#ff5500] ${
+          dragOver ? "border-[#ff5500] bg-[#ff5500]/5" : "border-white/15 bg-black/20 hover:border-white/30"
+        }`}
+        onClick={() => fileInput.current?.click()}
+      >
+        {busy ? (
+          <div className="text-sm text-[#94a3b8]">Uploading…</div>
+        ) : value ? (
+          <div className="flex items-start gap-4">
+            <img
+              src={value}
+              alt="Product"
+              className="w-24 h-24 object-cover rounded-lg border border-white/10"
+            />
+            <div className="flex-1 space-y-1 min-w-0">
+              <div className="text-xs text-white/60 break-all">{value}</div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onChange(""); }}
+                  className="text-xs font-bold uppercase text-red-400 hover:text-red-300"
+                >
+                  Remove
+                </button>
+                <span className="text-xs text-white/40">• click area to replace</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-sm text-[#94a3b8] space-y-1">
+            <div className="font-bold text-white">Paste an image here (Ctrl+V), drop a file, or click to pick.</div>
+            <div className="text-xs">JPEG, PNG, WebP, GIF, AVIF — up to 10 MB. Stored on Cargoo R2.</div>
+          </div>
+        )}
+        <input
+          ref={fileInput}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onFileChange}
+        />
+      </div>
+      {/* Power-user escape hatch: paste a URL directly. */}
+      <input
+        type="url"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="…or paste a URL"
+        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm font-bold text-white outline-none focus:border-[#ff5500]"
+      />
+    </label>
+  );
+}
+
