@@ -164,8 +164,28 @@ export function requireCsrf(req: NextRequest) {
   if (!["POST", "PATCH", "PUT", "DELETE"].includes(method)) return;
 
   const header = req.headers.get("x-csrf-token");
-  const cookie = cookies().get(CSRF_COOKIE)?.value;
-  if (!header || !cookie || header !== cookie) {
+  if (!header) apiError(403, "Invalid CSRF token", "CSRF_INVALID");
+
+  // Browsers happily store multiple cookies with the same name when they
+  // come from different domain scopes (e.g. `.cargooimport.eu` and the bare
+  // `admin.cargooimport.eu` from before COOKIE_DOMAIN was set). Any of those
+  // is a legitimate session — we only need *some* matching value to prove
+  // the caller has the cookie alongside the matching x-csrf-token header.
+  const rawCookie = req.headers.get("cookie") ?? "";
+  const candidates: string[] = [];
+  for (const piece of rawCookie.split(/;\s*/)) {
+    const eq = piece.indexOf("=");
+    if (eq < 0) continue;
+    const name = piece.slice(0, eq).trim();
+    if (name === CSRF_COOKIE) candidates.push(piece.slice(eq + 1).trim());
+  }
+  // Fall back to next/headers cookies() in case the Cookie header isn't
+  // visible (some edge runtimes pre-parse and strip it).
+  if (candidates.length === 0) {
+    const cookieValue = cookies().get(CSRF_COOKIE)?.value;
+    if (cookieValue) candidates.push(cookieValue);
+  }
+  if (candidates.length === 0 || !candidates.includes(header)) {
     apiError(403, "Invalid CSRF token", "CSRF_INVALID");
   }
 }
