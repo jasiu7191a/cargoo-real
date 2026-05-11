@@ -1,0 +1,61 @@
+name: Drip + SEO cron
+
+# Daily 09:00 UTC = 10:00 CET / 11:00 CEST — landed in EU prospect inboxes
+# for the morning open. Use the manual `workflow_dispatch` trigger for smoke
+# testing before the schedule fires for real.
+on:
+  schedule:
+    - cron: '0 9 * * *'   # daily 09:00 UTC drip + win-back
+    - cron: '15 9 * * 1'  # weekly Monday 09:15 UTC SEO check
+    - cron: '30 9 * * *'  # daily 09:30 UTC leads-pipeline (covers fresh keywords)
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which endpoint to hit (drip | seo-check | leads-pipeline)'
+        required: true
+        default: 'drip'
+
+permissions:
+  contents: read
+
+jobs:
+  fire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pick endpoint
+        id: pick
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "endpoint=${{ inputs.target }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event.schedule }}" == "15 9 * * 1" ]]; then
+            echo "endpoint=seo-check" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event.schedule }}" == "30 9 * * *" ]]; then
+            echo "endpoint=leads-pipeline" >> "$GITHUB_OUTPUT"
+          else
+            echo "endpoint=drip" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Hit agent endpoint
+        env:
+          AGENT_SECRET: ${{ secrets.AGENT_SECRET }}
+          BASE_URL: ${{ secrets.ADMIN_BASE_URL }}
+        run: |
+          if [[ -z "$AGENT_SECRET" ]]; then
+            echo "::error::AGENT_SECRET repo secret is not set"
+            exit 1
+          fi
+          BASE="${BASE_URL:-https://admin.cargooimport.eu}"
+          URL="$BASE/api/agent/${{ steps.pick.outputs.endpoint }}"
+          echo "POST $URL"
+          HTTP_CODE=$(curl -sS -o /tmp/body.json -w "%{http_code}" \
+            -X POST "$URL" \
+            -H "Authorization: Bearer $AGENT_SECRET" \
+            -H "Content-Type: application/json" \
+            --max-time 90)
+          echo "HTTP $HTTP_CODE"
+          cat /tmp/body.json
+          echo
+          if [[ "$HTTP_CODE" != "200" ]]; then
+            echo "::error::Cron endpoint returned non-200"
+            exit 1
+          fi

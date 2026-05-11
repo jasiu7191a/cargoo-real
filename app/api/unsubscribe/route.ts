@@ -64,6 +64,58 @@ function unsubscribePage(message: string, success: boolean): string {
 </html>`;
 }
 
+/**
+ * One-click unsubscribe (RFC 8058 / List-Unsubscribe-Post header).
+ *
+ * Gmail and Outlook will POST `List-Unsubscribe=One-Click` here when the
+ * user clicks the native unsubscribe button at the top of the message.
+ * We accept the token from either the query string OR the form body,
+ * verify it, and upsert into the Unsubscribe table.
+ *
+ * MUST return 200 — non-2xx tells the mail client the unsubscribe failed
+ * and they'll surface that as an error to the user.
+ */
+export async function POST(req: Request) {
+  const { searchParams } = new URL(req.url);
+  let token = searchParams.get("token");
+
+  if (!token) {
+    try {
+      const form = await req.formData();
+      const fromForm = form.get("token");
+      if (typeof fromForm === "string") token = fromForm;
+    } catch {
+      // body not form-encoded — ignore, fall through to error
+    }
+  }
+
+  if (!token) {
+    return new Response("Missing token", { status: 400 });
+  }
+
+  const email = await verifyUnsubscribeToken(token);
+  if (!email) {
+    return new Response("Invalid token", { status: 400 });
+  }
+
+  await prisma.unsubscribe.upsert({
+    where: { email },
+    create: { email },
+    update: {},
+  });
+
+  return new Response("OK", { status: 200 });
+}
+
 // Unsubscribe is hit directly from email links (top-level GET, no CORS).
-// Cross-origin POST isn't part of this flow, so a plain 204 OPTIONS is fine.
-export const OPTIONS = () => new Response(null, { status: 204 });
+// CORS preflight is harmless here — return 204 with allow-methods so any
+// future cross-origin POST (e.g. an in-app preference page) just works.
+export const OPTIONS = () =>
+  new Response(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });

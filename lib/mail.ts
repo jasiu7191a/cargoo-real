@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
 import { getEmailTemplate } from '@/lib/email-templates';
+import { esc } from '@/lib/mail-esc';
 
 // Instantiated lazily so a missing key only fails when email is actually sent,
 // not at module load time (which would crash all routes that import this file).
@@ -17,22 +18,14 @@ export const resend = {
   },
 };
 
-/** Escapes HTML special characters to prevent XSS in email bodies. */
-function esc(str: unknown): string {
-  return String(str ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 interface MailOptions {
   to: string;
   subject: string;
   html: string;
   replyTo?: string;
   tags?: { name: string; value: string }[];
+  /** Extra headers (e.g. List-Unsubscribe) — passed straight to Resend. */
+  headers?: Record<string, string>;
 }
 
 /** Default reply-to used when the caller doesn't override it. */
@@ -44,7 +37,7 @@ const DEFAULT_REPLY_TO =
  * replies thread cleanly back to the support inbox, and tags every send so
  * Resend dashboards / webhooks can be filtered by category.
  */
-export async function sendEmail({ to, subject, html, replyTo, tags }: MailOptions) {
+export async function sendEmail({ to, subject, html, replyTo, tags, headers }: MailOptions) {
   try {
     const data = await resend.emails.send({
       from: process.env.FROM_EMAIL || 'Cargoo Import <contact@cargooimport.eu>',
@@ -53,6 +46,7 @@ export async function sendEmail({ to, subject, html, replyTo, tags }: MailOption
       html,
       reply_to: replyTo ?? DEFAULT_REPLY_TO,
       tags: tags ?? [{ name: 'category', value: 'transactional' }],
+      headers,
     });
     return { success: true, data };
   } catch (error: any) {
@@ -189,12 +183,28 @@ export function stripBodyPlaceholder(html: string): string | null {
   return cleaned.length > 0 ? cleaned : null;
 }
 
-/** Sends a cold prospecting email using the branded language-specific template. */
+/**
+ * Sends a cold prospecting email using the branded language-specific template.
+ *
+ * Sets:
+ *  - `Reply-To: replies@cargooimport.eu` (or REPLIES_INBOX env override) so
+ *    that the inbound-reply webhook (app/api/webhooks/inbound-reply/route.ts)
+ *    is the address that receives any prospect response — that's how we
+ *    detect replies and stop the drip cron from spamming someone who
+ *    already engaged.
+ *  - `List-Unsubscribe` (URL + mailto) and `List-Unsubscribe-Post: List-Unsubscribe=One-Click`
+ *    so Gmail/Outlook show a native unsubscribe button at the top of the
+ *    message. Required for compliant bulk sending and a strong positive
+ *    deliverability signal.
+ */
 export async function sendColdEmail({ to, name, subject, bodyHtml, lang = "en" }: ColdEmailOptions) {
   const token = await createUnsubscribeToken(to);
   const unsubBase =
     process.env.UNSUBSCRIBE_BASE_URL || "https://admin.cargooimport.eu";
   const unsubUrl = `${unsubBase.replace(/\/$/, "")}/api/unsubscribe?token=${token}`;
+  const repliesInbox = process.env.REPLIES_INBOX || "replies@cargooimport.eu";
+  const unsubMailto =
+    process.env.UNSUBSCRIBE_MAILTO || "unsubscribe@cargooimport.eu";
 
   const html = getEmailTemplate(lang)
     .replace(/\{\{BODY\}\}/g, bodyHtml)
@@ -204,10 +214,18 @@ export async function sendColdEmail({ to, name, subject, bodyHtml, lang = "en" }
     to,
     subject,
     html,
+    replyTo: repliesInbox,
     tags: [
       { name: "category", value: "cold_outreach" },
       { name: "lang", value: lang },
     ],
+    headers: {
+      "List-Unsubscribe": `<${unsubUrl}>, <mailto:${unsubMailto}?subject=unsubscribe>`,
+      // Gmail / Outlook one-click unsubscribe (RFC 8058). Without the Post
+      // header the inbox UI may still render a button but won't auto-call
+      // our endpoint — they'll show a "do you want to unsubscribe?" prompt.
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   });
 }
 
