@@ -4,7 +4,12 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { getFallbackBlogPosts } from "@/lib/blog-fallbacks";
 
-export const dynamic = "force-dynamic";
+// ISR: cache the rendered page at the edge for 5 minutes. Blog posts are
+// published infrequently, so paying the Prisma + Neon cold-start cost on
+// every request (which was producing 30-50s loads) is wasteful. With
+// `revalidate`, the first request after each 5-minute window rebuilds in
+// the background while all other visitors get an instant cached response.
+export const revalidate = 300;
 const BASE_URL = "https://www.cargooimport.eu";
 
 function formatPostDate(date: Date, lang: string) {

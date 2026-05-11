@@ -6,7 +6,10 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { getFallbackBlogPost } from "@/lib/blog-fallbacks";
 
-export const dynamic = "force-dynamic";
+// ISR: cache each rendered post for 10 minutes. Posts only change when
+// admins re-publish, so serving from the edge cache eliminates the 30-50s
+// Prisma + Neon cold-start latency that visitors were seeing.
+export const revalidate = 600;
 
 const BASE_URL = "https://www.cargooimport.eu";
 
