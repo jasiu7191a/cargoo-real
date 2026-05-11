@@ -1,34 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
-
-const LANG_NAMES: Record<string, string> = {
-  en: "English",
-  pl: "Polish",
-  de: "German",
-  fr: "French",
-};
-
-const SOURCING_GUIDE_PROMPT = (keyword: string, lang: string) => `
-You are a senior sourcing agent and logistics expert for Cargoo Import, a platform helping EU businesses import from China.
-Generate a comprehensive, high-converting sourcing guide for the keyword/topic: "${keyword}".
-
-IMPORTANT: Write the entire response in ${LANG_NAMES[lang] ?? "English"}. Every field — title, metaDescription, and content — must be in ${LANG_NAMES[lang] ?? "English"}.
-
-Requirements:
-- Title: Catchy, professional, SEO-optimized
-- Slug: URL-safe hyphenated string in English (Latin characters only, no accents)
-- Meta Description: Compelling summary under 160 chars, in ${LANG_NAMES[lang] ?? "English"}
-- Content: Long-form Markdown in ${LANG_NAMES[lang] ?? "English"}. Must include:
-  ### 📦 Why Import [Topic]?
-  ### 🛡️ Verified Sourcing & Quality Control
-  ### 🚢 Logistics & Shipping to EU
-  ### 📜 Customs & Duties (Focus on Poland/Germany/France)
-  ### ⚡ How Cargoo Can Help (CTA)
-
-Tone: Professional, authoritative, yet approachable.
-Return the result as a raw JSON object with keys: title, slug, metaDescription, content.
-`;
+import {
+  buildBlogPrompt,
+  parseBlogJson,
+  type BlogLang,
+  type RelatedPostHint,
+} from "@/lib/seo-prompts";
 
 export const dynamic = "force-dynamic";
 
@@ -39,13 +17,35 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { keyword, lang = "en" } = await req.json();
+    const body = await req.json();
+    const { keyword, lang = "en", variety } = body ?? {};
     if (!keyword) {
       return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
     }
-    const safeLang = ["en", "pl", "de", "fr"].includes(lang) ? lang : "en";
+    const safeLang: BlogLang = (["en", "pl", "de", "fr"].includes(lang) ? lang : "en") as BlogLang;
+    const safeVariety = (["guide", "comparison", "listicle", "how-to"] as const).includes(variety)
+      ? variety
+      : undefined;
 
-    // API key goes in a header, not the URL — URL params appear in server logs and CDN access logs.
+    // Pull related posts so admins-generated articles also link internally.
+    const relatedRows = await prisma.blogPost.findMany({
+      where: { status: "PUBLISHED", lang: safeLang },
+      select: { slug: true, title: true, targetKeyword: true },
+      orderBy: { publishedAt: "desc" },
+      take: 20,
+    });
+    const relatedPosts: RelatedPostHint[] = relatedRows.map(r => ({
+      slug: r.slug.replace(new RegExp(`^${safeLang}-`), ""),
+      title: r.title,
+      targetKeyword: r.targetKeyword,
+    }));
+
+    const prompt = buildBlogPrompt(keyword, safeLang, {
+      relatedPosts,
+      includeFaq: true,
+      varietyHint: safeVariety,
+    });
+
     const geminiRes = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent",
       {
@@ -56,17 +56,15 @@ export async function POST(req: Request) {
         },
         body: JSON.stringify({
           system_instruction: {
-            parts: [{ text: "You are a helpful assistant that returns only valid JSON with no markdown, no backticks, no explanation — just raw JSON." }]
+            parts: [{
+              text:
+                "You are a helpful assistant that returns only valid JSON with no markdown, no backticks, no explanation — just raw JSON.",
+            }],
           },
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: SOURCING_GUIDE_PROMPT(keyword, safeLang) }]
-            }
-          ],
-          generationConfig: {
-            maxOutputTokens: 2000,
-          },
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          // Increased from 2000 — with FAQ + longer body the previous cap was
+          // truncating mid-JSON which then failed parsing.
+          generationConfig: { maxOutputTokens: 4000 },
         }),
       }
     );
@@ -78,19 +76,11 @@ export async function POST(req: Request) {
 
     const data = await geminiRes.json();
     const result = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
     if (!result) throw new Error("Empty response from Gemini");
 
-    let cleaned = result.trim();
-    if (cleaned.startsWith("```")) {
-      cleaned = cleaned.replace(/^```json?\n?/, "").replace(/```$/, "").trim();
-    }
-
-    let contentData;
-    try {
-      contentData = JSON.parse(cleaned);
-    } catch {
-      throw new Error("Failed to parse Gemini response as JSON: " + cleaned.slice(0, 200));
+    const contentData = parseBlogJson(result);
+    if (!contentData) {
+      throw new Error("Failed to parse Gemini response as JSON: " + result.slice(0, 200));
     }
 
     // Prefix slug with lang code to avoid collisions between languages.
@@ -100,15 +90,20 @@ export async function POST(req: Request) {
       data: {
         title: contentData.title,
         slug: langSlug,
-        metaDescription: contentData.metaDescription,
+        metaDescription: contentData.metaDescription ?? "",
         content: contentData.content,
         targetKeyword: keyword,
         lang: safeLang,
         status: "DRAFT",
-      },
+        ...(contentData.faq ? ({ faq: contentData.faq } as any) : {}),
+      } as any,
     });
 
-    return NextResponse.json({ success: true, post: savedPost });
+    return NextResponse.json({
+      success: true,
+      post: savedPost,
+      faqCount: contentData.faq?.length ?? 0,
+    });
   } catch (error: any) {
     console.error("AI Generation Error:", error);
     return NextResponse.json(

@@ -30,32 +30,53 @@ export async function POST(req: Request) {
     return NextResponse.json({ skipped: true, reason: "No recent leads" });
   }
 
-  // Build unique keyword list from product names
-  const keywords = Array.from(new Set(recentLeads.map(l => l.productName.trim()).filter(Boolean)));
-
-  // Find which keywords already have a published article
-  const existing = await prisma.blogPost.findMany({
-    where: { status: "PUBLISHED" },
-    select: { targetKeyword: true, title: true },
-  });
-
-  const coveredKeywords = new Set(
-    existing.flatMap(p => [
-      p.targetKeyword?.toLowerCase(),
-      p.title?.toLowerCase(),
-    ]).filter(Boolean)
-  );
-
-  const uncovered = keywords.filter(k => {
-    const lower = k.toLowerCase();
-    return !Array.from(coveredKeywords).some(c => c?.includes(lower) || lower.includes(c ?? ""));
-  });
-
-  if (uncovered.length === 0) {
-    return NextResponse.json({ skipped: true, reason: "All recent products already have articles", keywords });
+  // Build unique keyword list from product names (case-insensitive dedup)
+  const seenLower = new Set<string>();
+  const keywords: string[] = [];
+  for (const lead of recentLeads) {
+    const trimmed = lead.productName.trim();
+    if (!trimmed) continue;
+    const lower = trimmed.toLowerCase();
+    if (seenLower.has(lower)) continue;
+    seenLower.add(lower);
+    keywords.push(trimmed);
   }
 
-  // Trigger article generation for the top uncovered keyword
+  // Single-shot dedup check: pull every keyword/title already covered, then
+  // filter the candidate list in-memory. One DB roundtrip instead of N.
+  const existing = await prisma.blogPost.findMany({
+    select: { targetKeyword: true, title: true },
+  });
+  const coveredKeywords = new Set(
+    existing
+      .flatMap(p => [p.targetKeyword?.toLowerCase(), p.title?.toLowerCase()])
+      .filter((v): v is string => Boolean(v))
+  );
+
+  const skipped: string[] = [];
+  const uncovered: string[] = [];
+  for (const k of keywords) {
+    const lower = k.toLowerCase();
+    const isCovered = Array.from(coveredKeywords).some(c => c.includes(lower) || lower.includes(c));
+    if (isCovered) {
+      skipped.push(k);
+    } else {
+      uncovered.push(k);
+    }
+  }
+
+  if (uncovered.length === 0) {
+    return NextResponse.json({
+      skipped: true,
+      reason: "All recent products already have articles",
+      skippedKeywords: skipped,
+      totalLeadKeywords: keywords.length,
+    });
+  }
+
+  // Trigger article generation for the top uncovered keyword.
+  // Internal /api/agent/trigger does its own targetKeyword-level dedup as a
+  // second layer of defense (in case the pipeline races with a manual gen).
   const keyword = uncovered[0];
   const agentSecret = process.env.AGENT_SECRET ?? "";
   const baseUrl = process.env.NEXT_PUBLIC_ADMIN_URL ?? "https://admin.cargooimport.eu";
@@ -85,7 +106,7 @@ export async function POST(req: Request) {
   await prisma.adminAction.create({
     data: {
       type: "LEADS_PIPELINE",
-      details: `Triggered article for keyword: "${keyword}" (${uncovered.length} uncovered of ${keywords.length} unique products)`,
+      details: `Triggered article for keyword: "${keyword}" (${uncovered.length} uncovered, ${skipped.length} skipped, ${keywords.length} unique products)`,
       adminName: "Agent",
     },
   });
@@ -93,6 +114,7 @@ export async function POST(req: Request) {
   return NextResponse.json({
     keyword,
     uncoveredCount: uncovered.length,
+    skippedCount: skipped.length,
     totalLeadKeywords: keywords.length,
     triggerResult,
   });

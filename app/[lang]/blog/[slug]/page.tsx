@@ -150,6 +150,28 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
     },
   };
 
+  // FAQ rendering: trust only well-formed {question, answer} pairs. Bad
+  // data must NOT explode the page or emit invalid JSON-LD (Google penalises
+  // structurally broken FAQPage markup).
+  const faqEntries: { question: string; answer: string }[] = (() => {
+    const raw = (post as any).faq;
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter((e: any) => e && typeof e.question === "string" && typeof e.answer === "string")
+      .map((e: any) => ({ question: e.question.trim(), answer: e.answer.trim() }))
+      .filter((e: { question: string; answer: string }) => e.question && e.answer);
+  })();
+
+  const faqSchema = faqEntries.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqEntries.map(({ question, answer }) => ({
+      "@type": "Question",
+      name: question,
+      acceptedAnswer: { "@type": "Answer", text: answer },
+    })),
+  } : null;
+
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -164,6 +186,9 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      {faqSchema && (
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      )}
 
       <Navbar lang={params.lang} />
 
@@ -244,6 +269,75 @@ export default async function BlogPostPage({ params }: { params: { slug: string;
           <div className="prose-content">
             <ReactMarkdown>{post.content}</ReactMarkdown>
           </div>
+
+          {/* FAQ — rendered as native <details> accordion so it works without
+              JS and Googlebot still sees the questions/answers in HTML. */}
+          {faqEntries.length > 0 && (
+            <section
+              aria-labelledby="faq-heading"
+              style={{
+                marginTop: "4rem",
+                paddingTop: "3rem",
+                borderTop: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <h2
+                id="faq-heading"
+                style={{
+                  fontSize: "1.75rem",
+                  fontWeight: 800,
+                  letterSpacing: "-0.02em",
+                  color: "#ffffff",
+                  marginBottom: "1.5rem",
+                }}
+              >
+                {{
+                  en: "Frequently asked questions",
+                  pl: "Najczęściej zadawane pytania",
+                  de: "Häufig gestellte Fragen",
+                  fr: "Questions fréquentes",
+                }[params.lang as "en"|"pl"|"de"|"fr"] ?? "Frequently asked questions"}
+              </h2>
+              <div style={{ display: "grid", gap: "0.75rem" }}>
+                {faqEntries.map((item, idx) => (
+                  <details
+                    key={idx}
+                    style={{
+                      background: "rgba(255,255,255,0.03)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                      borderRadius: "0.75rem",
+                      padding: "1rem 1.25rem",
+                    }}
+                  >
+                    <summary
+                      style={{
+                        cursor: "pointer",
+                        fontWeight: 700,
+                        color: "#ffffff",
+                        listStyle: "none",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: "1rem",
+                      }}
+                    >
+                      <span>{item.question}</span>
+                      <span style={{ color: "var(--clr-orange)", fontWeight: 900 }}>＋</span>
+                    </summary>
+                    <p
+                      style={{
+                        marginTop: "0.75rem",
+                        color: "#cbd5e1",
+                        lineHeight: 1.7,
+                        fontSize: "0.95rem",
+                      }}
+                    >
+                      {item.answer}
+                    </p>
+                  </details>
+                ))}
+              </div>
+            </section>
+          )}
         </article>
 
         {/* CTA banner */}
