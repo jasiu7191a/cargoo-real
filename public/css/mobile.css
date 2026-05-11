@@ -1,0 +1,516 @@
+/* =========================================================================
+   CARGOO — Mobile-first additive layer (2026-05-10)
+   -------------------------------------------------------------------------
+   This file ONLY changes behaviour at viewports < 1024px. Desktop layout,
+   typography, spacing and brand styling defined in style.css are untouched
+   above the breakpoint. Drop this file as the LAST stylesheet in the
+   <head> so its declarations win on equal-specificity ties.
+
+   Audit + fixes target:
+     • tap targets ≥ 44×44 px
+     • iOS-zoom-on-focus prevention (≥16px input font-size)
+     • hamburger / lang-switch / floating WhatsApp thumb-reach + spacing
+     • testimonial avatars and product cards on narrow viewports
+     • horizontal-scroll prevention sitewide
+     • reduced-motion friendliness
+   ========================================================================= */
+
+/* ---------- Sitewide guard rails --------------------------------------- */
+
+@media (max-width: 1023.98px) {
+    /* Hard stop horizontal scroll. Some inline styles use min-width that
+       overflows on 320px screens. */
+    html, body { max-width: 100%; overflow-x: hidden; }
+    img, video, iframe, svg { max-width: 100%; height: auto; }
+
+    /* Ensure every hero section has comfortable side gutters at 320px. */
+    .container { padding-left: 1rem; padding-right: 1rem; }
+
+    /* === Header sizing on mobile ===
+       The desktop header is 90px tall (.nav-container { height: 90px })
+       which is too tall on phones and was clipping content. Shrink it
+       to 56px on mobile so it doesn't dominate the screen, and push
+       page content below it via padding on <main>. We use <main>, not
+       body, so the fixed header stays glued to the viewport top while
+       only the scrollable content gets offset. */
+    .header,
+    .header .nav-container { height: 64px !important; min-height: 64px !important; }
+    .header.scrolled .nav-container { height: 64px !important; }
+    /* Inner padding so logo + hamburger have breathing room */
+    .header .nav-container { padding-inline: 1rem !important; }
+
+    /* Default: push <main> content below the fixed 64px header. */
+    main { padding-top: 64px; }
+
+    /* Hero pages already paint their own padding/mesh background at the
+       top — let them start at viewport y=0 so the orange-to-black gradient
+       extends behind the translucent header (intended visual). */
+    main:has(> .hero:first-child),
+    main:has(> .viral-hero:first-child) { padding-top: 0 !important; }
+
+    /* Tap target floor — applies to anything that already has a min-height
+       smaller than 44 px. Targeted enough to not break visual layouts. */
+    .nav-actions a.btn,
+    .nav-actions button,
+    .mobile-toggle,
+    .close-menu,
+    .close-drawer,
+    .floating-whatsapp,
+    .btn-estimate-header,
+    .btn-account-header,
+    .lang-switch .lang-link,
+    .lang-switch-mobile a,
+    .footer-links a,
+    .social-links a {
+        min-height: 44px;
+        min-width: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Footer links break-target spec: lists become spaced rows so each row
+       hits the 44 px target without stacking text awkwardly. */
+    .footer-links ul li { margin-bottom: 0.25rem; }
+    .footer-links a {
+        padding: 0.5rem 0;
+        line-height: 1.3;
+    }
+
+    /* Visible keyboard-focus state — many inline-styled links lose default. */
+    a:focus-visible,
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+        outline: 2px solid var(--clr-orange, #ff5500);
+        outline-offset: 2px;
+    }
+}
+
+/* ---------- Header & navigation --------------------------------------- */
+
+@media (max-width: 1023.98px) {
+    .header { padding-block: 0.75rem; }
+
+    /* === Mobile header: logo + hamburger only ===
+       The previous header crammed lang-switch (4 pills), estimate icon,
+       account icon, Get Quote button, and hamburger into one row — ~420px
+       wide on a 375px viewport. Everything except the logo and the
+       hamburger is hidden here and surfaced inside the mobile menu drawer
+       so it stays one tap away. */
+    .nav-actions > * { display: none !important; }
+    .nav-actions > .mobile-toggle { display: inline-flex !important; }
+
+    /* Hamburger styling — bigger, easier to thumb */
+    .mobile-toggle {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid var(--clr-border, rgba(255,255,255,0.1));
+        border-radius: 999px;
+        color: #fff;
+        font-size: 1.1rem;
+        padding: 0;
+        width: 44px;
+        height: 44px;
+    }
+
+    /* Logo: keep simple, trim icon-text gap on tight screens */
+    .header .logo { font-size: 1.25rem !important; gap: 0.4rem !important; }
+
+    /* Inside the mobile menu drawer, lang switch needs more breathing room */
+    .lang-switch-mobile {
+        padding: 0 1.25rem;
+        gap: 0.5rem !important;
+    }
+    .lang-switch-mobile a {
+        font-size: 0.85rem !important;
+        padding: 0.5rem 0.85rem !important;
+    }
+}
+
+/* ---------- Mobile menu drawer ---------------------------------------- */
+
+@media (max-width: 1023.98px) {
+    /* Drawer takes ~78% of the viewport width with a soft shadow over the
+       remaining ~22% so the user still sees the page they came from.
+       Use `transform` for the slide-in animation instead of right=0 — gives
+       smoother performance and avoids stacking-context surprises that can
+       block clicks on the inner links. */
+    .mobile-menu {
+        width: min(78%, 380px) !important;
+        max-width: min(78%, 380px) !important;
+        right: 0 !important;
+        transform: translateX(100%);
+        transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        padding-top: max(env(safe-area-inset-top, 0), 4.5rem);
+        padding-bottom: max(env(safe-area-inset-bottom, 0), 2rem);
+        box-shadow: -12px 0 40px rgba(0,0,0,0.6);
+    }
+    .mobile-menu.active { transform: translateX(0); }
+
+    .mobile-nav-links li > .mobile-link,
+    .mobile-nav-links li a.mobile-link,
+    .mobile-nav-links li button.mobile-link {
+        font-size: 1.05rem;
+        padding: 1rem 1.25rem;
+        line-height: 1.3;
+        display: flex !important;
+        align-items: center;
+        gap: 0.6rem;
+        text-align: left;
+        width: 100%;
+        cursor: pointer;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(255, 85, 0, 0.25);
+        color: var(--clr-text, #e2e8f0);
+    }
+    .mobile-nav-links li + li > .mobile-link {
+        border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .mobile-nav-links li > .mobile-link:active {
+        background: rgba(255, 85, 0, 0.08);
+    }
+    /* Children of menu links don't intercept taps — bubble straight to
+       the link itself so events always fire. */
+    .mobile-nav-links li > .mobile-link > * { pointer-events: none; }
+
+    /* PRODUCTS highlighted in orange — same prominence as the desktop
+       nav's Get Quote pill. Identifies it as primary navigation. */
+    .mobile-nav-links li a.mobile-link[href*="products.html"] {
+        color: var(--clr-orange, #ff5500) !important;
+        font-weight: 800 !important;
+    }
+    .mobile-nav-links li a.mobile-link[href*="products.html"]::before {
+        content: '\f005'; /* fa-star — small marker */
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        font-size: 0.7rem;
+        color: var(--clr-orange);
+        margin-right: 0.1rem;
+    }
+
+    /* Estimate row: orange highlight when count > 0 */
+    .mobile-nav-links .open-estimate-btn-mobile .badge-count {
+        min-width: 1.5rem;
+        text-align: center;
+    }
+
+    .lang-switch-mobile a {
+        padding: 0.5rem 0.75rem !important;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .mobile-nav-cta { padding: 0 1.25rem; }
+}
+
+/* ---------- Hero ------------------------------------------------------ */
+
+@media (max-width: 1023.98px) {
+    .hero, .viral-hero { padding-top: 5rem; padding-bottom: 3rem; }
+    .hero h1, .super-title { font-size: clamp(2.4rem, 11vw, 3.8rem) !important; }
+    .subtitle-large { font-size: 1rem !important; line-height: 1.5; }
+
+    .hero-buttons { flex-direction: column; align-items: stretch !important; }
+    .hero-buttons .btn { width: 100%; justify-content: center; }
+
+    .trust-strip {
+        gap: 0.75rem !important;
+        margin-top: 2rem !important;
+        font-size: 0.8rem !important;
+    }
+    .trust-strip span { flex-basis: calc(50% - 0.5rem); justify-content: center; }
+}
+
+@media (max-width: 480px) {
+    .trust-strip span { flex-basis: 100%; }
+}
+
+/* ---------- Forms / inputs (kill iOS zoom-on-focus) ------------------- */
+
+@media (max-width: 1023.98px) {
+    /* Anything below 16px font triggers Mobile Safari to auto-zoom on focus.
+       Override on inputs only — buttons keep their smaller chrome. */
+    input,
+    textarea,
+    select,
+    .search-input,
+    .input-lg {
+        font-size: 16px !important;
+    }
+
+    /* Comfortable form field hit area */
+    .form-group input,
+    .form-group textarea,
+    .account-form input,
+    .account-form textarea,
+    .account-form select,
+    .estimate-drawer input,
+    .estimate-drawer textarea {
+        min-height: 48px;
+        padding: 0.85rem 1rem;
+    }
+
+    .form-group label,
+    .account-form label > span {
+        font-size: 0.8rem;
+        margin-bottom: 0.3rem;
+    }
+}
+
+/* ---------- Floating WhatsApp button -------------------------------- */
+
+/* Base styles always — without these the element renders as a static
+   inline link at the bottom of the document flow. */
+.floating-whatsapp {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    background: #25D366;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45);
+    z-index: 999;
+    transition: transform 0.2s ease;
+}
+.floating-whatsapp:hover { transform: scale(1.08); }
+
+/* On mobile: hide entirely. The CTA section already has a big WhatsApp
+   contact box, plus mobile menu has Contact Us. A floating bubble was
+   redundant and the icon at bottom-of-page is confusing. */
+@media (max-width: 1023.98px) {
+    .floating-whatsapp { display: none !important; }
+}
+
+/* ---------- Estimate drawer (mobile sheet feel) ----------------------- */
+
+@media (max-width: 1023.98px) {
+    .estimate-drawer {
+        width: 100% !important;
+        max-width: 100% !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        top: auto !important;
+        height: auto !important;
+        max-height: 90vh !important;
+        border-radius: 1.25rem 1.25rem 0 0 !important;
+        transform: translateY(100%);
+    }
+    .estimate-drawer.active { transform: translateY(0); }
+
+    .drawer-body { max-height: 50vh; overflow-y: auto; }
+}
+
+/* ---------- Testimonial avatars & cards ------------------------------ */
+
+@media (max-width: 1023.98px) {
+    /* Author avatar that previously went `width="100"` could blow up — clamp. */
+    .testimonial-card .author-img,
+    .author-img {
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 999px;
+        object-fit: cover;
+    }
+
+    .testimonial-card,
+    .glass-panel.testimonial-card {
+        padding: 1.25rem !important;
+    }
+}
+
+/* ---------- Bento / cards: keep readable on 320 ---------------------- */
+
+@media (max-width: 1023.98px) {
+    .bento-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+    .bento-card { padding: 1.25rem !important; }
+    .huge-number { font-size: clamp(3rem, 14vw, 5rem) !important; }
+}
+
+/* ---------- Product detail (PDP) -------------------------------------- */
+
+@media (max-width: 900px) {
+    .pdp-grid { grid-template-columns: 1fr !important; }
+    .pdp-gallery { aspect-ratio: 1 / 1; }
+    .pdp-actions { flex-direction: column; }
+    .pdp-actions .btn { width: 100%; }
+}
+
+/* ---------- Account dashboard (customer-account.js) ------------------ */
+
+@media (max-width: 1023.98px) {
+    .account-grid {
+        grid-template-columns: 1fr !important;
+    }
+    .account-form-row {
+        grid-template-columns: 1fr !important;
+    }
+    .account-hero {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .account-hero-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+    .account-hero-actions .btn { width: 100%; justify-content: center; }
+}
+
+/* ---------- Notification bell dropdown -------------------------------- */
+
+@media (max-width: 480px) {
+    .cg-notif__panel {
+        position: fixed !important;
+        top: 4.5rem !important;
+        left: 0.5rem !important;
+        right: 0.5rem !important;
+        width: auto !important;
+        max-height: calc(100vh - 6rem) !important;
+    }
+}
+
+/* ---------- Footer ---------------------------------------------------- */
+
+@media (max-width: 1023.98px) {
+    .footer-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 1.5rem !important;
+    }
+    .footer-brand { grid-column: 1 / -1; }
+    .footer-bottom {
+        flex-direction: column;
+        gap: 0.75rem;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-grid { grid-template-columns: 1fr !important; }
+}
+
+/* ---------- Product grids: keep 2 columns on mobile ------------------- */
+
+@media (max-width: 1023.98px) {
+    /* Override the existing single-column rules in style.css AND any
+       inline <style> that uses .product-teaser .teaser-grid as selector
+       — match its specificity so we win the cascade tie. */
+    .teaser-grid,
+    .product-teaser .teaser-grid,
+    #productsGrid.grid-layout,
+    #productsGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 0.75rem !important;
+    }
+
+    /* Tighter card chrome at mobile so 2-up doesn't feel cramped. */
+    .teaser-card .teaser-body { padding: 0.75rem !important; }
+    .teaser-card h4 { font-size: 0.85rem !important; min-height: 2.4em !important; }
+    .teaser-card .teaser-cat { font-size: 0.62rem !important; }
+    .teaser-card .teaser-meta { font-size: 0.7rem !important; }
+}
+
+/* ---------- CTA section on mobile: stack the two contact boxes ------- */
+
+@media (max-width: 1023.98px) {
+    /* Email + WhatsApp boxes stack vertically full-width — both visible
+       (per the user's request to keep WhatsApp accessible) but without
+       the awkward grid squeeze. */
+    .cta .contact-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+        margin-top: 2rem !important;
+    }
+    .cta .contact-box {
+        padding: 1.25rem !important;
+    }
+    .cta .contact-box span {
+        font-size: 1rem !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+}
+
+/* ---------- Search input + dropdown clickability --------------------- */
+
+@media (max-width: 1023.98px) {
+    /* Lift the whole hero-search component above the rest of the hero so
+       it actually receives taps (mesh-bg gradients with negative z-index
+       inside hero can shadow the input on some browsers). */
+    .hero-search,
+    .global-search.hero-search {
+        position: relative;
+        z-index: 50;
+    }
+    .hero-search .search-input-wrapper { position: relative; z-index: 51; }
+    .hero-search .search-input {
+        pointer-events: auto !important;
+        touch-action: manipulation;
+    }
+
+    /* Dropdown lifts above the fixed header (z=1000) and stays below the
+       mobile menu drawer (z=2000). */
+    .search-dropdown {
+        z-index: 1500 !important;
+        top: 60px !important;
+        max-height: calc(100vh - 70px) !important;
+    }
+    /* When focused, raise the wrapper itself too. */
+    .global-search.is-focused { position: relative; z-index: 1400; }
+}
+
+/* ---------- FAQ accordion clickability on touch --------------------- */
+
+@media (max-width: 1023.98px) {
+    /* Native <details>/<summary> should always work, but the orange
+       gradient overlay on .faq-item could grab the tap on some Android
+       browsers. Force pointer-events through the stack and a comfortable
+       tap target. */
+    .faq-item summary {
+        pointer-events: auto !important;
+        touch-action: manipulation;
+        min-height: 44px;
+        padding-block: 0.4rem;
+    }
+    .faq-item summary > * { pointer-events: none; }
+    .faq-item { padding: 1rem 1.25rem !important; }
+}
+
+/* ---------- Estimate-drawer guest hint ------------------------------- */
+
+/* (Applies on every viewport, not just mobile — keep it tight and subtle.) */
+.quote-login-hint {
+    font-size: 0.85rem;
+    color: var(--clr-text-muted, #94a3b8);
+    margin-bottom: 0.85rem;
+    padding: 0.6rem 0.85rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 0.6rem;
+    line-height: 1.4;
+}
+.quote-login-hint a {
+    color: var(--clr-orange, #ff5500);
+    font-weight: 700;
+    text-decoration: none;
+}
+.quote-login-hint a:hover { text-decoration: underline; }
+
+/* ---------- Reduced motion ------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+        scroll-behavior: auto !important;
+    }
+}

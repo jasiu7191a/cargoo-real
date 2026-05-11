@@ -61,6 +61,41 @@ img { max-width: 100%; height: auto; display: block; }
 a { text-decoration: none; color: inherit; transition: var(--trans-fast); }
 ul { list-style: none; }
 
+.btn-account-header {
+    padding-inline: 1rem;
+    min-height: 2.75rem;
+    white-space: nowrap;
+}
+
+.lang-link.active {
+    background: var(--clr-orange) !important;
+    color: var(--clr-white) !important;
+}
+
+.quote-account-note,
+.quote-login-cta {
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    color: var(--clr-text);
+    font-size: 0.9rem;
+}
+
+.quote-account-note strong { color: var(--clr-white); }
+
+.quote-login-cta p {
+    margin: 0 0 1rem;
+    color: var(--clr-text-muted);
+}
+
+.quote-login-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+}
+
 h1, h2, h3, h4, h5, h6 { font-weight: 800; line-height: 1.1; color: var(--clr-white); letter-spacing: -0.03em; }
 h1.super-title { font-size: clamp(3.5rem, 8vw, 6rem); letter-spacing: -0.04em; text-transform: uppercase; margin-bottom: 1.5rem; font-weight: 900; }
 h2 { font-size: clamp(2rem, 5vw, 3.5rem); margin-bottom: 1rem; border-radius: var(--radius-sm); }
@@ -492,11 +527,33 @@ input:focus, select:focus { outline: none; border-color: var(--clr-blue); box-sh
 
 /* Testimonials */
 .testimonial-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; }
-.testimonial-card { background: var(--clr-bg-panel); padding: 3rem; border-radius: var(--radius-xl); border: 1px solid var(--clr-border); position: relative; backdrop-filter: blur(10px); }
+.testimonial-card { background: var(--clr-bg-panel); padding: 3rem; border-radius: var(--radius-xl); border: 1px solid var(--clr-border); position: relative; backdrop-filter: blur(10px); display: flex; flex-direction: column; }
 .quote-icon { position: absolute; top: -25px; left: 3rem; width: 50px; height: 50px; background: var(--clr-white); color: var(--clr-bg); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
-.testimonial-text { font-size: 1.25rem; margin-bottom: 2rem; color: var(--clr-white); font-weight: 500; }
-.testimonial-author { display: flex; align-items: center; gap: 1rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1.5rem; }
-.author-info h4 { margin: 0; font-size: 1.125rem; }
+.testimonial-text { font-size: 1.25rem; margin-bottom: 2rem; color: var(--clr-white); font-weight: 500; flex: 1; }
+.testimonial-author {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    margin-top: auto;
+    padding: 1rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 1rem;
+    background: linear-gradient(135deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018));
+}
+.author-img {
+    width: 62px;
+    height: 62px;
+    flex: 0 0 62px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center;
+    border: 2px solid rgba(255,255,255,0.14);
+    box-shadow: 0 0 0 4px rgba(255,85,0,0.08);
+    background: rgba(255,255,255,0.08);
+}
+.author-info { min-width: 0; }
+.author-info h4 { margin: 0 0 0.15rem; font-size: 1.05rem; display: flex; align-items: center; gap: 0.35rem; }
+.author-info span { display: block; color: var(--clr-text-muted); font-size: 0.9rem; line-height: 1.35; }
 
 /* CTA */
 .cta { background: transparent; text-align: center; padding: 10rem 0; position: relative; }
@@ -830,20 +887,21 @@ input:focus, select:focus { outline: none; border-color: var(--clr-blue); box-sh
 /* Teaser grid (homepage) */
 .teaser-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.25rem;
 }
 .teaser-card {
     background: var(--clr-bg-surface-elevated);
     border: 1px solid var(--clr-border);
-    border-radius: 1.25rem;
+    border-radius: 1rem;
     overflow: hidden;
     text-decoration: none;
     color: inherit;
     display: flex;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+    align-items: stretch;
     gap: 0;
+    min-height: 100%;
     transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
 }
 .teaser-card:hover {
@@ -853,43 +911,57 @@ input:focus, select:focus { outline: none; border-color: var(--clr-blue); box-sh
 }
 .teaser-card .teaser-img {
     flex-shrink: 0;
-    width: 130px;
-    height: 130px;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    min-height: 0;
     background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.25rem;
+    overflow: hidden;
+    padding: 1rem;
 }
 .teaser-card .teaser-img img {
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
     object-fit: contain;
     transition: transform 0.3s ease;
 }
 .teaser-card:hover .teaser-img img { transform: scale(1.07); }
 .teaser-card .teaser-body {
-    padding: 1.1rem 1.25rem;
+    padding: 1rem;
     flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 .teaser-card .teaser-cat {
     margin: 0 0 0.3rem;
     font-size: 0.68rem;
     color: var(--clr-orange);
     font-weight: 700;
-    letter-spacing: 1.2px;
+    letter-spacing: 0;
     text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .teaser-card h4 {
     margin: 0 0 0.3rem;
-    font-size: 1rem;
+    font-size: 0.96rem;
     color: #fff;
     font-weight: 700;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
     line-height: 1.3;
+    min-height: 2.5em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 .teaser-card .teaser-meta {
-    margin: 0;
+    margin: auto 0 0;
     font-size: 0.78rem;
     color: var(--clr-text-muted);
     display: flex;
@@ -906,12 +978,11 @@ input:focus, select:focus { outline: none; border-color: var(--clr-blue); box-sh
     opacity: 0.6;
     flex-shrink: 0;
 }
-@media (max-width: 900px) {
-    .teaser-grid { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 1024px) {
+    .teaser-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) {
     .teaser-grid { grid-template-columns: 1fr; }
-    .teaser-card .teaser-img { width: 100px; height: 100px; }
 }
 
 /* FAQ accordion */
@@ -1294,3 +1365,17 @@ input:focus, select:focus { outline: none; border-color: var(--clr-blue); box-sh
     border-radius: 2rem;
     color: var(--clr-text-muted);
 }
+
+/* Blog teaser cards on homepage — extracted from inline onmouseover (2026-05-10).
+   CSS :hover works on cursor devices, no-op on touch (which is correct — the
+   onmouseover/onmouseout would have stuck after a tap on phone). */
+.blog-teaser-card {
+    text-decoration: none;
+    display: block;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 1.25rem;
+    padding: 1.75rem;
+    transition: border-color 0.2s;
+}
+.blog-teaser-card:hover { border-color: rgba(255,85,0,0.4); }

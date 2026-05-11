@@ -50,10 +50,15 @@ export default function RootLayout({
     <html lang={locale}>
       <head>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-        {/* /css/style.css and /css/search.css live on the static www site
-            (cargoo Pages project), not on this Next.js deployment, so loading
-            them from here used to 500. They were never actually needed for
-            the admin or blog routes. */}
+        {/* style.css + search.css + mobile.css are mirrored into
+            cargoo-real-fixed/public/css/ from the static www project so blog
+            pages (rendered by this Next.js app) reuse the same brand styling
+            and the Navbar/Footer/glass-panel classes resolve correctly.
+            Earlier these 500'd because the files only existed on the www
+            Pages project. */}
+        <link rel="stylesheet" href="/css/style.css" />
+        <link rel="stylesheet" href="/css/mobile.css" />
+        <link rel="stylesheet" href="/css/search.css" />
       </head>
       <body className={jakarta.className}>
         {children}
