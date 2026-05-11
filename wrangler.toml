@@ -15,6 +15,20 @@ FROM_EMAIL = "Cargoo Import <contact@cargooimport.eu>"
 # the user logged in.
 COOKIE_DOMAIN = ".cargooimport.eu"
 
+# Cold-outreach drip + reply detection -----------------------------------------
+# REPLIES_INBOX       Reply-To on cold sends. Customer replies land here; the
+#                     inbound-reply webhook flips ColdOutreach.replied=true.
+# UNSUBSCRIBE_MAILTO  mailto: fallback target for the List-Unsubscribe header.
+REPLIES_INBOX = "contact@cargooimport.eu"
+UNSUBSCRIBE_MAILTO = "contact@cargooimport.eu"
+
+# Drip cron tuning. Raise DRIP_DAILY_CAP gradually as domain reputation grows —
+# large jumps trigger Gmail/Outlook reputation throttling.
+DRIP_DAILY_CAP = "30"
+DRIP_FOLLOWUP_COOLDOWN_DAYS = "3"
+DRIP_MAX_TOUCHES = "3"
+DRIP_WINBACK_AFTER_DAYS = "7"
+
 # -----------------------------------------------------------------------------
 # Secrets (NOT declared here — managed via Cloudflare Pages dashboard or
 # `wrangler pages secret put <NAME>`). Code expects:
