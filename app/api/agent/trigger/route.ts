@@ -46,6 +46,29 @@ async function callGemini(prompt: string, signal: AbortSignal, apiKey: string) {
   return res;
 }
 
+/**
+ * Dry-run support:
+ *   Pass `?dryRun=true` (query string) or `{ "dryRun": true }` in the body to
+ *   exercise auth + validation + dedup lookups WITHOUT calling Gemini, writing
+ *   a BlogPost, or logging an AdminAction. Use this to verify the AGENT_SECRET
+ *   bearer token from a new orchestrator without polluting production with
+ *   throwaway articles. Response shape:
+ *     {
+ *       success: true,
+ *       dryRun: true,
+ *       authOk: true,
+ *       wouldCreateArticles: [{ keyword, lang, varietyHint, relatedPostsAvailable, slugPrefix }],
+ *       wouldSendEmails: [],
+ *       note: "<what got skipped>"
+ *     }
+ *
+ * Manual test:
+ *   curl -sS -X POST -H "Authorization: Bearer $AGENT_SECRET" \
+ *        -H "Content-Type: application/json" \
+ *        -d '{"keyword":"import duties china","lang":"en","dryRun":true}' \
+ *        https://admin.cargooimport.eu/api/agent/trigger
+ */
+
 export async function POST(req: Request) {
   if (!verifySecret(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -53,6 +76,9 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}));
   const { keyword, lang = "en" } = body;
+  const dryRun =
+    body?.dryRun === true ||
+    new URL(req.url).searchParams.get("dryRun") === "true";
 
   if (!keyword || typeof keyword !== "string" || keyword.length > 500) {
     return NextResponse.json({ error: "keyword is required (string, max 500 chars)" }, { status: 400 });
@@ -61,7 +87,10 @@ export async function POST(req: Request) {
   const safeLang: BlogLang = (["en", "pl", "de", "fr"].includes(lang) ? lang : "en") as BlogLang;
 
   const geminiKey = process.env.GEMINI_API_KEY;
-  if (!geminiKey) {
+  // In dry-run we don't call Gemini, so a missing key shouldn't fail the
+  // auth-verification flow. In a real run the absence of the key is still a
+  // hard 503.
+  if (!dryRun && !geminiKey) {
     return NextResponse.json({ error: "GEMINI_API_KEY not configured" }, { status: 503 });
   }
 
@@ -77,7 +106,13 @@ export async function POST(req: Request) {
     },
   });
   if (dupe) {
-    return NextResponse.json({ skipped: true, reason: "Keyword already covered", existingId: dupe.id, slug: dupe.slug });
+    return NextResponse.json({
+      skipped: true,
+      reason: "Keyword already covered",
+      existingId: dupe.id,
+      slug: dupe.slug,
+      dryRun,
+    });
   }
 
   // Pull related published posts for the same lang — used both as internal-link
@@ -99,6 +134,25 @@ export async function POST(req: Request) {
   const articleIndex = relatedRows.length;
   const varietyHint = VARIETY_CYCLE[articleIndex % VARIETY_CYCLE.length];
 
+  if (dryRun) {
+    return NextResponse.json({
+      success: true,
+      dryRun: true,
+      authOk: true,
+      wouldCreateArticles: [
+        {
+          keyword,
+          lang: safeLang,
+          varietyHint,
+          relatedPostsAvailable: relatedPosts.length,
+          slugPrefix: `${safeLang}-`,
+        },
+      ],
+      wouldSendEmails: [],
+      note: "Dry run: auth + validation + dedup check + related-posts query ran. Skipped: Gemini call, prisma.blogPost.create, prisma.adminAction.create.",
+    });
+  }
+
   // Timeout after 45s — Gemini can be slow on long articles
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 45_000);
@@ -111,7 +165,7 @@ export async function POST(req: Request) {
       varietyHint,
     });
 
-    let geminiRes = await callGemini(prompt, controller.signal, geminiKey);
+    let geminiRes = await callGemini(prompt, controller.signal, geminiKey!);
     if (!geminiRes.ok) {
       const err = await geminiRes.text();
       return NextResponse.json({ error: "Gemini API error", details: err.slice(0, 500) }, { status: 502 });
@@ -128,7 +182,7 @@ export async function POST(req: Request) {
         const stronger =
           prompt +
           `\n\nIMPORTANT RETRY: your previous draft included ${linkHits} internal links. You MUST include at least 3 markdown links of the form [Title](/${safeLang}/blog/<slug>) using only the slugs listed above. Regenerate the FULL article with the links woven naturally into the prose.`;
-        geminiRes = await callGemini(stronger, controller.signal, geminiKey);
+        geminiRes = await callGemini(stronger, controller.signal, geminiKey!);
         if (geminiRes.ok) {
           geminiData = await geminiRes.json();
           raw = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text ?? raw;
