@@ -1,13 +1,13 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Current Year for Footer
-    document.getElementById('currentYear').textContent = new Date().getFullYear();
+    const currentYear = document.getElementById('currentYear');
+    if (currentYear) currentYear.textContent = new Date().getFullYear();
 
     // Mobile Menu Toggle
     const mobileToggle = document.querySelector('.mobile-toggle');
     const closeMenu = document.getElementById('closeMenu');
     const mobileMenu = document.getElementById('mobileMenu');
     const mobileOverlay = document.getElementById('mobileOverlay');
-    const mobileLinks = document.querySelectorAll('.mobile-link');
 
     function toggleMenu() {
         mobileMenu.classList.toggle('active');
@@ -19,37 +19,110 @@ document.addEventListener('DOMContentLoaded', () => {
     if (closeMenu) closeMenu.addEventListener('click', toggleMenu);
     if (mobileOverlay) mobileOverlay.addEventListener('click', toggleMenu);
 
-    mobileLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if (mobileMenu.classList.contains('active')) toggleMenu();
+    // Close the drawer whenever ANY .mobile-link is clicked — event
+    // delegation so it also catches dynamically injected items (the
+    // estimate trigger and the auto-injected "My Account" link).
+    // We do NOT call preventDefault — the link's default navigation
+    // (or the open-estimate button's own click handler) still runs after.
+    if (mobileMenu) {
+        mobileMenu.addEventListener('click', (ev) => {
+            const link = ev.target.closest('.mobile-link');
+            if (!link) return;
+            if (mobileMenu.classList.contains('active')) {
+                toggleMenu();
+            }
         });
-    });
+    }
+
+    // Customer account link, shared across all language versions.
+    const accountCopy = {
+        en: { login: 'Login', account: 'My Account' },
+        pl: { login: 'Logowanie', account: 'Moje konto' },
+        de: { login: 'Einloggen', account: 'Mein Konto' },
+        fr: { login: 'Connexion', account: 'Mon compte' }
+    };
+
+    function detectLang() {
+        const path = window.location.pathname;
+        if (path.includes('/cargoo-pl/')) return 'pl';
+        if (path.includes('/cargoo-de/')) return 'de';
+        if (path.includes('/cargoo-fr/')) return 'fr';
+        return 'en';
+    }
+
+    function installAccountLinks() {
+        const lang = detectLang();
+        const copy = accountCopy[lang] || accountCopy.en;
+        const href = 'account.html';
+
+        let desktopLink = document.querySelector('.btn-account-header');
+        if (!desktopLink) {
+            desktopLink = document.createElement('a');
+            desktopLink.className = 'btn btn-secondary btn-account-header';
+            desktopLink.href = href;
+            desktopLink.innerHTML = `<i class="fa-solid fa-user"></i> <span>${copy.login}</span>`;
+            const navActions = document.querySelector('.nav-actions');
+            const estimateButton = document.querySelector('.btn-estimate-header');
+            if (navActions) navActions.insertBefore(desktopLink, estimateButton || navActions.firstChild);
+        }
+
+        const mobileList = document.querySelector('.mobile-nav-links');
+        let mobileLink = document.querySelector('.account-mobile-link');
+        if (!mobileLink && mobileList) {
+            const item = document.createElement('li');
+            mobileLink = document.createElement('a');
+            mobileLink.className = 'mobile-link account-mobile-link';
+            mobileLink.href = href;
+            mobileLink.textContent = copy.login;
+            mobileLink.addEventListener('click', () => {
+                if (mobileMenu && mobileMenu.classList.contains('active')) toggleMenu();
+            });
+            item.appendChild(mobileLink);
+            mobileList.appendChild(item);
+        }
+
+        fetch('/api/auth/me', { credentials: 'include' })
+            .then(res => res.ok ? res.json() : { user: null })
+            .then(data => {
+                const label = data.user ? copy.account : copy.login;
+                const span = desktopLink && desktopLink.querySelector('span');
+                if (span) span.textContent = label;
+                if (mobileLink) mobileLink.textContent = label;
+            })
+            .catch(() => {
+                const span = desktopLink && desktopLink.querySelector('span');
+                if (span) span.textContent = copy.login;
+                if (mobileLink) mobileLink.textContent = copy.login;
+            });
+    }
+
+    installAccountLinks();
 
     // Sticky Header
     const header = document.getElementById('header');
-    
+    let scrollTicking = false;
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
+        if (!scrollTicking) {
+            requestAnimationFrame(() => {
+                header.classList.toggle('scrolled', window.scrollY > 50);
+                scrollTicking = false;
+            });
+            scrollTicking = true;
         }
-    });
+    }, { passive: true });
 
-    // Estimate Badge Synchronization
+    // Estimate Badge Synchronization — update ALL .badge-count elements,
+    // not just the first one. The estimate appears in two places now: the
+    // header pill (desktop) and the mobile-menu list item (mobile).
     function updateEstimateBadge(count) {
-        const badge = document.querySelector('.btn-estimate-header .badge-count');
-        const btn = document.querySelector('.btn-estimate-header');
-        if (badge) {
+        document.querySelectorAll('.badge-count').forEach(badge => {
             badge.textContent = count;
-            // Visible feedback if count > 0 (could hide if 0, but usually looks better always present)
-            // badge.style.display = count > 0 ? 'flex' : 'none';
-            
-            // Trigger pop animation
-            if (btn) {
-                btn.classList.add('pop');
-                setTimeout(() => btn.classList.remove('pop'), 400);
-            }
+        });
+        // Pop animation only on the visible header pill if it's present.
+        const btn = document.querySelector('.btn-estimate-header');
+        if (btn) {
+            btn.classList.add('pop');
+            setTimeout(() => btn.classList.remove('pop'), 400);
         }
     }
 

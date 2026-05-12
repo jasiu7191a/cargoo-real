@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { headers } from "next/headers";
@@ -37,6 +37,16 @@ export const metadata: Metadata = {
     icon: "/assets/images/favicon.png",
     apple: "/assets/images/favicon.png",
   },
+};
+
+// Explicit viewport so env(safe-area-inset-*) resolves correctly on iPhone notch.
+// mobile.css (lines ~145-146) uses these vars for the mobile drawer padding.
+// Without viewportFit: 'cover', the env() vars are 0 and the drawer sits under the notch.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#050505',
 };
 
 export default function RootLayout({

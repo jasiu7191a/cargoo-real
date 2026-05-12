@@ -10,7 +10,7 @@ window.ImageConfig = {
     // Placeholder resolution
     placeholderMode: 'local', // 'local' uses local assets, 'placehold.co' generates on the fly
     localPlaceholderPath: 'img/placeholders/',
-    forcePlaceholders: true, // Skip product-specific images; use category placeholder for all
+    forcePlaceholders: false, // Skip product-specific images; use category placeholder for all
 
     // Transform bindings to switch resolutions for bandwidth optimization
     transformations: {
@@ -18,3 +18,4 @@ window.ImageConfig = {
         detail: 'w_1200,h_1200,c_fit,q_auto,f_auto'
     }
 };
+

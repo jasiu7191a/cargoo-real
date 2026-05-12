@@ -15,12 +15,7 @@ const SearchAPI = {
     },
 
     query: async function(searchTerm) {
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                const results = this._performSearch(searchTerm);
-                resolve(results);
-            }, 150); // Network delay simulation
-        });
+        return Promise.resolve(this._performSearch(searchTerm));
     },
 
     _performSearch: function(term) {
@@ -129,14 +124,10 @@ const SearchAPI = {
     },
 
     getEmptyState: async function() {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                resolve({
-                    trending: window.SearchCatalog.trending,
-                    popularBrands: window.SearchCatalog.popularBrands,
-                    suggestions: window.SearchCatalog.suggestions   // All 56 for the chip grid
-                });
-            }, 50);
+        return Promise.resolve({
+            trending: window.SearchCatalog.trending,
+            popularBrands: window.SearchCatalog.popularBrands,
+            suggestions: window.SearchCatalog.suggestions
         });
     }
 };

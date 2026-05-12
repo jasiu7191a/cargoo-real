@@ -723,7 +723,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
             </div>
           </div>
           <div className="footer-bottom">
-            <p>&copy; 2026 Cargoo. All rights reserved.</p>
+            <p>&copy; <span id="currentYear">2026</span> Cargoo. All rights reserved.</p>
             <div className="payment-methods">
               <i className="fa-brands fa-cc-visa"></i>
               <i className="fa-brands fa-cc-mastercard"></i>

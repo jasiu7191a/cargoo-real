@@ -1259,6 +1259,11 @@ const STOCKX_EXPANDED_DYSON_PRODUCTS = window.StockxExpandedDysonProducts || [];
 const STOCKX_TRENDING_MARKETPLACE_PRODUCTS = window.StockxTrendingMarketplaceProducts || [];
 const INTERNET_TRENDING_FRAGRANCE_PRODUCTS = window.InternetTrendingFragranceProducts || [];
 const STOCKX_EXPANDED_PRODUCTS = [...STOCKX_EXPANDED_NIKE_JORDAN_PRODUCTS, ...STOCKX_EXPANDED_JORDAN_PRODUCTS, ...STOCKX_EXPANDED_ADIDAS_PRODUCTS, ...STOCKX_EXPANDED_SUPREME_PRODUCTS, ...STOCKX_EXPANDED_NEW_BALANCE_PRODUCTS, ...STOCKX_EXPANDED_FEAR_OF_GOD_PRODUCTS, ...STOCKX_EXPANDED_GUCCI_PRODUCTS, ...STOCKX_EXPANDED_YEEZY_PRODUCTS, ...STOCKX_EXPANDED_ASICS_PRODUCTS, ...STOCKX_EXPANDED_BAPE_PRODUCTS, ...STOCKX_EXPANDED_STONE_ISLAND_PRODUCTS, ...STOCKX_EXPANDED_MONCLER_PRODUCTS, ...STOCKX_EXPANDED_ROLEX_PRODUCTS, ...STOCKX_EXPANDED_POKEMON_PRODUCTS, ...STOCKX_EXPANDED_STUSSY_PRODUCTS, ...STOCKX_EXPANDED_APPLE_PRODUCTS, ...STOCKX_EXPANDED_LOUIS_VUITTON_PRODUCTS, ...STOCKX_EXPANDED_HERMES_PRODUCTS, ...STOCKX_EXPANDED_DYSON_PRODUCTS, ...STOCKX_TRENDING_MARKETPLACE_PRODUCTS, ...INTERNET_TRENDING_FRAGRANCE_PRODUCTS];
+const HAS_PRODUCT_IMAGE_DATA = Boolean(
+    (window.ProductImages && Object.keys(window.ProductImages).length) ||
+    (window.ProductImagesById && Object.keys(window.ProductImagesById).length) ||
+    STOCKX_EXPANDED_PRODUCTS.length
+);
 let PRODUCT_IMAGE_NEXT_BRAND_ID = MOCK_BRANDS.reduce((max, b) => Math.max(max, Number(b.id) || 0), 0) + 1;
 STOCKX_EXPANDED_PRODUCTS.forEach(item => {
     if (!item || !item.brandSlug || brandBySlug[item.brandSlug]) return;
@@ -1295,6 +1300,10 @@ const PRODUCT_IMAGE_SEEN_URLS = new Set();
 const PRODUCT_IMAGE_SEEN_SKUS = new Set();
 const PRODUCT_IMAGE_VISIBLE_PRODUCTS = [];
 MOCK_PRODUCTS.forEach(p => {
+    if (!HAS_PRODUCT_IMAGE_DATA) {
+        PRODUCT_IMAGE_VISIBLE_PRODUCTS.push(p);
+        return;
+    }
     if (PRODUCT_IMAGE_HIDDEN_IDS.has(p.id)) return;
     const imageUrlById = window.ProductImagesById && window.ProductImagesById[p.id];
     const imageUrlBySku = p.sku && window.ProductImages && window.ProductImages[p.sku];
@@ -1423,10 +1432,10 @@ window.SearchCatalog = {
 
 // ── DEV VALIDATION ────────────────────────────────────────â”€
 // Open browser console to see live count on page load
-console.log(`[Cargoo] Catalogue loaded: ${MOCK_PRODUCTS.length} products across ${MOCK_BRANDS.length} brands and ${MOCK_CATEGORIES.length} categories`);
+console.debug(`[Cargoo] Catalogue loaded: ${MOCK_PRODUCTS.length} products across ${MOCK_BRANDS.length} brands and ${MOCK_CATEGORIES.length} categories`);
 if (MOCK_PRODUCTS.length < 1500) console.warn('[Cargoo] WARNING: Product count below expected threshold');
 
 // Validate no orphan brandId=1 (Nike fallback) for non-Nike products
 const orphans = MOCK_PRODUCTS.filter(p => p.brandId === 1 && !['Nike'].includes(p.brand));
 if (orphans.length > 0) console.warn('[Cargoo] Brand mapping orphans:', orphans.map(p=>p.name));
-
+//# sourceMappingURL=search-data.js.map

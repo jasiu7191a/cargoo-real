@@ -6,18 +6,18 @@ window.ImageAdapter = {
     _resolveSource: function(product, variant="thumbnail") {
         if (!product) return this.getFallbackPlaceholder('default');
 
-        // Priority 0: Product/SKU keyed image maps (real product photos, bypasses placeholder override)
+        // Force all products to use category placeholder images
+        if (window.ImageConfig.forcePlaceholders) {
+            return this.getFallbackPlaceholder(product.categorySlug || 'default');
+        }
+
+        // Priority 0: Product/SKU keyed image maps (real product photos)
         if (product.id && window.ProductImagesById && window.ProductImagesById[product.id]) {
             return window.ProductImagesById[product.id];
         }
 
         if (product.sku && window.ProductImages && window.ProductImages[product.sku]) {
             return window.ProductImages[product.sku];
-        }
-
-        // Force all products to use category placeholder images
-        if (window.ImageConfig.forcePlaceholders) {
-            return this.getFallbackPlaceholder(product.categorySlug || 'default');
         }
 
         // Priority 1: CMS Backend Image (Future Proofing)

@@ -153,7 +153,7 @@ export function Footer({ lang = "en" }: FooterProps) {
         </div>
 
         <div className="footer-bottom">
-          <p>&copy; 2026 Cargoo. {t.copyright}</p>
+          <p>&copy; <span id="currentYear">2026</span> Cargoo. {t.copyright}</p>
           <div className="payment-methods">
             <i className="fa-brands fa-cc-visa"></i>
             <i className="fa-brands fa-cc-mastercard"></i>

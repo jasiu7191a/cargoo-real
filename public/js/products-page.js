@@ -559,11 +559,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
         }).join('');
 
-        if (reset) {
-            gridContainer.innerHTML = batchHtml;
-        } else {
-            gridContainer.insertAdjacentHTML('beforeend', batchHtml);
-        }
+        gridContainer.insertAdjacentHTML('beforeend', batchHtml);
 
 
         // Hide sentinel if all items loaded
@@ -650,3 +646,4 @@ document.addEventListener('DOMContentLoaded', () => {
     init();
 
 });
+

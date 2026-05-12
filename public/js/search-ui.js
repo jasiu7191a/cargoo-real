@@ -17,6 +17,114 @@ document.addEventListener('DOMContentLoaded', () => {
     const openDrawerBtns = document.querySelectorAll('.open-estimate-btn'); // For manual opening
     const estimateItemsList = document.getElementById('estimateItemsList');
     const estimateForm = document.getElementById('estimateForm');
+    let accountUser = null;
+    let accountLoaded = false;
+
+    const quoteCopy = {
+        en: {
+            sentTo: 'Quote will be sent to:',
+            saved: 'Quote request saved. You can track it in My Account.',
+            loginHint: 'Have an account?',
+            login: 'Log in',
+            create: 'Create account',
+            sending: 'Sending...'
+        },
+        pl: {
+            sentTo: 'Wycena zostanie wysłana do:',
+            saved: 'Zapytanie o wycenę zapisane. Możesz je śledzić w Moim koncie.',
+            loginHint: 'Masz już konto?',
+            login: 'Zaloguj się',
+            create: 'Utwórz konto',
+            sending: 'Wysyłanie...'
+        },
+        de: {
+            sentTo: 'Das Angebot wird gesendet an:',
+            saved: 'Preisanfrage gespeichert. Du kannst sie in Mein Konto verfolgen.',
+            loginHint: 'Hast du ein Konto?',
+            login: 'Einloggen',
+            create: 'Konto erstellen',
+            sending: 'Senden...'
+        },
+        fr: {
+            sentTo: 'Le devis sera envoyé à :',
+            saved: 'Demande de devis enregistrée. Vous pouvez la suivre dans Mon compte.',
+            loginHint: 'Vous avez un compte ?',
+            login: 'Se connecter',
+            create: 'Créer un compte',
+            sending: 'Envoi...'
+        }
+    };
+
+    function detectLang() {
+        const path = window.location.pathname;
+        if (path.includes('/cargoo-pl/')) return 'pl';
+        if (path.includes('/cargoo-de/')) return 'de';
+        if (path.includes('/cargoo-fr/')) return 'fr';
+        return 'en';
+    }
+
+    function getCsrfToken() {
+        return document.cookie
+            .split('; ')
+            .find(row => row.startsWith('cargoo_csrf='))
+            ?.split('=')[1] || '';
+    }
+
+    async function loadAccountUser() {
+        if (accountLoaded) return accountUser;
+        accountLoaded = true;
+        try {
+            const res = await fetch('/api/auth/me', { credentials: 'include' });
+            const data = res.ok ? await res.json() : { user: null };
+            accountUser = data.user || null;
+        } catch {
+            accountUser = null;
+        }
+        return accountUser;
+    }
+
+    async function updateEstimateAuthUI() {
+        if (!estimateForm) return;
+        const copy = quoteCopy[detectLang()] || quoteCopy.en;
+        const user = await loadAccountUser();
+
+        // Always keep the form visible. When the user is logged in, hide the
+        // email field (we already know the address). When they're not, show a
+        // subtle "log in?" link above the form so they can opt in but the
+        // form stays usable for guest checkout.
+        const emailInput = document.getElementById('estEmail');
+        const emailGroup = emailInput ? emailInput.closest('.form-group') : null;
+
+        // Wipe any banner that might have been injected on a previous render.
+        estimateForm.querySelectorAll('.quote-account-note, .quote-login-hint')
+            .forEach(el => el.remove());
+
+        if (user) {
+            // Logged in — hide the email field, show the "sent to: ..." note.
+            if (emailInput) emailInput.required = false;
+            if (emailGroup) emailGroup.style.display = 'none';
+
+            const note = document.createElement('div');
+            note.className = 'quote-account-note';
+            note.innerHTML = `${copy.sentTo} <strong>${user.email}</strong>`;
+            estimateForm.insertBefore(note, estimateForm.firstChild);
+            return;
+        }
+
+        // Guest — keep the email field required, show a tiny login affordance.
+        if (emailInput) emailInput.required = true;
+        if (emailGroup) emailGroup.style.display = '';
+
+        const hint = document.createElement('div');
+        hint.className = 'quote-login-hint';
+        hint.innerHTML = `
+            <span>${copy.loginHint}</span>
+            <a href="account.html?mode=login">${copy.login}</a>
+            <span> · </span>
+            <a href="account.html?mode=register">${copy.create}</a>
+        `;
+        estimateForm.insertBefore(hint, estimateForm.firstChild);
+    }
 
     /* --- GLOBAL DRAWER CONTROLS --- */
     window.openEstimateDrawer = () => {
@@ -26,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.style.overflow = 'hidden';
         closeSearch();
         renderEstimateTray();
+        updateEstimateAuthUI();
     };
 
     window.closeEstimateDrawer = () => {
@@ -426,27 +535,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /* Submit Logic */
     if (estimateForm) {
+        updateEstimateAuthUI();
         estimateForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const email    = document.getElementById('estEmail').value.trim();
-            const msg      = document.getElementById('estMsg').value.trim();
-            const items    = window.EstimateState ? window.EstimateState.getItems() : [];
-            const submitBtn = estimateForm.querySelector('button[type="submit"]');
-
-            if (!email) {
-                alert('Please enter your email address.');
+            const copy     = quoteCopy[detectLang()] || quoteCopy.en;
+            const user     = await loadAccountUser();
+            if (!user) {
+                await updateEstimateAuthUI();
                 return;
             }
+
+            const email    = user.email;
+            const msgEl    = document.getElementById('estMsg');
+            const msg      = msgEl ? msgEl.value.trim() : '';
+            const items    = window.EstimateState ? window.EstimateState.getItems() : [];
+            const submitBtn = estimateForm.querySelector('button[type="submit"]');
 
             // UI: show loading state
             const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
             if (submitBtn) {
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+                submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> ${copy.sending}`;
             }
 
-            const API_URL = 'https://admin.cargooimport.eu/api/leads';
+            const API_URL = '/api/quote-requests';
 
             try {
                 let leadsToSubmit = [];
@@ -475,13 +588,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     leadsToSubmit.map(lead =>
                         fetch(API_URL, {
                             method:  'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-csrf-token': getCsrfToken()
+                            },
                             body:    JSON.stringify(lead),
                         }).then(r => r.json())
                     )
                 );
 
-                const allOk = results.every(r => r.success || r.leadId);
+                const allOk = results.every(r => r.success || r.leadId || r.quoteRequest);
                 console.log('[Analytics] estimate_submit → API', allOk ? 'OK' : 'PARTIAL', results);
 
                 if (allOk) {
@@ -489,7 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     estimateForm.innerHTML = `
                         <div style="text-align:center; padding: 2rem 0;">
                             <i class="fa-solid fa-circle-check" style="font-size:2.5rem; color:#22c55e; margin-bottom:1rem;"></i>
-                            <h3 style="margin-bottom:0.5rem;">Request Sent!</h3>
+                            <h3 style="margin-bottom:0.5rem;">${copy.saved}</h3>
                             <p style="color:var(--clr-text-muted); font-size:0.9rem;">
                                 We've received your inquiry and will email <strong>${email}</strong> within 24–48 hours with a sourcing quote.
                             </p>
