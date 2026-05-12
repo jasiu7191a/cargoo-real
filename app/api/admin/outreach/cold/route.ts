@@ -2,24 +2,14 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getAdminSession } from "@/lib/session";
 import { sendColdEmail, stripBodyPlaceholder } from "@/lib/mail";
+import { dailyEmailCap, dailyWindowStartUtc } from "@/lib/cold-email/config";
 
 export const dynamic = "force-dynamic";
 
-// Daily cap on outbound cold sends, protects domain reputation. Override via
-// COLD_OUTREACH_DAILY_LIMIT env var when running a planned follow-up batch
-// larger than the default. Keep increases gradual — Resend will throttle a
-// brand-new domain that suddenly sends 50/day after weeks at 10/day.
-const DEFAULT_DAILY_LIMIT = 10;
-const DAILY_LIMIT = (() => {
-  const raw = process.env.COLD_OUTREACH_DAILY_LIMIT;
-  const parsed = raw ? Number(raw) : NaN;
-  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : DEFAULT_DAILY_LIMIT;
-})();
-
-// Hours that must elapse between two sends to the same address. Set short enough
+// Hours that must elapse between two sends to the same address. Short enough
 // that a next-day follow-up batch goes through, long enough that an operator
-// double-clicking "send" the same morning doesn't spam a prospect. Override via
-// COLD_OUTREACH_COOLDOWN_HOURS env var.
+// double-clicking "send" the same morning doesn't spam a prospect. Override
+// via COLD_OUTREACH_COOLDOWN_HOURS env var.
 const DEFAULT_COOLDOWN_HOURS = 12;
 const cooldownHours = (() => {
   const raw = process.env.COLD_OUTREACH_COOLDOWN_HOURS;
@@ -78,15 +68,16 @@ export async function POST(req: Request) {
       );
     }
 
-    // Enforce daily sending limit to protect deliverability
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
+    // Enforce the shared daily cap. Both new cold sends and drip follow-ups
+    // write to coldOutreach with status=SENT, so this single count covers
+    // both code paths — no risk of drift between routes.
+    const cap = dailyEmailCap();
     const sentToday = await prisma.coldOutreach.count({
-      where: { sentAt: { gte: todayStart }, status: "SENT" },
+      where: { sentAt: { gte: dailyWindowStartUtc() }, status: "SENT" },
     });
-    if (sentToday >= DAILY_LIMIT) {
+    if (sentToday >= cap) {
       return NextResponse.json(
-        { error: `Daily limit of ${DAILY_LIMIT} cold emails reached. Try again tomorrow.` },
+        { error: `Daily cap of ${cap} cold emails reached. Try again after 00:00 UTC.` },
         { status: 429 }
       );
     }
@@ -155,7 +146,8 @@ export async function POST(req: Request) {
       success: true,
       touch: touchNumber,
       sentToday: sentToday + 1,
-      remaining: DAILY_LIMIT - sentToday - 1,
+      remaining: cap - sentToday - 1,
+      cap,
     });
   } catch (error) {
     console.error("Cold outreach error:", error);
@@ -170,6 +162,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const cap = dailyEmailCap();
     const [history, unsubscribes, todayCount] = await Promise.all([
       prisma.coldOutreach.findMany({
         orderBy: { sentAt: "desc" },
@@ -178,7 +171,7 @@ export async function GET() {
       prisma.unsubscribe.count(),
       prisma.coldOutreach.count({
         where: {
-          sentAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+          sentAt: { gte: dailyWindowStartUtc() },
           status: "SENT",
         },
       }),
@@ -188,8 +181,8 @@ export async function GET() {
       history,
       unsubscribes,
       todaySent: todayCount,
-      dailyLimit: DAILY_LIMIT,
-      remaining: Math.max(0, DAILY_LIMIT - todayCount),
+      dailyLimit: cap,
+      remaining: Math.max(0, cap - todayCount),
       cooldownHours,
     });
   } catch (error) {

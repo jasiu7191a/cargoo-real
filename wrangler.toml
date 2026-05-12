@@ -22,9 +22,10 @@ COOKIE_DOMAIN = ".cargooimport.eu"
 REPLIES_INBOX = "contact@cargooimport.eu"
 UNSUBSCRIBE_MAILTO = "contact@cargooimport.eu"
 
-# Drip cron tuning. Raise DRIP_DAILY_CAP gradually as domain reputation grows —
-# large jumps trigger Gmail/Outlook reputation throttling.
-DRIP_DAILY_CAP = "30"
+# Drip cron tuning. EMAIL_DAILY_CAP is shared with /api/admin/outreach/cold
+# (see lib/cold-email/config.ts) — bump it gradually, large jumps trigger
+# Gmail/Outlook reputation throttling.
+EMAIL_DAILY_CAP = "25"
 DRIP_FOLLOWUP_COOLDOWN_DAYS = "3"
 DRIP_MAX_TOUCHES = "3"
 DRIP_WINBACK_AFTER_DAYS = "7"
@@ -47,8 +48,12 @@ DRIP_WINBACK_AFTER_DAYS = "7"
 #
 # Optional tuning (set in [vars] above or as a secret):
 #
-#   COLD_OUTREACH_DAILY_LIMIT      Default: 10. Raise gradually for follow-up
-#                                  batches; large jumps hurt deliverability.
+#   EMAIL_DAILY_CAP                Default: 25. Shared between new cold sends
+#                                  and drip follow-ups. Ramp up gradually for
+#                                  deliverability. Replaces the old
+#                                  COLD_OUTREACH_DAILY_LIMIT + DRIP_DAILY_CAP
+#                                  pair — if those are still set in the
+#                                  Cloudflare dashboard, delete them.
 #   COLD_OUTREACH_COOLDOWN_HOURS   Default: 12. Minimum gap between two sends to
 #                                  the same address.
 #   ENABLE_FIRST_ADMIN_SETUP       Default: unset. Set to "true" only while

@@ -9,7 +9,7 @@
     "COOKIE_DOMAIN": ".cargooimport.eu",
     "REPLIES_INBOX": "contact@cargooimport.eu",
     "UNSUBSCRIBE_MAILTO": "contact@cargooimport.eu",
-    "DRIP_DAILY_CAP": "30",
+    "EMAIL_DAILY_CAP": "25",
     "DRIP_FOLLOWUP_COOLDOWN_DAYS": "3",
     "DRIP_MAX_TOUCHES": "3",
     "DRIP_WINBACK_AFTER_DAYS": "7"

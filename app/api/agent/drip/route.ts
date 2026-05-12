@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { sendColdEmail } from "@/lib/mail";
 import { buildFollowUpEmail, buildWinBackEmail } from "@/lib/outreach-templates";
+import { dailyEmailCap, dailyWindowStartUtc } from "@/lib/cold-email/config";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -27,9 +28,14 @@ export const maxDuration = 60;
  *      win-back email. We dedupe via AdminAction so a prospect doesn't
  *      receive two win-backs.
  *
- * Caps: each invocation will not send more than DRIP_DAILY_CAP emails
- * total. Below the cold-outreach daily limit because drip is additive on
- * top of fresh cold sends.
+ * Daily budget:
+ *   Cold sends (POST /api/admin/outreach/cold) and drip follow-ups share one
+ *   daily quota — see lib/cold-email/config.ts. Drip computes "remaining
+ *   slots" as `cap - cold_sends_already_today`, so a busy morning of new
+ *   sends naturally shrinks the drip allotment instead of double-spending
+ *   the domain's deliverability budget. Win-backs are NOT counted in the
+ *   shared cap today (they don't write to coldOutreach); revisit if volume
+ *   grows enough to matter.
  */
 
 function authOk(req: Request): boolean {
@@ -41,7 +47,6 @@ function authOk(req: Request): boolean {
 const FOLLOWUP_COOLDOWN_DAYS = Number(process.env.DRIP_FOLLOWUP_COOLDOWN_DAYS ?? 3);
 const MAX_TOUCHES              = Number(process.env.DRIP_MAX_TOUCHES ?? 3);
 const WINBACK_AFTER_DAYS       = Number(process.env.DRIP_WINBACK_AFTER_DAYS ?? 7);
-const DRIP_DAILY_CAP           = Number(process.env.DRIP_DAILY_CAP ?? 30);
 
 interface DripStats {
   followUpsSent: number;
@@ -49,18 +54,34 @@ interface DripStats {
   skippedReplied: number;
   skippedUnsubscribed: number;
   skippedMaxTouches: number;
+  skippedDailyCap: number;
   errors: string[];
+  dailyCap: number;
+  coldSentBeforeDrip: number;
 }
 
 async function runDrip(): Promise<DripStats> {
+  const cap = dailyEmailCap();
+  const initialColdSent = await prisma.coldOutreach.count({
+    where: { sentAt: { gte: dailyWindowStartUtc() }, status: "SENT" },
+  });
+
   const stats: DripStats = {
     followUpsSent: 0,
     winBackSent: 0,
     skippedReplied: 0,
     skippedUnsubscribed: 0,
     skippedMaxTouches: 0,
+    skippedDailyCap: 0,
     errors: [],
+    dailyCap: cap,
+    coldSentBeforeDrip: initialColdSent,
   };
+
+  // Slots left for drip after subtracting whatever cold-sends already went
+  // out today (manual admin sends, agent sends — all funnel through the
+  // same coldOutreach table).
+  const followUpSlots = Math.max(0, cap - initialColdSent);
 
   const cutoff = new Date(Date.now() - FOLLOWUP_COOLDOWN_DAYS * 24 * 60 * 60 * 1000);
 
@@ -82,7 +103,7 @@ async function runDrip(): Promise<DripStats> {
     if (seen.has(row.email)) continue;
     seen.add(row.email);
     candidates.push(row);
-    if (candidates.length >= DRIP_DAILY_CAP * 2) break;
+    if (candidates.length >= Math.max(followUpSlots, cap) * 2) break;
   }
 
   // Unsubscribe lookup in one query
@@ -93,7 +114,10 @@ async function runDrip(): Promise<DripStats> {
   const unsubSet = new Set(unsubs.map(u => u.email));
 
   for (const row of candidates) {
-    if (stats.followUpsSent >= DRIP_DAILY_CAP) break;
+    if (stats.followUpsSent >= followUpSlots) {
+      stats.skippedDailyCap += 1;
+      continue;
+    }
 
     const replied = (row as { replied?: boolean }).replied === true;
     if (replied) { stats.skippedReplied += 1; continue; }
@@ -210,8 +234,10 @@ async function runDrip(): Promise<DripStats> {
       type: "DRIP_CRON_RUN",
       details:
         `Drip: ${stats.followUpsSent} follow-ups, ${stats.winBackSent} win-backs. ` +
+        `Cap ${cap}, cold-sent-before ${initialColdSent}, slots ${followUpSlots}. ` +
         `Skipped — replied:${stats.skippedReplied} unsub:${stats.skippedUnsubscribed} ` +
-        `maxTouches:${stats.skippedMaxTouches}. Errors:${stats.errors.length}`,
+        `maxTouches:${stats.skippedMaxTouches} dailyCap:${stats.skippedDailyCap}. ` +
+        `Errors:${stats.errors.length}`,
       adminName: "Drip Cron",
     },
   });
