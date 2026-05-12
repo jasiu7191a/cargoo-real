@@ -1,10 +1,69 @@
 import React from "react";
+import type { Metadata } from "next";
 import prisma from "@/lib/prisma";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 
 export const dynamic = "force-dynamic";
+
+const BASE_URL = "https://www.cargooimport.eu";
+
+const RESOURCES_META = {
+  en: {
+    title: "Sourcing Guides & Resources | Cargoo Import",
+    description: "Expert guides on importing from China — supplier verification, freight, customs, VAT, and landed cost planning for EU buyers.",
+  },
+  pl: {
+    title: "Przewodniki sourcingowe i materiały | Cargoo Import",
+    description: "Praktyczne przewodniki po imporcie z Chin — weryfikacja dostawców, transport, cło, VAT i planowanie kosztu końcowego dla kupujących z UE.",
+  },
+  de: {
+    title: "Sourcing-Guides & Ressourcen | Cargoo Import",
+    description: "Praxiswissen zu China-Import — Lieferantenprüfung, Fracht, Zoll, Mehrwertsteuer und Gesamtkosten für EU-Käufer.",
+  },
+  fr: {
+    title: "Guides sourcing & ressources | Cargoo Import",
+    description: "Guides pratiques pour importer de Chine — vérification fournisseurs, fret, douane, TVA et coût rendu pour les acheteurs UE.",
+  },
+} as const;
+
+type ResourcesLang = keyof typeof RESOURCES_META;
+
+export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
+  const lang = (params.lang in RESOURCES_META ? params.lang : "en") as ResourcesLang;
+  const meta = RESOURCES_META[lang];
+
+  return {
+    title: meta.title,
+    description: meta.description,
+    alternates: {
+      canonical: `${BASE_URL}/${lang}/resources`,
+      languages: {
+        en: `${BASE_URL}/en/resources`,
+        pl: `${BASE_URL}/pl/resources`,
+        de: `${BASE_URL}/de/resources`,
+        fr: `${BASE_URL}/fr/resources`,
+        "x-default": `${BASE_URL}/en/resources`,
+      },
+    },
+    openGraph: {
+      title: meta.title,
+      description: meta.description,
+      url: `${BASE_URL}/${lang}/resources`,
+      siteName: "Cargoo Import",
+      type: "website",
+      locale: lang,
+      images: [{ url: `${BASE_URL}/assets/images/logo-image.jpg`, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: meta.title,
+      description: meta.description,
+      images: [`${BASE_URL}/assets/images/logo-image.jpg`],
+    },
+  };
+}
 
 export default async function ResourcesPage({ params }: { params: { lang: string } }) {
   const lang = params.lang || "en";
@@ -18,8 +77,18 @@ export default async function ResourcesPage({ params }: { params: { lang: string
     console.error("Failed to load blog posts:", e);
   }
 
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Home", item: `${BASE_URL}/${lang}` },
+      { "@type": "ListItem", position: 2, name: "Resources", item: `${BASE_URL}/${lang}/resources` },
+    ],
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <Navbar lang={lang} />
 
       <main style={{ minHeight: "100vh" }}>

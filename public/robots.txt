@@ -1,26 +1,16 @@
+# Cargoo Import — robots.txt (Next.js admin/preview deployment)
+# This file is served from admin.cargooimport.eu and cargoo-real.pages.dev.
+# The canonical robots.txt for the public site lives in cargoo/robots.txt
+# and is served from www.cargooimport.eu via Cloudflare Pages.
+
 User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /admin
+Disallow: /api/auth/
+Disallow: /api/payment-webhooks/
+Disallow: /api/leads
+Disallow: /account
 
-User-agent: GPTBot
-Disallow: /
-
-User-agent: ChatGPT-User
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
-User-agent: anthropic-ai
-Disallow: /
-
-User-agent: ClaudeBot
-Disallow: /
-
-User-agent: Google-Extended
-Disallow: /
-
-User-agent: meta-externalagent
-Disallow: /
-
-Sitemap: https://blog.cargooimport.eu/sitemap.xml
+Sitemap: https://www.cargooimport.eu/sitemap-index.xml
+Sitemap: https://www.cargooimport.eu/sitemap.xml
