@@ -38,6 +38,27 @@ async function loadAdminBlogPost(lang: string, slug: string) {
   return prisma.blogPost.findFirst({ where: { slug, lang } });
 }
 
+// Find published siblings sharing the same targetKeyword in other locales.
+// Used to emit accurate hreflang alternates — emitting a fixed cross-lang
+// URL (the same slug under a different /lang/ path) 404s because slugs
+// are stored with a {lang}- prefix that doesn't translate.
+async function loadSiblings(targetKeyword: string | null | undefined, lang: string) {
+  if (!targetKeyword) return [] as { lang: string; slug: string }[];
+  try {
+    const { default: prisma } = await import("@/lib/prisma");
+    const rows = await prisma.blogPost.findMany({
+      where: { status: "PUBLISHED", targetKeyword, lang: { not: lang } },
+      select: { lang: true, slug: true },
+    });
+    const byLang = new Map<string, string>();
+    for (const r of rows) if (!byLang.has(r.lang)) byLang.set(r.lang, r.slug);
+    return Array.from(byLang.entries()).map(([l, s]) => ({ lang: l, slug: s }));
+  } catch (e) {
+    console.error("[generateMetadata] sibling lookup failed:", e);
+    return [];
+  }
+}
+
 export async function generateMetadata({ params }: { params: { slug: string; lang: string } }) {
   let post: any = null;
   try {
@@ -54,6 +75,15 @@ export async function generateMetadata({ params }: { params: { slug: string; lan
     de: "de_DE",
     fr: "fr_FR",
   };
+
+  const siblings = await loadSiblings(post.targetKeyword, params.lang);
+  const languages: Record<string, string> = {
+    [params.lang]: `${BASE_URL}/${params.lang}/blog/${params.slug}`,
+  };
+  for (const s of siblings) {
+    languages[s.lang] = `${BASE_URL}/${s.lang}/blog/${s.slug}`;
+  }
+  languages["x-default"] = languages.en ?? languages[params.lang];
 
   return {
     title: post.title + " | Cargoo Import",
@@ -80,13 +110,7 @@ export async function generateMetadata({ params }: { params: { slug: string; lan
     },
     alternates: {
       canonical: `${BASE_URL}/${params.lang}/blog/${params.slug}`,
-      languages: {
-        en: `${BASE_URL}/en/blog/${params.slug}`,
-        pl: `${BASE_URL}/pl/blog/${params.slug}`,
-        de: `${BASE_URL}/de/blog/${params.slug}`,
-        fr: `${BASE_URL}/fr/blog/${params.slug}`,
-        "x-default": `${BASE_URL}/en/blog/${params.slug}`,
-      },
+      languages,
     },
   };
 }

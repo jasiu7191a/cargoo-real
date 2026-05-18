@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { querySearchAnalytics, getServiceAccountToken } from "@/lib/gsc";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export const maxDuration = 60;
+
+const SITE_URL = "https://www.cargooimport.eu";
 
 function authOk(req: Request): boolean {
   const header = req.headers.get("authorization") ?? "";
@@ -10,15 +15,13 @@ function authOk(req: Request): boolean {
   return !!secret && token === secret;
 }
 
-// Check if a URL is indexed by searching for site:url in Google's Custom Search API.
-// Returns indexed=false (with no snippet) when the API isn't configured or fails.
-async function isIndexed(slug: string, lang: string): Promise<{ indexed: boolean; snippet?: string }> {
+// Legacy fallback: Custom Search "site:" probe. Kept because GSC takes 2-3
+// days to register a brand-new URL while Custom Search shows it within
+// hours, so for the freshest posts the legacy check is still informative.
+async function isIndexedCustomSearch(slug: string, lang: string): Promise<{ indexed: boolean; snippet?: string }> {
   const apiKey = process.env.GOOGLE_SEARCH_API_KEY;
   const cx = process.env.GOOGLE_SEARCH_CX;
-  if (!apiKey || !cx) {
-    // Caller already returned 503 above when configuration is bad, but defend anyway.
-    return { indexed: false };
-  }
+  if (!apiKey || !cx) return { indexed: false };
 
   const domain = "cargooimport.eu";
   const query = encodeURIComponent(`site:${domain}/${lang}/blog/${slug}`);
@@ -36,138 +39,203 @@ async function isIndexed(slug: string, lang: string): Promise<{ indexed: boolean
       items?: Array<{ snippet?: string }>;
     };
     const total = parseInt(data?.searchInformation?.totalResults ?? "0", 10);
-    const snippet = data?.items?.[0]?.snippet;
-    return { indexed: total > 0, snippet };
+    return { indexed: total > 0, snippet: data?.items?.[0]?.snippet };
   } catch {
     return { indexed: false };
   }
+}
+
+function pageUrl(lang: string, slug: string) {
+  return `${SITE_URL}/${lang}/blog/${slug}`;
+}
+
+function ymd(d: Date) {
+  return d.toISOString().slice(0, 10);
 }
 
 export async function POST(req: Request) {
   if (!authOk(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  if (!process.env.GOOGLE_SEARCH_API_KEY || !process.env.GOOGLE_SEARCH_CX) {
-    return NextResponse.json(
-      { error: "GOOGLE_SEARCH_API_KEY and GOOGLE_SEARCH_CX must be set" },
-      { status: 503 }
-    );
-  }
 
   try {
-  // Get published posts not yet confirmed indexed, or checked more than 7 days ago
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const gscReady = !!(await getServiceAccountToken());
+    const hasCustomSearch = !!(process.env.GOOGLE_SEARCH_API_KEY && process.env.GOOGLE_SEARCH_CX);
 
-  const posts = await prisma.blogPost.findMany({
-    where: { status: "PUBLISHED" },
-    orderBy: { publishedAt: "asc" },
-    select: { id: true, slug: true, lang: true, title: true, publishedAt: true },
-    take: 20,
-  });
-
-  if (posts.length === 0) {
-    return NextResponse.json({ checked: 0, message: "No published posts" });
-  }
-
-  // Batch-load latest SEO check for all posts in one query
-  const postIds = posts.map(p => p.id);
-  const allChecks = await prisma.seoCheck.findMany({
-    where: { postId: { in: postIds } },
-    orderBy: { checkedAt: "desc" },
-  });
-
-  // Keep only the most recent check per post
-  const latestCheckByPost = new Map<string, typeof allChecks[number]>();
-  for (const check of allChecks) {
-    if (!latestCheckByPost.has(check.postId)) {
-      latestCheckByPost.set(check.postId, check);
+    if (!gscReady && !hasCustomSearch) {
+      return NextResponse.json(
+        {
+          error:
+            "Neither GSC (GSC_SERVICE_ACCOUNT_JSON + GSC_SITE_URL) nor Custom Search (GOOGLE_SEARCH_API_KEY + GOOGLE_SEARCH_CX) is configured.",
+        },
+        { status: 503 }
+      );
     }
-  }
 
-  const results: Array<{
-    postId: string;
-    slug: string;
-    lang: string;
-    title: string;
-    indexed: boolean;
-    checkedAt: string;
-    snippet?: string;
-    isNew: boolean;
-  }> = [];
+    const posts = await prisma.blogPost.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: { publishedAt: "asc" },
+      select: { id: true, slug: true, lang: true, title: true, publishedAt: true },
+      take: 50,
+    });
 
-  const needsCheck: typeof posts = [];
+    if (posts.length === 0) {
+      return NextResponse.json({ checked: 0, message: "No published posts" });
+    }
 
-  for (const post of posts) {
-    const lastCheck = latestCheckByPost.get(post.id);
+    // ---- Path A: GSC bulk pull ------------------------------------------
+    let gscRowsByPage = new Map<string, { impressions: number; clicks: number; ctr: number; position: number }>();
+    let gscDate: string | null = null;
 
-    // Skip if: already indexed AND checked recently
-    if (lastCheck?.indexed && lastCheck.checkedAt > sevenDaysAgo) {
-      results.push({
-        postId: post.id,
-        slug: post.slug,
-        lang: post.lang,
-        title: post.title,
-        indexed: true,
-        checkedAt: lastCheck.checkedAt.toISOString(),
-        snippet: lastCheck.searchSnippet ?? undefined,
-        isNew: false,
+    if (gscReady) {
+      const end = new Date();
+      const start = new Date();
+      start.setDate(end.getDate() - 28); // last 28 days
+      gscDate = ymd(end);
+
+      const rows = await querySearchAnalytics({
+        startDate: ymd(start),
+        endDate: ymd(end),
+        dimensions: ["page"],
+        rowLimit: 500,
       });
-      continue;
+
+      for (const row of rows) {
+        if (!row.page) continue;
+        gscRowsByPage.set(row.page, {
+          impressions: row.impressions,
+          clicks: row.clicks,
+          ctr: row.ctr,
+          position: row.position,
+        });
+      }
     }
 
-    // Re-check if not indexed or stale
-    if (!lastCheck || lastCheck.checkedAt < sevenDaysAgo) {
-      needsCheck.push(post);
+    const results: Array<{
+      postId: string;
+      slug: string;
+      lang: string;
+      title: string;
+      source: "gsc" | "custom-search" | "none";
+      indexed: boolean;
+      impressions?: number;
+      clicks?: number;
+      ctr?: number;
+      position?: number;
+      snippet?: string;
+    }> = [];
+
+    const captureDate = new Date();
+
+    for (const post of posts) {
+      const url = pageUrl(post.lang, post.slug);
+      const gscRow = gscRowsByPage.get(url);
+
+      if (gscRow) {
+        // Indexed if it has at least one impression in the last 28 days
+        const indexed = gscRow.impressions > 0;
+
+        // Persist into SeoMetric (new model) — keep one row per post per
+        // capture date for trending.
+        await prisma.seoMetric.upsert({
+          where: {
+            // SeoMetric has no compound unique, so use a deterministic id
+            id: `${post.id}-${gscDate ?? ymd(captureDate)}`,
+          } as any,
+          create: {
+            id: `${post.id}-${gscDate ?? ymd(captureDate)}`,
+            postId: post.id,
+            slug: post.slug,
+            lang: post.lang,
+            impressions: gscRow.impressions,
+            clicks: gscRow.clicks,
+            ctr: gscRow.ctr,
+            position: gscRow.position,
+            date: new Date(`${gscDate ?? ymd(captureDate)}T00:00:00Z`),
+          } as any,
+          update: {
+            impressions: gscRow.impressions,
+            clicks: gscRow.clicks,
+            ctr: gscRow.ctr,
+            position: gscRow.position,
+          } as any,
+        });
+
+        // Mirror into legacy SeoCheck so the existing admin UI still works.
+        await prisma.seoCheck.create({
+          data: {
+            postId: post.id,
+            slug: post.slug,
+            lang: post.lang,
+            indexed,
+          },
+        });
+
+        results.push({
+          postId: post.id,
+          slug: post.slug,
+          lang: post.lang,
+          title: post.title,
+          source: "gsc",
+          indexed,
+          impressions: gscRow.impressions,
+          clicks: gscRow.clicks,
+          ctr: gscRow.ctr,
+          position: gscRow.position,
+        });
+        continue;
+      }
+
+      // ---- Path B: legacy Custom Search fallback ------------------------
+      if (hasCustomSearch) {
+        const { indexed, snippet } = await isIndexedCustomSearch(post.slug, post.lang);
+        await prisma.seoCheck.create({
+          data: {
+            postId: post.id,
+            slug: post.slug,
+            lang: post.lang,
+            indexed,
+            searchSnippet: snippet ?? null,
+          },
+        });
+        results.push({
+          postId: post.id,
+          slug: post.slug,
+          lang: post.lang,
+          title: post.title,
+          source: "custom-search",
+          indexed,
+          snippet,
+        });
+      } else {
+        results.push({
+          postId: post.id,
+          slug: post.slug,
+          lang: post.lang,
+          title: post.title,
+          source: "none",
+          indexed: false,
+        });
+      }
     }
-  }
 
-  // Check up to 10 posts per run to avoid rate limits
-  const toCheck = needsCheck.slice(0, 10);
+    const indexedCount = results.filter(r => r.indexed).length;
+    const fromGsc = results.filter(r => r.source === "gsc").length;
 
-  for (const post of toCheck) {
-    const { indexed, snippet } = await isIndexed(post.slug, post.lang);
-
-    await prisma.seoCheck.create({
+    await prisma.adminAction.create({
       data: {
-        postId: post.id,
-        slug: post.slug,
-        lang: post.lang,
-        indexed,
-        searchSnippet: snippet ?? null,
+        type: "SEO_CHECK",
+        details: `Checked ${results.length} posts. Indexed: ${indexedCount}. GSC: ${fromGsc}, Custom Search: ${results.length - fromGsc}.`,
+        adminName: "Agent",
       },
     });
 
-    results.push({
-      postId: post.id,
-      slug: post.slug,
-      lang: post.lang,
-      title: post.title,
-      indexed,
-      checkedAt: new Date().toISOString(),
-      snippet,
-      isNew: true,
+    return NextResponse.json({
+      checked: results.length,
+      indexedCount,
+      gscEnabled: gscReady,
+      results,
     });
-  }
-
-  const indexedCount = results.filter(r => r.indexed).length;
-  const notIndexedCount = results.filter(r => !r.indexed).length;
-
-  await prisma.adminAction.create({
-    data: {
-      type: "SEO_CHECK",
-      details: `Checked ${toCheck.length} posts. Indexed: ${indexedCount}, Not yet: ${notIndexedCount}`,
-      adminName: "Agent",
-    },
-  });
-
-  return NextResponse.json({
-    checked: toCheck.length,
-    total: results.length,
-    indexedCount,
-    notIndexedCount,
-    results,
-  });
   } catch (error: any) {
     console.error("seo-check route error:", error);
     return NextResponse.json(
