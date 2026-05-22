@@ -22,13 +22,13 @@ export const metadata: Metadata = {
     url: "https://www.cargooimport.eu",
     siteName: "Cargoo Import",
     type: "website",
-    images: [{ url: "/assets/images/logo-image.jpg", width: 1200, height: 630 }],
+    images: [{ url: "/assets/images/og-image.jpg", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Cargoo | Import from China Made Simple",
     description: "Cargoo helps you source, ship, and deliver products with zero hassle.",
-    images: ["/assets/images/logo-image.jpg"],
+    images: ["/assets/images/og-image.jpg"],
   },
   verification: {
     google: "FrgLQ6zedzPxzSk0B3-piVkLyup3BGo006w22pl8yG4",

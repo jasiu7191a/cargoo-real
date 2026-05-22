@@ -75,13 +75,13 @@ export async function generateMetadata({ params }: { params: { lang: string } })
       url: `${BASE_URL}/${params.lang}/blog`,
       siteName: "Cargoo Import",
       type: "website",
-      images: [{ url: `${BASE_URL}/assets/images/logo-image.jpg`, width: 1200, height: 630 }],
+      images: [{ url: `${BASE_URL}/assets/images/og-image.jpg`, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title: dict.blog.metaTitle,
       description: dict.blog.metaDescription,
-      images: [`${BASE_URL}/assets/images/logo-image.jpg`],
+      images: [`${BASE_URL}/assets/images/og-image.jpg`],
     },
   };
 }

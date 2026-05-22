@@ -100,13 +100,13 @@ export async function generateMetadata({ params }: { params: { slug: string; lan
       authors: ["Cargoo Import"],
       section: "EU–China Sourcing & Logistics",
       tags: post.targetKeyword ? [post.targetKeyword] : undefined,
-      images: [{ url: `${BASE_URL}/assets/images/logo-image.jpg`, width: 1200, height: 630 }],
+      images: [{ url: `${BASE_URL}/assets/images/og-image.jpg`, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title: post.title,
       description: post.metaDescription || "",
-      images: [`${BASE_URL}/assets/images/logo-image.jpg`],
+      images: [`${BASE_URL}/assets/images/og-image.jpg`],
     },
     alternates: {
       canonical: `${BASE_URL}/${params.lang}/blog/${params.slug}`,

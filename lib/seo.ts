@@ -13,7 +13,7 @@ export function generateCargooMetadata({
   description,
   lang,
   path,
-  image = "/og-image.png"
+  image = "/assets/images/og-image.jpg"
 }: MetadataProps): Metadata {
   const baseUrl = "https://www.cargooimport.eu";
   const url = `${baseUrl}/${lang}/${path}`;

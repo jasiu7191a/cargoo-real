@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import prisma from "@/lib/prisma";
 export const dynamic = 'force-dynamic';
 
@@ -51,13 +52,13 @@ export function generateMetadata({ params }: { params: { lang: string } }): Meta
       url: meta.canonical,
       siteName: "Cargoo Import",
       type: "website",
-      images: [{ url: "https://www.cargooimport.eu/assets/images/logo-image.jpg", width: 1200, height: 630 }],
+      images: [{ url: "https://www.cargooimport.eu/assets/images/og-image.jpg", width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title: meta.title,
       description: meta.description,
-      images: ["https://www.cargooimport.eu/assets/images/logo-image.jpg"],
+      images: ["https://www.cargooimport.eu/assets/images/og-image.jpg"],
     },
   };
 }
@@ -739,15 +740,18 @@ export default async function Home({ params }: { params: { lang: string } }) {
         <i className="fa-brands fa-whatsapp"></i>
       </a>
 
-      {/* Load static JS */}
-      <script src="/js/estimate-state.js" defer></script>
-      <script src="/js/image-config.js" defer></script>
-      <script src="/js/product-images.js" defer></script>
-      <script src="/js/image-adapter.js" defer></script>
-      <script src="/js/search-data.js" defer></script>
-      <script src="/js/search-api.js" defer></script>
-      <script src="/js/search-ui.js" defer></script>
-      <script src="/js/main.js" defer></script>
+      {/* Load static JS via next/script so handlers reliably attach after
+          hydration. Raw <script> tags in App Router Server Components are
+          inconsistently executed; <Script> with strategy="afterInteractive"
+          is the supported pattern (same one used by /products/page.tsx). */}
+      <Script src="/js/estimate-state.js" strategy="afterInteractive" />
+      <Script src="/js/image-config.js" strategy="afterInteractive" />
+      <Script src="/js/product-images.js" strategy="afterInteractive" />
+      <Script src="/js/image-adapter.js" strategy="afterInteractive" />
+      <Script src="/js/search-data.js" strategy="afterInteractive" />
+      <Script src="/js/search-api.js" strategy="afterInteractive" />
+      <Script src="/js/search-ui.js" strategy="afterInteractive" />
+      <Script src="/js/main.js" strategy="afterInteractive" />
     </>
   );
 }

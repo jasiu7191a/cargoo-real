@@ -54,13 +54,13 @@ export async function generateMetadata({ params }: { params: { lang: string } })
       siteName: "Cargoo Import",
       type: "website",
       locale: lang,
-      images: [{ url: `${BASE_URL}/assets/images/logo-image.jpg`, width: 1200, height: 630 }],
+      images: [{ url: `${BASE_URL}/assets/images/og-image.jpg`, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title: meta.title,
       description: meta.description,
-      images: [`${BASE_URL}/assets/images/logo-image.jpg`],
+      images: [`${BASE_URL}/assets/images/og-image.jpg`],
     },
   };
 }
