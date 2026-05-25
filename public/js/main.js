@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
             }
 
-            const serviceFee = productCost * 0.18 + 10;
+            const serviceFee = productCost * 0.12 + 25;
             const customs = productCost * 0.05;
             const total = productCost + shippingRate + serviceFee + customs;
 

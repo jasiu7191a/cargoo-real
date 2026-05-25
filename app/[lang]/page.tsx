@@ -616,7 +616,7 @@ export default async function Home({ params }: { params: { lang: string } }) {
                 {q:'Is this legal? What about customs?',a:'Yes — importing goods for personal use or small-scale resale is fully legal across the EU. We declare every shipment honestly, pay VAT and import duties in your name, and hand you the paperwork.'},
                 {q:'What if the product arrives broken or wrong?',a:'We photo-inspect every unit before it leaves China, so 95% of issues are caught upstream. If something is still wrong on arrival, we reship or refund at our cost within 14 days.'},
                 {q:'Do I need a business or VAT number?',a:'Nope. Most of our customers are individuals — sneakerheads, hobbyists, side-hustlers. We handle personal imports and small-business orders the same way.'},
-                {q:'How is pricing calculated?',a:'Product cost + shipping by weight + EU customs & VAT + our 8% service fee (min €25). You see every line item on the quote — no markup hidden in the product price.'},
+                {q:'How is pricing calculated?',a:'Product cost + shipping by weight + EU customs & VAT + our 12% service fee + €25. You see every line item on the quote — no markup hidden in the product price.'},
                 {q:'When do I pay?',a:'After you approve the quote, you pay into escrow (Stripe, PayPal, or bank transfer). Funds release to the factory only after our QC team signs off.'},
                 {q:'Can I order replicas or branded goods?',a:"We source factory-direct unbranded goods and non-counterfeit items for personal use. We don't touch obvious trademark infringements. Ask and we'll tell you honestly what's sourceable."},
               ].map((faq,i) => (
