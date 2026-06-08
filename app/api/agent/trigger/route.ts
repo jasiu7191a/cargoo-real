@@ -163,6 +163,11 @@ export async function POST(req: Request) {
       relatedPosts,
       includeFaq: true,
       varietyHint,
+      // Real first-hand Cargoo facts (fees, observed transit times, real
+      // importer mistakes). Set CARGOO_FACTS in Cloudflare to inject them —
+      // this is the moat pure-AI competitors can't fake. Empty = the prompt
+      // falls back to "accurate general figures, no fabrication".
+      firstHandFacts: process.env.CARGOO_FACTS,
     });
 
     let geminiRes = await callGemini(prompt, controller.signal, geminiKey!);

@@ -43,6 +43,40 @@ export interface BuildBlogPromptOptions {
    * Cycle the hint by `articleIndex % 4` from the caller for organic variety.
    */
   varietyHint?: BlogVarietyHint;
+  /**
+   * Real, first-hand Cargoo specifics to weave in: actual service fee, transit
+   * times Cargoo has observed China→EU, real importer mistakes, anonymised case
+   * outcomes. This is the ONE thing pure-AI competitors can't fake — but the LLM
+   * can't invent it truthfully either. Supply REAL facts here (or via the
+   * CARGOO_FACTS env var, wired in the trigger route). Empty = the model must
+   * stick to accurate, citable general figures and MUST NOT fabricate specifics.
+   */
+  firstHandFacts?: string;
+}
+
+const LOCALIZATION: Record<BlogLang, string> = {
+  en: "Write for EU/UK importers. Use EU framing: 'EU VAT', 'EU customs' — never US 'sales tax' or 'CBP'.",
+  pl: "Pisz dla polskich importerów. Użyj polskich realiów: cło, VAT i procedura uproszczona (art. 33a), import przez port Gdańsk, agencja celna, EORI. Tekst MA brzmieć jak napisany od zera po polsku — NIE jak tłumaczenie z angielskiego (unikaj kalek językowych).",
+  de: "Schreibe für deutsche und österreichische Importeure. Nutze die lokale Realität: Zoll, EUSt (Einfuhrumsatzsteuer), Häfen Hamburg/Bremerhaven, EORI, IOSS. Der Text MUSS wie originär auf Deutsch verfasst klingen — KEINE Übersetzung aus dem Englischen.",
+  fr: "Écris pour les importateurs français (puis BE/CH francophone). Réalités locales : douane, TVA et autoliquidation, ports du Havre et de Marseille-Fos, EORI, IOSS. Le texte DOIT sonner comme rédigé directement en français — PAS une traduction de l'anglais.",
+};
+
+/**
+ * The non-negotiable quality bar. This is what separates the post from the
+ * low-effort AI content Google now demotes. The first-hand facts block is the
+ * moat; everything else is the floor.
+ */
+function qualityBar(firstHandFacts: string | undefined): string {
+  const facts = firstHandFacts && firstHandFacts.trim()
+    ? `\nFIRST-HAND FACTS — weave these in naturally; they are REAL, do not contradict, dilute, or generalise them away:\n${firstHandFacts.trim()}\n`
+    : "";
+  return `
+Quality bar — meet ALL of these (this is the whole point of the article):
+- INFORMATION GAIN: include at least one concrete, specific thing a generic top-10 article would NOT have — a 2026 regulatory change with its actual date/threshold, a real HS-code example, or a worked numeric example. Do not merely restate the obvious.
+- CONCRETE & ACCURATE NUMBERS: use real, verifiable figures — EU duty % by product category, the destination country's VAT rate, realistic China→EU transit times by mode (~30–45 days sea, ~18–22 days rail, ~5–8 days air express), and real thresholds (e.g. the €150 IOSS/customs-duty line). Include ONE short worked landed-cost example (product cost + freight + duty + VAT) using rounded, realistic numbers.
+- NO FABRICATION: never invent fake customer testimonials, fake company names, fake statistics, or false-precision figures you cannot support. Prefer ranges ("typically", "around"). Any hard figure must be real and, ideally, attributed to a named source.
+- HUMAN, NOT AI-TELL: open with a concrete hook (a number, a scenario, a 2026 change) — never "in today's fast-paced world" or an empty throat-clearing intro, and no "in conclusion" wrap-up.
+${facts}`;
 }
 
 /**
@@ -132,6 +166,8 @@ export function buildBlogPrompt(
   const structure = structureBlock(options.varietyHint);
   const related = relatedBlock(lang, options.relatedPosts);
   const faq = faqBlock(lang, options.includeFaq);
+  const localization = LOCALIZATION[lang];
+  const quality = qualityBar(options.firstHandFacts);
 
   const jsonShape = options.includeFaq
     ? `{ "title": "...", "slug": "...", "metaDescription": "...", "content": "...", "faq": [ { "question": "...", "answer": "..." }, ... ] }`
@@ -143,6 +179,7 @@ You are a senior sourcing agent and logistics expert for Cargoo Import — a pla
 Write a comprehensive, high-converting article for the keyword/topic: "${keyword}".
 
 LANGUAGE: Write EVERY field (title, metaDescription, content${options.includeFaq ? ", faq" : ""}) in ${langName}. The slug stays in Latin characters (URL-safe).
+LOCALISATION: ${localization}
 
 Requirements:
 - Title: Catchy, professional, SEO-optimized for "${keyword}".
@@ -150,7 +187,7 @@ Requirements:
 - Meta description: Compelling summary under 160 characters, in ${langName}.
 - Content: Long-form Markdown (1200–1800 words) in ${langName}.
 - Cite at least 2 real, credible sources by name in the prose (e.g. "European Commission", "WCO", a published industry report). Do NOT fabricate URLs — name the source inline; only link out to widely-known domains (ec.europa.eu, wto.org, etc.) you are sure exist.
-- Avoid the boilerplate phrase "in today's fast-paced world" and similar AI tells.
+${quality}
 ${structure}
 ${related}
 ${faq}
