@@ -436,7 +436,11 @@ input:focus, select:focus { outline: none; border-color: var(--clr-blue); box-sh
     right: -100%;
     width: 100%;
     max-width: 400px;
-    height: 100vh;
+    height: 100vh;            /* fallback for browsers without dvh support */
+    height: 100dvh;           /* tracks the small viewport (address bar shown) */
+    max-height: 100dvh;
+    overflow-y: auto;         /* let the drawer scroll when items exceed the viewport */
+    -webkit-overflow-scrolling: touch;
     background-color: rgba(11, 11, 11, 0.95);
     backdrop-filter: blur(30px);
     border-left: 1px solid var(--clr-border);
