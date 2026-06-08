@@ -63,30 +63,24 @@ export async function GET() {
       changefreq: "monthly",
       alternates: buildAlternates((l) => `/${l}/products`),
     });
-    entries.push({
-      loc: `${BASE_URL}/${lang}/resources`,
-      priority: "0.6",
-      changefreq: "weekly",
-      alternates: buildAlternates((l) => `/${l}/resources`),
-    });
+    // NOTE: /{lang}/resources is intentionally NOT listed. That section renders
+    // duplicates of blog posts and is now 301'd to /{lang}/blog/{slug} in
+    // middleware. Listing it here would re-advertise the duplicate URLs.
   }
 
-  // Blog posts — grouped by slug so alternates link translated versions
-  // when they exist. If a slug only has one lang, we still emit it.
-  const postsBySlug = new Map<string, Map<string, { slug: string; updatedAt: Date }>>();
-  for (const post of posts) {
-    const slugKey = post.slug;
-    if (!postsBySlug.has(slugKey)) postsBySlug.set(slugKey, new Map());
-    postsBySlug.get(slugKey)!.set(post.lang, post);
-  }
-
+  // Blog posts — each post is emitted exactly ONCE at its own canonical URL.
+  // We deliberately do NOT emit cross-language hreflang alternates here: the
+  // slug carries its own language prefix (e.g. fr-…), so the old
+  // `/{l}/blog/${post.slug}` alternates fabricated wrong-language URLs
+  // (/en/blog/fr-…, /de/blog/fr-…) that Google then indexed as duplicates.
+  // Per-post hreflang to real translated siblings is emitted on the page
+  // itself (generateMetadata → loadSiblings, matched by targetKeyword).
   for (const post of posts) {
     entries.push({
       loc: `${BASE_URL}/${post.lang}/blog/${post.slug}`,
       lastmod: post.updatedAt.toISOString().split("T")[0],
       priority: "0.6",
       changefreq: "monthly",
-      alternates: buildAlternates((l) => `/${l}/blog/${post.slug}`),
     });
   }
 

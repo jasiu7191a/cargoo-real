@@ -6,6 +6,26 @@ import { jwtVerify } from "jose"
 const locales = ['en', 'pl', 'de', 'fr']
 const defaultLocale = 'en'
 
+// Posts removed in the 2026-06 blog cleanup (2 test articles + 10 merged
+// duplicates). Each maps to the canonical successor it was folded into, so the
+// old URL 301s instead of 404-ing. Keep in sync with the DB deletions
+// (scripts/execute-cleanup.mjs). Targets are LIVE posts — never add a target
+// that is itself a key here, or you create a redirect loop.
+const DELETED_REDIRECTS: Record<string, string> = {
+  'pl-test-connectivity-check-import-guide-china-eu': '/pl/blog/pl-end-of-de-minimis-exemption-july-2026-ecommerce-preparation-vat-customs',
+  'en-test-auth-check-no-publish': '/en/blog/en-ioss-july-2026-eu-3-euro-duty-full-container-imports-vs-temu-shein',
+  'en-eu-made-in-europe-industrial-accelerator-act-2026-china-importers-guide': '/en/blog/en-eu-industrial-accelerator-act-2026-china-importers-guide',
+  'en-made-in-europe-industrial-accelerator-act-2026-china-import-guide': '/en/blog/en-eu-industrial-accelerator-act-2026-china-importers-guide',
+  'en-find-reliable-1688-suppliers-eu-import-2026-verification-guide': '/en/blog/en-find-reliable-chinese-factory-suppliers-eu-ecommerce-2026-alibaba-canton-fair',
+  'en-eu-new-trade-weapon-china-overcapacity-import-guide-2026': '/en/blog/en-eu-trade-deficit-china-2026-importer-guide',
+  'en-how-to-negotiate-moq-payment-terms-incoterms-chinese-factories-eu-ecommerce-2026': '/en/blog/en-negotiate-moq-payment-terms-chinese-factories-eu-importer-guide-2026',
+  'en-how-to-verify-a-chinese-factory-before-ordering-eu-import-2026-supplier-due-diligence-checklist': '/en/blog/en-how-to-verify-chinese-factory-legitimacy-7-due-diligence-steps-eu-ecommerce-importers-2026',
+  'de-eu-new-trade-instrument-chinese-overcapacity-2026-german-importers-guide': '/de/blog/de-eu-industry-law-2026-china-import-germany-guide',
+  'de-cbam-co2-grenzausgleich-china-import-2026-pflichten-deutsche-importeure': '/de/blog/de-cbam-pflichten-2026-deutsche-online-shops-stahl-aluminium-china',
+  'pl-nowe-clo-ue-3-euro-lipiec-2026-polskie-sklepy-import-chiny': '/pl/blog/pl-end-of-de-minimis-exemption-july-2026-ecommerce-preparation-vat-customs',
+  'fr-tva-import-china-france-2026-guide-sme-ecommerce-vat-customs': '/fr/blog/fr-import-china-france-2026-vat-duties-ecommerce-guide',
+}
+
 // Note: CORS for /api/* is handled by next.config.js `headers()` (static)
 // and per-route OPTIONS handlers (returning 204). Don't set CORS headers
 // from middleware — doing so concatenates with the static config and the
@@ -72,6 +92,46 @@ export async function middleware(request: NextRequest) {
     url.host = `www.${ROOT_DOMAIN}`
     url.pathname = legalPath
     return NextResponse.redirect(url, { status: 301 })
+  }
+
+  // 1b. CANONICALISE BLOG CONTENT — one URL per post.
+  //     Every post must live at exactly: https://www.cargooimport.eu/{slugLang}/blog/{slug}
+  //     This 301s away the three duplicate surfaces that were getting indexed:
+  //       - /{lang}/resources/{slug}            (duplicate render of the same post)
+  //       - /{wrongLang}/blog|resources/{slug}  (slug carries its own lang prefix, e.g. fr-…)
+  //       - blog.cargooimport.eu/{lang}/...     (duplicate host)
+  //     Loop-safe: the target (/{slugLang}/blog/{slug} on www) fails every redirect
+  //     condition below, so it passes through untouched.
+  const contentMatch = pathname.match(/^\/(en|pl|de|fr)\/(blog|resources)\/([^/]+)\/?$/)
+  if (contentMatch) {
+    const [, urlLang, section, slug] = contentMatch
+
+    // Deleted/merged posts → 301 to their canonical successor (zero 404s).
+    // Runs before canonicalisation so a deleted slug under /resources/ still
+    // lands on its successor instead of a now-missing /blog/{slug}.
+    const deletedTarget = DELETED_REDIRECTS[slug]
+    if (deletedTarget) {
+      const url = request.nextUrl.clone()
+      url.protocol = 'https:'
+      url.host = `www.${ROOT_DOMAIN}`
+      url.pathname = deletedTarget
+      url.search = ''
+      return NextResponse.redirect(url, { status: 301 })
+    }
+
+    const slugLangMatch = slug.match(/^(en|pl|de|fr)-/)
+    const correctLang = slugLangMatch ? slugLangMatch[1] : urlLang
+    const isProdHost =
+      host === `www.${ROOT_DOMAIN}` || host === `blog.${ROOT_DOMAIN}` || host === ROOT_DOMAIN
+    const needsHostFix = isProdHost && host !== `www.${ROOT_DOMAIN}`
+    if (section === 'resources' || urlLang !== correctLang || needsHostFix) {
+      const url = request.nextUrl.clone()
+      url.protocol = 'https:'
+      if (isProdHost) url.host = `www.${ROOT_DOMAIN}`
+      url.pathname = `/${correctLang}/blog/${slug}`
+      url.search = ''
+      return NextResponse.redirect(url, { status: 301 })
+    }
   }
 
   // 2. SMART SUBDOMAIN SHORTCUTS
