@@ -72,12 +72,21 @@ export async function POST(req: Request) {
       );
     }
 
+    // Cover the whole library. The GSC bulk path (Path A) handles all of these
+    // in a single query, so raising this is cheap when GSC is configured. The
+    // slow per-post Custom Search fallback (Path B) is separately rate-limited
+    // below (CUSTOM_SEARCH_MAX) so we never blow the 60s maxDuration.
     const posts = await prisma.blogPost.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "asc" },
       select: { id: true, slug: true, lang: true, title: true, publishedAt: true },
-      take: 50,
+      take: 1000,
     });
+
+    // Hard cap on slow per-post Custom Search calls (each ~up to 8s) so a
+    // GSC-disabled run over 150+ posts can't exceed maxDuration.
+    const CUSTOM_SEARCH_MAX = 40;
+    let customSearchUsed = 0;
 
     if (posts.length === 0) {
       return NextResponse.json({ checked: 0, message: "No published posts" });
@@ -187,7 +196,8 @@ export async function POST(req: Request) {
       }
 
       // ---- Path B: legacy Custom Search fallback ------------------------
-      if (hasCustomSearch) {
+      if (hasCustomSearch && customSearchUsed < CUSTOM_SEARCH_MAX) {
+        customSearchUsed++;
         const { indexed, snippet } = await isIndexedCustomSearch(post.slug, post.lang);
         await prisma.seoCheck.create({
           data: {
