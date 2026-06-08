@@ -66,6 +66,17 @@ async function runBuild() {
         "/_next/image*",
         "/favicon.ico",
         "/robots.txt",
+        // Static assets mirrored from the legacy static site into public/
+        // (/css, /js, /img, /assets). These are NOT Next routes — if they
+        // reach the OpenNext worker it throws 1101, so they must bypass it
+        // and be served directly from the Pages CDN. Covers the shared
+        // style.css/mobile.css/search.css + main.js the layout links.
+        "/css/*",
+        "/js/*",
+        "/img/*",
+        "/assets/*",
+        "/*.css",
+        "/*.js",
         "/*.png",
         "/*.jpg",
         "/*.svg",
