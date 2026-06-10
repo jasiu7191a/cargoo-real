@@ -23,8 +23,10 @@ async function isIndexedCustomSearch(slug: string, lang: string): Promise<{ inde
   const cx = process.env.GOOGLE_SEARCH_CX;
   if (!apiKey || !cx) return { indexed: false };
 
-  const domain = "cargooimport.eu";
-  const query = encodeURIComponent(`site:${domain}/${lang}/blog/${slug}`);
+  // Pages are indexed under the www canonical host (see pageUrl + sitemap),
+  // so probe that exact host. An apex-path probe (`site:cargooimport.eu/...`)
+  // can miss the www URLs Google actually has on file.
+  const query = encodeURIComponent(`site:www.cargooimport.eu/${lang}/blog/${slug}`);
   const url =
     `https://www.googleapis.com/customsearch/v1` +
     `?key=${encodeURIComponent(apiKey)}` +
@@ -86,7 +88,6 @@ export async function POST(req: Request) {
     // Hard cap on slow per-post Custom Search calls (each ~up to 8s) so a
     // GSC-disabled run over 150+ posts can't exceed maxDuration.
     const CUSTOM_SEARCH_MAX = 40;
-    let customSearchUsed = 0;
 
     if (posts.length === 0) {
       return NextResponse.json({ checked: 0, message: "No published posts" });
@@ -135,6 +136,22 @@ export async function POST(req: Request) {
     }> = [];
 
     const captureDate = new Date();
+
+    // The Custom Search fallback (Path B) is capped at CUSTOM_SEARCH_MAX slow
+    // per-post calls. Its whole purpose is catching the FRESHEST posts before
+    // GSC registers them (GSC lags 2-3 days; Custom Search shows within hours),
+    // so spend the budget on the newest GSC-missing posts — not the oldest.
+    // `posts` is sorted publishedAt asc, so the freshest are at the tail; walk
+    // it in reverse and claim the budget for those first.
+    const customSearchIds = new Set<string>();
+    if (hasCustomSearch) {
+      for (let i = posts.length - 1; i >= 0; i--) {
+        const p = posts[i];
+        if (gscRowsByPage.has(pageUrl(p.lang, p.slug))) continue; // GSC covers it
+        customSearchIds.add(p.id);
+        if (customSearchIds.size >= CUSTOM_SEARCH_MAX) break;
+      }
+    }
 
     for (const post of posts) {
       const url = pageUrl(post.lang, post.slug);
@@ -196,8 +213,9 @@ export async function POST(req: Request) {
       }
 
       // ---- Path B: legacy Custom Search fallback ------------------------
-      if (hasCustomSearch && customSearchUsed < CUSTOM_SEARCH_MAX) {
-        customSearchUsed++;
+      // customSearchIds is pre-selected (newest GSC-missing posts first) and is
+      // only populated when hasCustomSearch, so membership implies it's enabled.
+      if (customSearchIds.has(post.id)) {
         const { indexed, snippet } = await isIndexedCustomSearch(post.slug, post.lang);
         await prisma.seoCheck.create({
           data: {
@@ -230,6 +248,7 @@ export async function POST(req: Request) {
     }
 
     const indexedCount = results.filter(r => r.indexed).length;
+    const notIndexedCount = results.length - indexedCount;
     const fromGsc = results.filter(r => r.source === "gsc").length;
 
     await prisma.adminAction.create({
@@ -243,6 +262,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       checked: results.length,
       indexedCount,
+      notIndexedCount,
       gscEnabled: gscReady,
       results,
     });
