@@ -126,6 +126,7 @@ export async function POST(req: Request) {
       slug: string;
       lang: string;
       title: string;
+      publishedAt: string | null;
       source: "gsc" | "custom-search" | "none";
       indexed: boolean;
       impressions?: number;
@@ -202,6 +203,7 @@ export async function POST(req: Request) {
           slug: post.slug,
           lang: post.lang,
           title: post.title,
+          publishedAt: post.publishedAt ? ymd(post.publishedAt) : null,
           source: "gsc",
           indexed,
           impressions: gscRow.impressions,
@@ -231,6 +233,7 @@ export async function POST(req: Request) {
           slug: post.slug,
           lang: post.lang,
           title: post.title,
+          publishedAt: post.publishedAt ? ymd(post.publishedAt) : null,
           source: "custom-search",
           indexed,
           snippet,
@@ -241,6 +244,7 @@ export async function POST(req: Request) {
           slug: post.slug,
           lang: post.lang,
           title: post.title,
+          publishedAt: post.publishedAt ? ymd(post.publishedAt) : null,
           source: "none",
           indexed: false,
         });
