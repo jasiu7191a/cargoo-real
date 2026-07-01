@@ -38,10 +38,13 @@ export async function queryOne<T = any>(text: string, params: unknown[] = []): P
   return rows[0] ?? null;
 }
 
-let pool: Pool | null = null;
-function getPool() {
-  if (!pool) pool = new Pool({ connectionString: getConnectionString() });
-  return pool;
+// A fresh Pool per transaction, closed before returning. Caching a Pool at
+// module level breaks on Cloudflare Workers: the pooled WebSocket belongs to
+// the request that opened it, and any later request touching it throws
+// "Cannot perform I/O on behalf of a different request". Neon's guidance for
+// Workers is exactly this create-use-end lifecycle.
+function newPool() {
+  return new Pool({ connectionString: getConnectionString() });
 }
 
 type TxClient = {
@@ -50,7 +53,8 @@ type TxClient = {
 };
 
 export async function transaction<T>(fn: (client: TxClient) => Promise<T>): Promise<T> {
-  const client = await getPool().connect();
+  const pool = newPool();
+  const client = await pool.connect();
   const tx: TxClient = {
     query: async <R = any>(text: string, params: unknown[] = []) => {
       const result = await client.query(text, params as any[]);
@@ -72,5 +76,6 @@ export async function transaction<T>(fn: (client: TxClient) => Promise<T>): Prom
     throw error;
   } finally {
     client.release();
+    await pool.end().catch(() => {});
   }
 }
