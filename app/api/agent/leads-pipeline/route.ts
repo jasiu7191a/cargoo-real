@@ -11,6 +11,20 @@ function authOk(req: Request): boolean {
 }
 
 export async function POST(req: Request) {
+  try {
+    return await handle(req);
+  } catch (err: any) {
+    // Catch-all so DB connectivity blips return JSON instead of a bare
+    // Cloudflare 502 the cron job can't interpret.
+    console.error("agent/leads-pipeline unhandled error:", err);
+    return NextResponse.json(
+      { error: "Internal error", retryable: true, details: String(err?.message ?? err).slice(0, 300) },
+      { status: 500 }
+    );
+  }
+}
+
+async function handle(req: Request) {
   if (!authOk(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
