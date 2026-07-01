@@ -1,16 +1,22 @@
 import { PrismaClient } from '@prisma/client/wasm'
-import { PrismaNeonHTTP } from '@prisma/adapter-neon'
-import { neon } from '@neondatabase/serverless'
+import { PrismaNeon } from '@prisma/adapter-neon'
+import { Pool, neonConfig } from '@neondatabase/serverless'
 
-// Neon HTTP driver, NOT the WebSocket Pool. On Cloudflare Workers a Pool
-// cached at module level is reused across requests, and Workers forbid using
-// I/O objects (the pool's WebSocket) created in one request from another —
-// every prisma call on a warm isolate then throws "Cannot perform I/O on
-// behalf of a different request" / "Connection terminated", which surfaced
-// as bare 502s on /api/agent/trigger and 500s on blog SSR. The HTTP driver
-// is stateless (one fetch per query), so the client is safe to cache.
-// Trade-off: no interactive transactions — nothing using this client needs
-// them (lib/account-db.ts handles the transactional raw-SQL paths).
+// poolQueryViaFetch makes Pool.query() go over a stateless HTTP fetch instead
+// of a pooled WebSocket. On Cloudflare Workers a WebSocket cached at module
+// level is reused across requests, which the runtime forbids — every prisma
+// call on a warm isolate then threw "Cannot perform I/O on behalf of a
+// different request" / "Connection terminated", surfacing as bare 502s on
+// /api/agent/trigger and 500s on blog SSR. With fetch-per-query there is no
+// cross-request I/O object, so caching the client below is safe.
+// Note: PrismaNeonHTTP + neon() is NOT equivalent here — at these package
+// versions it drops the adapter's custom type parsers, so DateTime columns
+// come back as Date objects and the query engine rejects them ("Conversion
+// failed: expected a string in column 'publishedAt'"). The Pool shim forwards
+// the adapter's `types` config; only pool.connect() (Prisma interactive
+// transactions — unused in this codebase) would fall back to a WebSocket.
+neonConfig.poolQueryViaFetch = true;
+
 let prismaInstance: PrismaClient | null = null;
 
 export const getPrisma = (): PrismaClient => {
@@ -32,7 +38,8 @@ export const getPrisma = (): PrismaClient => {
   }
 
   try {
-    const adapter = new PrismaNeonHTTP(neon(connectionString));
+    const pool = new Pool({ connectionString });
+    const adapter = new PrismaNeon(pool);
     prismaInstance = new PrismaClient({ adapter });
     return prismaInstance;
   } catch (error: any) {
