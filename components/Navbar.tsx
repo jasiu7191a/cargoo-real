@@ -75,10 +75,10 @@ export function Navbar({ lang = "en" }: NavbarProps) {
 
   const productsUrl = (l: string) => {
     const map: Record<string, string> = {
-      en: "https://www.cargooimport.eu/products.html",
-      pl: "https://www.cargooimport.eu/cargoo-pl/products.html",
-      de: "https://www.cargooimport.eu/cargoo-de/products.html",
-      fr: "https://www.cargooimport.eu/cargoo-fr/products.html",
+      en: "https://www.cargooimport.eu/products",
+      pl: "https://www.cargooimport.eu/cargoo-pl/products",
+      de: "https://www.cargooimport.eu/cargoo-de/products",
+      fr: "https://www.cargooimport.eu/cargoo-fr/products",
     };
     return map[l] ?? map.en;
   };
