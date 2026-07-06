@@ -121,13 +121,16 @@ export async function POST(req: Request) {
     const total = await prisma.blogPost.count({ where: { status: "PUBLISHED" } });
 
     // ---- Load ONE batch, cursor-paginated -----------------------------------
-    // Deterministic order (publishedAt asc, id asc as the stable tiebreaker so
-    // the cursor never skips/duplicates a post across invocations). `id` is the
-    // @id unique column, which is the cursor value we hand back as nextCursor.
+    // Newest-first (publishedAt desc, id desc as the stable tiebreaker so the
+    // cursor never skips/duplicates a post across invocations). Newest-first so
+    // a single no-body call (the weekly agent) covers the freshest posts, where
+    // indexing status is most volatile and the Custom Search fallback matters
+    // most; the cursor then walks back through older posts. `id` is the @id
+    // unique column, which is the cursor value we hand back as nextCursor.
     // take = limit + 1 peeks whether more posts remain without a second query.
     const page = await prisma.blogPost.findMany({
       where: { status: "PUBLISHED" },
-      orderBy: [{ publishedAt: "asc" }, { id: "asc" }],
+      orderBy: [{ publishedAt: "desc" }, { id: "desc" }],
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       take: limit + 1,
       select: { id: true, slug: true, lang: true, title: true, publishedAt: true },
@@ -182,14 +185,13 @@ export async function POST(req: Request) {
 
     // Custom Search budget for THIS batch. Its purpose is catching the freshest
     // GSC-missing posts (GSC lags 2-3 days), so within the batch prefer the
-    // newest GSC-missing posts — `posts` is publishedAt asc, so walk in reverse.
-    // A post GSC already covers is skipped entirely: GSC is authoritative, so we
-    // never spend a redundant subrequest re-probing it.
+    // newest GSC-missing posts — `posts` is publishedAt desc (newest first), so
+    // walk forward. A post GSC already covers is skipped entirely: GSC is
+    // authoritative, so we never spend a redundant subrequest re-probing it.
     const CUSTOM_SEARCH_MAX = Math.min(limit, CUSTOM_SEARCH_BUDGET);
     const customSearchIds = new Set<string>();
     if (hasCustomSearch) {
-      for (let i = posts.length - 1; i >= 0; i--) {
-        const p = posts[i];
+      for (const p of posts) {
         if (gscRowsByPage.has(pageUrl(p.lang, p.slug))) continue; // GSC covers it
         customSearchIds.add(p.id);
         if (customSearchIds.size >= CUSTOM_SEARCH_MAX) break;
